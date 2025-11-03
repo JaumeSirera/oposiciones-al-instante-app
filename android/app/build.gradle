@@ -1,0 +1,100 @@
+apply plugin: 'com.android.application'
+
+import java.util.Properties
+import java.io.FileInputStream
+
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} else {
+    throw new GradleException("Falta key.properties (firma de release). Crea android/key.properties con tu keystore de EAS.")
+}
+
+android {
+    // Puedes dejar el namespace como quieras; no tiene que coincidir con applicationId
+    namespace "com.jaumesirera.TestsOposiciones"   // igual que abajo
+
+    // Estas variables vienen de variables.gradle (Capacitor)
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        // ⚠️ Debe coincidir EXACTO con el packageId de la app de Play donde subes
+        // Probablemente sea todo minúsculas: p.ej. "com.jaumesirera.testsoposiciones"
+        // Verifícalo en Play Console (ID del paquete) y cámbialo aquí si hace falta:
+        applicationId "com.jaumesirera.TestsOposiciones"
+
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        // Sube en cada envío a Play (que sea MAYOR al publicado)
+        versionCode 67
+        versionName "03.11.25"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // AGP 8.x: usa packagingOptions (aaptOptions está deprecado)
+    packagingOptions {
+        resources {
+            // Equivalente al ignoreAssetsPattern que tenías
+            excludes += ['**/.svn/**','**/.git/**','**/.ds_store','**/*.scc','**/CVS/**','**/thumbs.db','**/picasa.ini','**/*~']
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            // Empieza sin ofuscar, ya optimizarás luego
+            minifyEnabled false
+            shrinkResources false
+            // Si activas R8 en el futuro:
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug { /* nada especial */ }
+    }
+}
+
+repositories {
+    flatDir {
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+
+    implementation project(':capacitor-android')
+    implementation project(':capacitor-cordova-android-plugins')
+
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+println ">>> signing.storeFile=" + keystoreProperties['storeFile']
+println ">>> signing.keyAlias="  + keystoreProperties['keyAlias']

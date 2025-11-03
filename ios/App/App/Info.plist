@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Name -->
+	<key>CFBundleName</key>
+	<string>Oposiciones Test</string>
+	
+	<!-- Display Name (lo que aparece en la home screen) -->
+	<key>CFBundleDisplayName</key>
+	<string>Oposiciones Test</string>
+	
+	<!-- Bundle Identifier -->
+	<key>CFBundleIdentifier</key>
+	<string>app.lovable.48fb2d1f6abf404785e460f69d619ae1</string>
+	
+	<!-- Version -->
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	
+	<!-- App Category para App Store -->
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.education</string>
+	
+	<!-- Copyright -->
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2025 Oposiciones Test. Todos los derechos reservados.</string>
+	
+	<!-- App Description (interno) -->
+	<key>CFBundleGetInfoString</key>
+	<string>Prepara tus oposiciones con tests personalizados con IA, profesor virtual, resúmenes automáticos y planes de estudio</string>
+	
+	<!-- Keywords para ASO de iOS (separados por comas, máximo 100 caracteres) -->
+	<key>AppStoreKeywords</key>
+	<string>oposiciones,tests,exámenes,preparación,policía,guardia civil,bomberos,correos,administrativo</string>
+	
+	<!-- App Store Description Metadata -->
+	<key>AppStoreShortDescription</key>
+	<string>Tests con IA, profesor virtual y planes de estudio para aprobar tus oposiciones</string>
+	
+	<!-- Supported Languages -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+	</array>
+	
+	<!-- Required Device Capabilities -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	
+	<!-- Supported Interface Orientations -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	
+	<!-- Status Bar Style -->
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDefault</string>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	
+	<!-- Launch Screen -->
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	
+	<!-- Required for Capacitor -->
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>oposiciones-test.com</string>
+	</array>
+	
+	<!-- Camera Usage (si la necesitas en el futuro) -->
+	<key>NSCameraUsageDescription</key>
+	<string>Necesitamos acceso a la cámara para escanear documentos y PDFs de temarios</string>
+	
+	<!-- Photo Library Usage -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a tus fotos para subir PDFs de temarios y materiales de estudio</string>
+	
+	<!-- Notifications (si las usas) -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	
+	<!-- Internet Access -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	
+	<!-- User Tracking (para iOS 14+) -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Usamos estos datos para mejorar tu experiencia de estudio y mostrarte contenido relevante</string>
+	
+	<!-- Privacy Manifest -->
+	<key>NSPrivacyAccessedAPICategoryUserDefaults</key>
+	<dict>
+		<key>NSPrivacyAccessedAPIType</key>
+		<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+		<key>NSPrivacyAccessedAPITypeReasons</key>
+		<array>
+			<string>CA92.1</string>
+		</array>
+	</dict>
+</dict>
+</plist>

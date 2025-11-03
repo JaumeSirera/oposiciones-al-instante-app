@@ -1,0 +1,14 @@
+/node_modules
+/dist
+.env
+.DS_Store
+*.log
+*.lock
+.idea/
+.vscode/
+*.local
+*.bak
+*.tmp
+# Por si acaso:
+../../*
+../*

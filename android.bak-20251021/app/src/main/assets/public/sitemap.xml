@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- Página Principal -->
+  <url>
+    <loc>https://oposiciones-test.com/</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Tests -->
+  <url>
+    <loc>https://oposiciones-test.com/test</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Crear Test -->
+  <url>
+    <loc>https://oposiciones-test.com/crear-test</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Simulacro Cronometrado -->
+  <url>
+    <loc>https://oposiciones-test.com/simulacro-cronometrado</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Test Psicotécnico -->
+  <url>
+    <loc>https://oposiciones-test.com/crear-psicotecnicos</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Test de Personalidad -->
+  <url>
+    <loc>https://oposiciones-test.com/test-personalidad</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Estadísticas -->
+  <url>
+    <loc>https://oposiciones-test.com/estadisticas</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Historial -->
+  <url>
+    <loc>https://oposiciones-test.com/historial</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Ranking -->
+  <url>
+    <loc>https://oposiciones-test.com/ranking</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Resúmenes -->
+  <url>
+    <loc>https://oposiciones-test.com/resumenes</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Crear Resumen -->
+  <url>
+    <loc>https://oposiciones-test.com/crear-resumen</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Planes de Estudio -->
+  <url>
+    <loc>https://oposiciones-test.com/planes-estudio</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Crear Plan de Estudio -->
+  <url>
+    <loc>https://oposiciones-test.com/crear-plan-estudio</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Planes Físicos -->
+  <url>
+    <loc>https://oposiciones-test.com/planes-fisicos</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Perfil -->
+  <url>
+    <loc>https://oposiciones-test.com/profile</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Política de Privacidad -->
+  <url>
+    <loc>https://oposiciones-test.com/privacy-policy</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- Donación -->
+  <url>
+    <loc>https://oposiciones-test.com/donacion</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>

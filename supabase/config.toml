@@ -1,0 +1,22 @@
+project_id = "yrjwyeuqfleqhbveohrf"
+
+[functions.php-api-proxy]
+verify_jwt = false
+
+[functions.profesor-virtual]
+verify_jwt = false
+
+[functions.generar-tecnica]
+verify_jwt = false
+
+[functions.extraer-texto]
+verify_jwt = false
+
+[functions.generar-resumen]
+verify_jwt = false
+
+[functions.generar-plan-estudio]
+verify_jwt = false
+
+[functions.generar-descripcion-plan]
+verify_jwt = false

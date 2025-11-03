@@ -1,0 +1,38 @@
+Servidor Precinta Supremo = 707 286 450, Pre1235789@#
+Servidor Precinta AnyDesk = 974 664 296, Pre1235789@#
+Servidor Precinta TeamViewer = 136 465 150, Pre1235789@#
+Servidor Urplan Supremo = 231 809 016, Pre1235789@#
+
+
+#Comandos EXPO
+npx expo start -c
+eas build -p android --profile production --clear-cache
+npx expo export --platform web
+
+#Comando para web de lovable.
+npm run build
+
+#.htaccess
+<filesMatch "\.(html)$">
+  FileETag None
+  Header unset ETag
+  Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+</filesMatch>
+
+
+
+#Comandos lovable en simbolo que sistema para producción
+set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
+set "PATH=%JAVA_HOME%\bin;%PATH%"
+cd /d C:\Users\Jaume\source\vite\android
+
+# lo compila todo y genera las carpetas
+gradlew.bat :app:tasks --all | findstr /I bundleRelease
+gradlew.bat :app:bundleRelease --stacktrace --info
+
+
+
+
+l

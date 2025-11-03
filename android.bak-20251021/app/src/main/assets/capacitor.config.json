@@ -1,0 +1,7 @@
+{
+	"appId": "com.oposicionestest.app",
+	"appName": "Oposiciones Test",
+	"webDir": "dist",
+	"bundledWebRuntime": false,
+	"server": {}
+}
