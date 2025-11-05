@@ -23,6 +23,7 @@ import ResumenesIA from "./pages/ResumenesIA";
 import Psicotecnicos from "./pages/Psicotecnicos";
 import PreparacionFisicaIA from "./pages/PreparacionFisicaIA";
 import ProfesorVirtual from "./pages/ProfesorVirtual";
+import DonacionPublica from "./pages/DonacionPublica";
 
 // Protegidas
 import Profile from "./pages/Profile";
@@ -67,6 +68,7 @@ const App: React.FC = () => {
                 <Route path="/psicotecnicos-online" element={<Psicotecnicos />} />
                 <Route path="/preparacion-fisica-ia" element={<PreparacionFisicaIA />} />
                 <Route path="/profesor-virtual-oposiciones" element={<ProfesorVirtual />} />
+                <Route path="/donacion-publica" element={<DonacionPublica />} />
 
                 {/* Protegidas */}
                 <Route
