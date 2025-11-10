@@ -4,13 +4,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async"; // ✅ IMPORTANTE
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Layout } from "@/components/Layout";
 
 // Públicas
-import Index from "./pages/Index"; // dashboard (/dashboard)
+import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -51,7 +51,7 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <HelmetProvider> {/* ✅ ENVOLTURA */}
+          <HelmetProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -72,38 +72,34 @@ const App: React.FC = () => {
 
                 {/* Protegidas */}
                 <Route
-                  path="/*"
                   element={
                     <ProtectedRoute>
-                      <Layout>
-                        <Routes>
-                          <Route path="/dashboard" element={<Index />} />
-                          <Route path="/test" element={<TestPage mode="simulacion" />} />
-                          <Route path="/simulacro" element={<TestPage mode="examen" />} />
-                          <Route path="/test-psicotecnico" element={<TestPage mode="simulacion" isPsicotecnico />} />
-                          <Route path="/simulacro-psicotecnico" element={<TestPage mode="examen" isPsicotecnico />} />
-                          <Route path="/estadisticas" element={<EstadisticasPage />} />
-                          <Route path="/historial" element={<HistorialPage />} />
-                          <Route path="/ranking" element={<RankingPage />} />
-                          <Route path="/donacion" element={<Donacion />} />
-                          <Route path="/profile" element={<Profile />} />
-                          <Route path="/resumenes" element={<Resumenes />} />
-                          <Route path="/resumenes/:id" element={<ResumenDetalle />} />
-                          <Route path="/crear-resumen" element={<CrearResumen />} />
-                          <Route path="/crear-test" element={<CrearTest />} />
-                          <Route path="/crear-psicotecnicos" element={<CrearPsicotecnicos />} />
-                          <Route path="/planes-estudio" element={<PlanesEstudio />} />
-                          <Route path="/crear-plan-estudio" element={<CrearPlanEstudio />} />
-                          <Route path="/plan-estudio/:id" element={<PlanEstudioDetalle />} />
-                          <Route path="/planes-fisicos" element={<PlanesFisicos />} />
-                          <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
-                          <Route path="/test-personalidad" element={<TestPersonalidad />} />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                      </Layout>
+                      <Layout />
                     </ProtectedRoute>
                   }
-                />
+                >
+                  <Route path="/dashboard" element={<Index />} />
+                  <Route path="/test" element={<TestPage mode="simulacion" />} />
+                  <Route path="/simulacro" element={<TestPage mode="examen" />} />
+                  <Route path="/test-psicotecnico" element={<TestPage mode="simulacion" isPsicotecnico />} />
+                  <Route path="/simulacro-psicotecnico" element={<TestPage mode="examen" isPsicotecnico />} />
+                  <Route path="/estadisticas" element={<EstadisticasPage />} />
+                  <Route path="/historial" element={<HistorialPage />} />
+                  <Route path="/ranking" element={<RankingPage />} />
+                  <Route path="/donacion" element={<Donacion />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/resumenes" element={<Resumenes />} />
+                  <Route path="/resumenes/:id" element={<ResumenDetalle />} />
+                  <Route path="/crear-resumen" element={<CrearResumen />} />
+                  <Route path="/crear-test" element={<CrearTest />} />
+                  <Route path="/crear-psicotecnicos" element={<CrearPsicotecnicos />} />
+                  <Route path="/planes-estudio" element={<PlanesEstudio />} />
+                  <Route path="/crear-plan-estudio" element={<CrearPlanEstudio />} />
+                  <Route path="/plan-estudio/:id" element={<PlanEstudioDetalle />} />
+                  <Route path="/planes-fisicos" element={<PlanesFisicos />} />
+                  <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
+                  <Route path="/test-personalidad" element={<TestPersonalidad />} />
+                </Route>
 
                 {/* Fallback global */}
                 <Route path="*" element={<NotFound />} />
