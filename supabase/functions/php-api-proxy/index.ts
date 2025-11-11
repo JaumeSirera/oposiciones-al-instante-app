@@ -98,7 +98,11 @@ serve(async (req) => {
     console.log('Final body to send:', finalBody);
 
     // Forward the request to the PHP API
-    const requestMethod = bodyData?.method || req.method;
+    // For GET requests that come with method:"GET" in body, use actual GET
+    let requestMethod = req.method;
+    if (bodyData?.method === 'GET') {
+      requestMethod = 'GET';
+    }
     
     // Get Authorization header from incoming request
     const authHeader = req.headers.get('authorization') || '';
