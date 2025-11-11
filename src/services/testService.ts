@@ -1,6 +1,6 @@
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '@/lib/supabaseClient';
+
 const API_BASE_URL = 'https://oposiciones-test.com/api';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 interface Proceso {
   id: number;
@@ -266,7 +266,7 @@ class TestService {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify(data),
         }
