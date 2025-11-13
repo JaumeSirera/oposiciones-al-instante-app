@@ -6,10 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import logo from '@/assets/logo.png';
+import { supabase } from '@/lib/supabaseClient';
 
 const BASE_FOTO_URL = 'https://oposiciones-test.com/api/uploads/procesos/';
-const NOTICIAS_URL = 'https://oposiciones-test.com/api/proxy_noticias_oposiciones.php';
-const RSS_EXTRA_URL = 'https://oposiciones-test.com/api/noticias_oposiciones_multifuente.php';
+const PROXY_FUNCTION = 'php-api-proxy';
 
 const CCAA_LIST = [
   { nombre: 'Galicia', url: 'http://www.xunta.es/diario-oficial-galicia?lang=gl', area: { left: 55, top: 21, width: 80, height: 47 } },
@@ -56,12 +56,18 @@ const Index = () => {
       if (!user?.id) return;
       
       try {
-        const ts = Date.now().toString();
-        const response = await fetch(
-          `https://oposiciones-test.com/api/estadisticas_usuario.php?user_id=${user.id}&_ts=${ts}`,
-          { cache: 'no-store' }
-        );
-        const data = await response.json();
+        const token = localStorage.getItem('auth_token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+          body: {
+            endpoint: `estadisticas_usuario.php?user_id=${user.id}`,
+            method: 'GET',
+          },
+          headers,
+        });
+
+        if (error) throw error;
         
         if (data && !data.error) {
           const totalPreguntas = parseInt(data.total_aciertos || 0) + parseInt(data.total_fallos || 0);
@@ -85,25 +91,74 @@ const Index = () => {
 
   // Cargar últimos procesos
   useEffect(() => {
-    if (!user?.id) return;
-    
-    fetch(`https://oposiciones-test.com/api/ultimos_procesos.php?user_id=${user.id}`)
-      .then(r => r.json())
-      .then(d => setProcesos(Array.isArray(d) ? d.slice(0, 4) : []))
-      .catch(() => setProcesos([]));
+    const cargarProcesos = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const token = localStorage.getItem('auth_token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+          body: {
+            endpoint: `ultimos_procesos.php?user_id=${user.id}`,
+            method: 'GET',
+          },
+          headers,
+        });
+
+        if (error) throw error;
+        setProcesos(Array.isArray(data) ? data.slice(0, 4) : []);
+      } catch (error) {
+        console.error('Error al cargar procesos:', error);
+        setProcesos([]);
+      }
+    };
+
+    cargarProcesos();
   }, [user?.id]);
 
   // Cargar noticias
   useEffect(() => {
-    fetch(NOTICIAS_URL)
-      .then(r => r.json())
-      .then(d => setNoticias(Array.isArray(d) ? d.slice(0, 5) : []))
-      .catch(() => setNoticias([]));
-    
-    fetch(RSS_EXTRA_URL)
-      .then(r => r.json())
-      .then(d => setRssNoticias(Array.isArray(d) ? d.slice(0, 5) : []))
-      .catch(() => setRssNoticias([]));
+    const cargarNoticias = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+          body: {
+            endpoint: 'proxy_noticias_oposiciones.php',
+            method: 'GET',
+          },
+        });
+
+        if (error) throw error;
+        setNoticias(Array.isArray(data) ? data.slice(0, 5) : []);
+      } catch (error) {
+        console.error('Error al cargar noticias:', error);
+        setNoticias([]);
+      }
+    };
+
+    cargarNoticias();
+  }, []);
+
+  // Cargar RSS extra
+  useEffect(() => {
+    const cargarRss = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+          body: {
+            endpoint: 'noticias_oposiciones_multifuente.php',
+            method: 'GET',
+          },
+        });
+
+        if (error) throw error;
+        setRssNoticias(Array.isArray(data) ? data.slice(0, 3) : []);
+      } catch (error) {
+        console.error('Error al cargar RSS:', error);
+        setRssNoticias([]);
+      }
+    };
+
+    cargarRss();
   }, []);
 
   const renderMapaCCAA = () => {

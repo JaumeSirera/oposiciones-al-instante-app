@@ -72,7 +72,17 @@ const App: React.FC = () => {
                 <Route path="/donacion-publica" element={<DonacionPublica />} />
 
                 {/* Protegidas */}
+<<<<<<< HEAD
                 <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+=======
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <Layout />
+                    </ProtectedRoute>
+                  }
+                >
+>>>>>>> bf4b2663ef11e6fa1b6964ab563cae887b98c9c2
                   <Route path="/dashboard" element={<Index />} />
                   <Route path="/test" element={<TestPage mode="simulacion" />} />
                   <Route path="/simulacro" element={<TestPage mode="examen" />} />

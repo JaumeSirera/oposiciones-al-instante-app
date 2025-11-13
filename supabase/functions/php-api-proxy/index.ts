@@ -51,7 +51,7 @@ serve(async (req) => {
     const cleanEndpoint = endpointParts[0];
     const endpointParams = endpointParts[1] || '';
     
-    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'generar_preguntas.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_tests_realizados.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'generar_psicotecnicos.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php') {
+    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'generar_preguntas.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_tests_realizados.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'generar_psicotecnicos.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php') {
       // Direct API calls to specific endpoints
       const baseUrl = 'https://oposiciones-test.com/api/';
       
@@ -98,7 +98,11 @@ serve(async (req) => {
     console.log('Final body to send:', finalBody);
 
     // Forward the request to the PHP API
-    const requestMethod = bodyData?.method || req.method;
+    // For GET requests that come with method:"GET" in body, use actual GET
+    let requestMethod = req.method;
+    if (bodyData?.method === 'GET') {
+      requestMethod = 'GET';
+    }
     
     // Get Authorization header from incoming request
     const authHeader = req.headers.get('authorization') || '';

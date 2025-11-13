@@ -29,7 +29,11 @@ android {
 
         // Sube en cada envío a Play (que sea MAYOR al publicado)
         versionCode 68
+<<<<<<< HEAD
         versionName "13.11.25"
+=======
+        versionName "12.11.25"
+>>>>>>> bf4b2663ef11e6fa1b6964ab563cae887b98c9c2
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

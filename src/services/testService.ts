@@ -1,6 +1,6 @@
-const API_BASE_URL = 'https://oposiciones-test.com/api';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+import { supabase } from '@/lib/supabaseClient';
+
+const PROXY_FUNCTION = 'php-api-proxy';
 
 interface Proceso {
   id: number;
@@ -44,24 +44,20 @@ interface ProgresoResponse {
 
 class TestService {
   private async callAPI(endpoint: string, options: RequestInit = {}) {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}/${endpoint}`;
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        ...options.headers,
+    const token = localStorage.getItem('auth_token');
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+      body: {
+        endpoint,
+        method: options.method || 'GET',
+        ...(options.body ? JSON.parse(options.body as string) : {}),
       },
+      headers,
     });
 
-    if (!response.ok) {
-      throw new Error(`Error en la petición: ${response.status}`);
-    }
-
-    return response.json();
+    if (error) throw error;
+    return data;
   }
 
   async getProcesos(): Promise<Proceso[]> {
@@ -227,14 +223,10 @@ class TestService {
 
   async updateComentario(id: number, comentario: string, rol: string): Promise<{ success: boolean }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/comentarios.php`, {
+      return await this.callAPI('comentarios.php', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ id, comentario, rol }),
       });
-      return await response.json();
     } catch (error) {
       console.error('Error al actualizar comentario:', error);
       return { success: false };
@@ -260,19 +252,11 @@ class TestService {
     elegida: string;
   }): Promise<{ success: boolean; explicacion?: string; error?: string }> {
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/profesor-virtual`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify(data),
-        }
-      );
+      const { data: result, error } = await supabase.functions.invoke('profesor-virtual', {
+        body: data,
+      });
 
-      const result = await response.json();
+      if (error) throw error;
       return result;
     } catch (error) {
       console.error('Error al obtener explicación del profesor:', error);
