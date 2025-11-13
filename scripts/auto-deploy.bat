@@ -40,8 +40,32 @@ REM Pull antes de push
 echo Sincronizando con remoto...
 git pull origin %CURRENT_BRANCH%
 if %errorlevel% neq 0 (
-    echo [ERROR] Fallo al hacer pull. Resuelve los conflictos manualmente.
-    exit /b 1
+    echo.
+    echo [ADVERTENCIA] Detectados conflictos durante el pull
+    echo.
+    
+    REM Verificar si hay conflictos de merge
+    git diff --name-only --diff-filter=U > nul 2>&1
+    if %errorlevel% equ 0 (
+        echo Ejecutando resolucion automatica de conflictos...
+        echo.
+        call "%~dp0resolve-conflicts.bat"
+        
+        if %errorlevel% neq 0 (
+            echo.
+            echo [ERROR] No se pudieron resolver todos los conflictos automaticamente
+            echo Resuelve los conflictos restantes manualmente y ejecuta de nuevo
+            exit /b 1
+        )
+        
+        echo.
+        echo [OK] Conflictos resueltos, continuando con el despliegue...
+        echo.
+    ) else (
+        echo [ERROR] Fallo al hacer pull (no son conflictos de merge)
+        echo Revisa el error e intenta de nuevo
+        exit /b 1
+    )
 )
 
 REM Incrementar version localmente (opcional)
