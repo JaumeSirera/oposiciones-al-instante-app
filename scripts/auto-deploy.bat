@@ -36,6 +36,38 @@ if %errorlevel% equ 0 (
     )
 )
 
+REM Verificar si hay un merge sin terminar
+if exist ".git\MERGE_HEAD" (
+    echo.
+    echo [ADVERTENCIA] Hay un merge sin terminar
+    echo.
+    
+    REM Verificar si hay conflictos
+    git diff --name-only --diff-filter=U > nul 2>&1
+    if %errorlevel% equ 0 (
+        echo Hay conflictos sin resolver. Ejecutando resolucion automatica...
+        echo.
+        call "%~dp0resolve-conflicts.bat"
+        
+        if %errorlevel% neq 0 (
+            echo.
+            echo [ERROR] No se pudieron resolver todos los conflictos
+            echo Opciones:
+            echo   1. Resuelve manualmente: git status
+            echo   2. Aborta el merge: git merge --abort
+            exit /b 1
+        )
+    ) else (
+        echo No hay conflictos. Completando el merge...
+        git commit --no-edit
+        if %errorlevel% neq 0 (
+            echo [ERROR] No se pudo completar el merge
+            exit /b 1
+        )
+        echo [OK] Merge completado
+    )
+)
+
 REM Pull antes de push
 echo Sincronizando con remoto...
 git pull origin %CURRENT_BRANCH%
