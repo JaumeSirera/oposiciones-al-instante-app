@@ -6,12 +6,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-<<<<<<< HEAD
-=======
 // Check if we only need to update version
 const versionOnly = process.argv.includes('--version-only');
 
->>>>>>> bf4b2663ef11e6fa1b6964ab563cae887b98c9c2
 // Colores para la consola
 const colors = {
   reset: '\x1b[0m',
@@ -78,15 +75,12 @@ log(`✓ Versión actualizada:`, colors.green);
 log(`  versionCode: ${currentVersionCode} → ${newVersionCode}`, colors.yellow);
 log(`  versionName: "${newVersionName}"`, colors.yellow);
 
-<<<<<<< HEAD
-=======
 // If version-only flag, exit here
 if (versionOnly) {
   log('\n✓ Versión actualizada (solo versión)', colors.green);
   process.exit(0);
 }
 
->>>>>>> bf4b2663ef11e6fa1b6964ab563cae887b98c9c2
 // 2. Compilar web
 log('\n=== COMPILANDO WEB ===', colors.bright);
 if (!execCommand('npm run build', 'Compilación web')) {

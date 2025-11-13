@@ -56,7 +56,6 @@ const App: React.FC = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-
                 {/* Públicas */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
@@ -72,9 +71,6 @@ const App: React.FC = () => {
                 <Route path="/donacion-publica" element={<DonacionPublica />} />
 
                 {/* Protegidas */}
-<<<<<<< HEAD
-                <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-=======
                 <Route
                   element={
                     <ProtectedRoute>
@@ -82,7 +78,6 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 >
->>>>>>> bf4b2663ef11e6fa1b6964ab563cae887b98c9c2
                   <Route path="/dashboard" element={<Index />} />
                   <Route path="/test" element={<TestPage mode="simulacion" />} />
                   <Route path="/simulacro" element={<TestPage mode="examen" />} />
@@ -108,7 +103,6 @@ const App: React.FC = () => {
 
                 {/* Fallback global */}
                 <Route path="*" element={<NotFound />} />
-
               </Routes>
             </BrowserRouter>
           </HelmetProvider>
