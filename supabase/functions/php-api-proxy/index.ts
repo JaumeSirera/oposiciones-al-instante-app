@@ -81,8 +81,10 @@ serve(async (req) => {
       
       // Remove the 'endpoint', 'action', and 'method' fields from bodyData before sending to PHP API
       if (bodyData && typeof bodyData === 'object') {
-        const { endpoint: _, method: __, action: ___, ...cleanBody } = bodyData;
-        finalBody = Object.keys(cleanBody).length > 0 ? JSON.stringify(cleanBody) : null;
+        const { endpoint: _, method: __, action: ___, body: bodyContent, ...cleanBody } = bodyData;
+        // If there's a 'body' field, use its content directly
+        const finalData = bodyContent || cleanBody;
+        finalBody = Object.keys(finalData).length > 0 ? JSON.stringify(finalData) : null;
       } else {
         finalBody = bodyData ? JSON.stringify(bodyData) : null;
       }
