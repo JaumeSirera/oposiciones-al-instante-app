@@ -163,18 +163,22 @@ export default function CrearPsicotecnicos() {
         for (const tema of temasFinal) {
           try {
             const response = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/php-api-proxy?endpoint=generar_psicotecnicos.php`,
+              `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
               {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  id_proceso: procesoId,
-                  tema: tema,
-                  seccion: seccion,
-                  id_usuario: user.id,
-                  num_preguntas: preguntasPorCombinacion,
+                  endpoint: 'generar_psicotecnicos.php',
+                  method: 'POST',
+                  body: {
+                    id_proceso: procesoId,
+                    tema: tema,
+                    seccion: seccion,
+                    id_usuario: user.id,
+                    num_preguntas: preguntasPorCombinacion,
+                  }
                 }),
               }
             );
