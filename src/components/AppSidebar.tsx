@@ -58,8 +58,8 @@ const menuItems = [
   {
     group: "Herramientas IA",
     items: [
-      { title: "Generar Preguntas", url: "/crear-test", icon: Wand2, requiresSA: true },
-      { title: "Generar Psicotécnicos", url: "/crear-psicotecnicos", icon: Sparkles, requiresSA: true },
+      { title: "Generar Preguntas", url: "/crear-test", icon: Wand2 },
+      { title: "Generar Psicotécnicos", url: "/crear-psicotecnicos", icon: Sparkles },
       { title: "Crear Resumen", url: "/crear-resumen", icon: PlusCircle },
       { title: "Planes de Estudio", url: "/planes-estudio", icon: Calendar, notForUsuario: true },
       { title: "Planes Físicos", url: "/planes-fisicos", icon: Dumbbell, notForUsuario: true },
