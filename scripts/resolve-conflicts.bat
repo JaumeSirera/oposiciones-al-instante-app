@@ -33,73 +33,73 @@ for /f "tokens=*" %%f in ('git diff --name-only --diff-filter=U') do (
     set "FILE=%%f"
     set "RESOLVED=0"
     
-    REM Regla 1: build.gradle - SIEMPRE local (contiene versiones actualizadas)
-    echo !FILE! | findstr /i "build.gradle" > nul
+    REM Regla 1: build.gradle - SIEMPRE local
+    echo %%f | findstr /i "build.gradle" > nul
     if !errorlevel! equ 0 (
-        echo [LOCAL] !FILE! - Priorizando version local
-        git checkout --ours "!FILE!"
-        git add "!FILE!"
+        echo [LOCAL] %%f - Priorizando version local
+        git checkout --ours "%%f"
+        git add "%%f"
         set "RESOLVED=1"
     )
     
-    REM Regla 2: Archivos de codigo fuente (src/) - LOCAL
-    if !RESOLVED! equ 0 (
-        echo !FILE! | findstr /i "^src/" > nul
+    REM Regla 2: Archivos de codigo fuente - LOCAL
+    if "!RESOLVED!"=="0" (
+        echo %%f | findstr /i "^src/" > nul
         if !errorlevel! equ 0 (
-            echo [LOCAL] !FILE! - Priorizando version local
-            git checkout --ours "!FILE!"
-            git add "!FILE!"
+            echo [LOCAL] %%f - Priorizando version local
+            git checkout --ours "%%f"
+            git add "%%f"
             set "RESOLVED=1"
         )
     )
     
     REM Regla 3: Scripts - LOCAL
-    if !RESOLVED! equ 0 (
-        echo !FILE! | findstr /i "^scripts/" > nul
+    if "!RESOLVED!"=="0" (
+        echo %%f | findstr /i "^scripts/" > nul
         if !errorlevel! equ 0 (
-            echo [LOCAL] !FILE! - Priorizando version local
-            git checkout --ours "!FILE!"
-            git add "!FILE!"
+            echo [LOCAL] %%f - Priorizando version local
+            git checkout --ours "%%f"
+            git add "%%f"
             set "RESOLVED=1"
         )
     )
     
     REM Regla 4: index.html - LOCAL
-    if !RESOLVED! equ 0 (
-        echo !FILE! | findstr /i "index.html" > nul
+    if "!RESOLVED!"=="0" (
+        echo %%f | findstr /i "index.html" > nul
         if !errorlevel! equ 0 (
-            echo [LOCAL] !FILE! - Priorizando version local
-            git checkout --ours "!FILE!"
-            git add "!FILE!"
+            echo [LOCAL] %%f - Priorizando version local
+            git checkout --ours "%%f"
+            git add "%%f"
             set "RESOLVED=1"
         )
     )
     
     REM Regla 5: Archivos de configuracion - LOCAL
-    if !RESOLVED! equ 0 (
-        echo !FILE! | findstr /i ".config.ts .config.js" > nul
+    if "!RESOLVED!"=="0" (
+        echo %%f | findstr /i ".config.ts .config.js" > nul
         if !errorlevel! equ 0 (
-            echo [LOCAL] !FILE! - Priorizando version local
-            git checkout --ours "!FILE!"
-            git add "!FILE!"
+            echo [LOCAL] %%f - Priorizando version local
+            git checkout --ours "%%f"
+            git add "%%f"
             set "RESOLVED=1"
         )
     )
     
-    REM Regla 6: package.json, package-lock.json - REMOTO (evitar conflictos de dependencias)
-    if !RESOLVED! equ 0 (
-        echo !FILE! | findstr /i "package.json package-lock.json" > nul
+    REM Regla 6: package.json - REMOTO
+    if "!RESOLVED!"=="0" (
+        echo %%f | findstr /i "package.json package-lock.json" > nul
         if !errorlevel! equ 0 (
-            echo [REMOTO] !FILE! - Priorizando version remota
-            git checkout --theirs "!FILE!"
-            git add "!FILE!"
+            echo [REMOTO] %%f - Priorizando version remota
+            git checkout --theirs "%%f"
+            git add "%%f"
             set "RESOLVED=1"
         )
     )
     
-    REM Si no se aplico ninguna regla, marcar para revision manual
-    if !RESOLVED! equ 0 (
-        echo [MANUAL] !FILE! - Requiere revision manual
+    REM Si no se aplico regla, marcar para revision manual
+    if "!RESOLVED!"=="0" (
+        echo [MANUAL] %%f - Requiere revision manual
     )
 )
 
