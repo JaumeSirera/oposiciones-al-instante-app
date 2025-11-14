@@ -145,19 +145,23 @@ export default function CrearTest() {
       const procesoId = formData.proceso ? parseInt(formData.proceso) : 1;
       
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/php-api-proxy?endpoint=generar_preguntas.php`,
+        `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            id_proceso: procesoId,
-            seccion: seccionFinal,
-            tema: temaFinal,
-            id_usuario: user.id,
-            num_preguntas: formData.numPreguntas,
-            texto: ''
+            endpoint: 'generar_preguntas.php',
+            method: 'POST',
+            body: {
+              id_proceso: procesoId,
+              seccion: seccionFinal,
+              tema: temaFinal,
+              id_usuario: user.id,
+              num_preguntas: formData.numPreguntas,
+              texto: ''
+            }
           })
         }
       );
