@@ -127,7 +127,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
   const loadProcesos = async () => {
     try {
       setLoading(true);
-      const data = await testService.getProcesos();
+      const data = await testService.getProcesos(user?.id);
       setProcesos(data);
     } catch (error) {
       toast({
