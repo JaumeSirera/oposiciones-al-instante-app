@@ -1,139 +1,127 @@
-# Sistema de Roles para Generación de Preguntas
+# SOLUCIÓN AL ERROR 500 - Sistema de Roles para Procesos
 
-## 📋 Resumen
+## ⚠️ PROBLEMA ACTUAL
+El error 500 ocurre porque `procesos_usuario.php` necesita:
+1. Las columnas `id_usuario` y `es_publico` en la tabla `procesos`
+2. Validación de token JWT en lugar de consulta a tabla usuarios
 
-Este sistema implementa visibilidad basada en roles para las preguntas generadas:
+## 📋 SOLUCIÓN EN 2 PASOS
 
-- **SA (superadmin)**: Genera preguntas **públicas** (visibles para todos)
-- **admin**: Genera preguntas **privadas** (solo visibles para él mismo)
-- **user**: Solo puede ver preguntas públicas
+### PASO 1: Ejecutar SQL en MySQL
 
-## 📁 Archivos Modificados
+Ejecuta este SQL en tu base de datos (ver archivo `ALTER_TABLE_PROCESOS.sql`):
 
-### 1. `generar_preguntas.php`
-Generador de preguntas tipo test con sistema de roles implementado.
+```sql
+ALTER TABLE procesos 
+ADD COLUMN id_usuario INT(11) UNSIGNED NULL AFTER descripcion,
+ADD COLUMN es_publico TINYINT(1) DEFAULT 0 AFTER id_usuario;
+
+CREATE INDEX idx_procesos_usuario ON procesos(id_usuario);
+CREATE INDEX idx_procesos_publico ON procesos(es_publico);
+```
+
+### PASO 2: Subir archivos PHP actualizados
+
+Sube estos 2 archivos a `https://oposiciones-test.com/api/`:
+
+1. **procesos.php** - Gestión completa de procesos con roles
+2. **procesos_usuario.php** - **CRÍTICO**: Este archivo ahora usa JWT en vez de consultar la tabla usuarios
+
+## 🔐 Lógica de Roles Implementada
+
+| Rol | Procesos que ve | Puede crear |
+|-----|----------------|-------------|
+| **SA** | Todos los activos | Procesos públicos |
+| **admin** | Públicos + propios | Procesos privados |
+| **user** | Solo públicos | No puede crear |
+
+## 📁 Archivos en esta carpeta
+
+### 1. `procesos.php`
+Gestión CRUD de procesos con autenticación JWT.
+
+**Funcionalidades:**
+- GET: Lista todos los procesos (con filtros opcionales)
+- POST: Crea proceso (requiere rol admin/SA)
+  - SA → crea públicos (`es_publico=1`)
+  - admin → crea privados (`es_publico=0`)
+- PUT/DELETE: Actualiza/elimina (solo admin/SA)
+
+### 2. `procesos_usuario.php` ⚠️ ARCHIVO CRÍTICO
+Filtra procesos según rol del usuario autenticado.
 
 **Cambios principales:**
-- Nueva función `obtener_rol_usuario()` - Consulta el rol desde tabla `usuarios.nivel`
-- Nueva función `es_publico_segun_rol()` - Determina visibilidad según rol
-- INSERT con campo `es_publico` (si la columna existe en la BD)
-- Compatibilidad con BDs sin columna `es_publico`
-- Logging completo del rol y visibilidad de cada generación
+- ✅ Usa `validarToken()` para obtener rol del JWT
+- ✅ No consulta tabla `usuarios` (evita el error 500)
+- ✅ Retorna array directo (no objeto `{success, procesos}`)
+- ✅ Aplica filtros según rol:
+  - SA: todos activos
+  - admin: públicos + propios
+  - user: solo públicos
 
-### 2. `generar_psicotecnicos.php`
-Generador de pruebas psicotécnicas con sistema de roles implementado.
+### 3. `ALTER_TABLE_PROCESOS.sql`
+Script SQL para agregar columnas necesarias.
 
-**Cambios principales:**
-- Misma lógica de roles que `generar_preguntas.php`
-- Soporte para columnas meta (tipo, habilidad, dificultad)
-- Múltiples combinaciones de INSERT según columnas disponibles
-- Logging detallado de rol y visibilidad
+## ✅ Verificación Post-Instalación
 
-## 🗄️ Cambios en Base de Datos
+Después de completar los 2 pasos:
 
-### SQL Requerido
+1. **Recarga la aplicación** (Ctrl+F5)
+2. **El error 500 debe desaparecer**
+3. **Verifica los procesos visibles** según tu rol:
+   - Si eres SA: verás todos los procesos activos
+   - Si eres admin: verás públicos + tus propios procesos
+   - Si eres user: solo verás procesos públicos
 
+## 🔍 Queries SQL Implementadas
+
+### Usuario SA
 ```sql
--- Agregar columna es_publico
-ALTER TABLE preguntas ADD COLUMN es_publico TINYINT DEFAULT 0;
-
--- Crear índice para optimizar consultas
-CREATE INDEX idx_preguntas_visibilidad ON preguntas(es_publico, id_usuario, id_proceso);
+SELECT id, descripcion, foto, fecha_inicio, fecha_fin, estado
+FROM procesos 
+WHERE estado = 'activo'
+ORDER BY descripcion ASC
 ```
 
-### Estructura de tabla `usuarios`
-Los archivos PHP asumen que existe:
+### Usuario admin
 ```sql
-CREATE TABLE usuarios (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  nombre VARCHAR(255),
-  nivel VARCHAR(50),  -- 'SA', 'admin', 'user'
-  ...
-);
+SELECT id, descripcion, foto, fecha_inicio, fecha_fin, estado
+FROM procesos 
+WHERE estado = 'activo' AND (es_publico = 1 OR id_usuario = ?)
+ORDER BY descripcion ASC
 ```
 
-## 🔐 Lógica de Visibilidad
-
-### Generación de Preguntas
-
-| Rol Usuario | Campo `es_publico` | Visible para |
-|-------------|-------------------|--------------|
-| SA | 1 | Todos los usuarios |
-| admin | 0 | Solo el creador (admin) |
-| user | N/A | No genera preguntas |
-
-### Consulta de Preguntas
-
-**Usuario SA:**
+### Usuario normal
 ```sql
-SELECT * FROM preguntas 
-WHERE id_proceso = ? AND seccion IN (?) AND tema IN (?);
--- Ve TODAS las preguntas
+SELECT id, descripcion, foto, fecha_inicio, fecha_fin, estado
+FROM procesos 
+WHERE estado = 'activo' AND es_publico = 1
+ORDER BY descripcion ASC
 ```
 
-**Usuario admin:**
-```sql
-SELECT * FROM preguntas 
-WHERE id_proceso = ? 
-  AND seccion IN (?) 
-  AND tema IN (?)
-  AND (es_publico = 1 OR id_usuario = ?);
--- Ve preguntas públicas + sus propias preguntas
+## 🚨 Diferencias Clave vs Versión Anterior
+
+### ❌ ANTES (causaba error 500)
+```php
+// Consultaba tabla usuarios
+$stmt = $conn->prepare("SELECT nivel FROM usuarios WHERE id = ?");
+$stmt->bind_param("i", $id_usuario);
+// ... podía fallar si la tabla no existe o tiene estructura diferente
 ```
 
-**Usuario normal:**
-```sql
-SELECT * FROM preguntas 
-WHERE id_proceso = ? 
-  AND seccion IN (?) 
-  AND tema IN (?)
-  AND es_publico = 1;
--- Solo ve preguntas públicas
+### ✅ AHORA (funciona correctamente)
+```php
+// Usa el token JWT que ya viene en el header
+$payload = validarToken($claveJWT);
+$nivel = $payload['nivel'] ?? 'user';
+// ... más robusto, usa datos ya autenticados
 ```
 
-## 📦 Instalación
+## 📝 Notas Adicionales
 
-### Paso 1: Backup
-```bash
-# Respalda tus archivos actuales
-cp generar_preguntas.php generar_preguntas.php.backup
-cp generar_psicotecnicos.php generar_psicotecnicos.php.backup
-```
-
-### Paso 2: Subir archivos al servidor PHP
-Copia los archivos de esta carpeta a tu servidor PHP:
-- `generar_preguntas.php` → `/api/generar_preguntas.php`
-- `generar_psicotecnicos.php` → `/api/generar_psicotecnicos.php`
-
-### Paso 3: Ejecutar SQL
-Ejecuta el contenido de `INSTRUCCIONES_SQL.sql` en tu base de datos MySQL.
-
-### Paso 4: Verificar roles en usuarios
-```sql
--- Verificar que los usuarios tienen roles asignados
-SELECT id, nombre, nivel FROM usuarios;
-
--- Actualizar roles si es necesario
-UPDATE usuarios SET nivel = 'SA' WHERE id = 1;  -- Ejemplo
-UPDATE usuarios SET nivel = 'admin' WHERE id IN (2, 3);
-```
-
-## 🔍 Testing
-
-### Test 1: Generar pregunta como SA
-```bash
-curl -X POST https://tu-servidor/api/generar_preguntas.php \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id_usuario": 1,
-    "id_proceso": 100,
-    "seccion": "Tema1",
-    "tema": "Constitución",
-    "num_preguntas": 2
-  }'
-```
-
-**Respuesta esperada:**
+- El archivo `config.php` debe contener la variable `$claveJWT` con tu clave secreta
+- Los tokens JWT deben incluir los campos: `id`, `nivel`, `exp`
+- La columna `nivel` en usuarios debe ser: 'SA', 'admin', o 'user'
 ```json
 {
   "ok": true,
