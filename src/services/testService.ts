@@ -63,7 +63,7 @@ class TestService {
   async getProcesos(id_usuario?: number): Promise<Proceso[]> {
     try {
       const endpoint = id_usuario 
-        ? `procesos_por_rol.php?id_usuario=${id_usuario}`
+        ? `procesos_usuario.php?id_usuario=${id_usuario}`
         : 'procesos.php';
       const data = await this.callAPI(endpoint);
       return Array.isArray(data) ? data : [];
