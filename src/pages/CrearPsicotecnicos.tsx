@@ -161,12 +161,10 @@ export default function CrearPsicotecnicos() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              endpoint: 'crear_proceso.php',
+              endpoint: 'procesos.php',
               method: 'POST',
-              body: {
-                descripcion: formData.procesoPersonalizado,
-                id_usuario: user.id
-              }
+              descripcion: formData.procesoPersonalizado,
+              id_usuario: user.id
             })
           }
         );
