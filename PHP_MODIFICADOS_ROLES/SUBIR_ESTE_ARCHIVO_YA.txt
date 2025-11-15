@@ -1,0 +1,27 @@
+⚠️⚠️⚠️ ATENCIÓN - ACCIÓN REQUERIDA ⚠️⚠️⚠️
+
+DEBES SUBIR EL ARCHIVO procesos_usuario.php AL SERVIDOR YA
+
+El error 500 que estás viendo ocurre porque:
+1. La aplicación está intentando llamar a procesos_usuario.php
+2. El archivo actual en tu servidor NO tiene el código actualizado
+3. Está fallando al intentar obtener los procesos
+
+PASOS INMEDIATOS:
+
+1. Ve a: https://oposiciones-test.com/api/
+2. Busca el archivo: procesos_usuario.php
+3. REEMPLÁZALO con el archivo de esta carpeta: procesos_usuario.php
+
+OPCIONAL (pero recomendado):
+- También sube procesos.php para tener la funcionalidad completa
+- Ejecuta ALTER_TABLE_PROCESOS.sql para agregar las columnas
+
+NOTA IMPORTANTE:
+La nueva versión de procesos_usuario.php:
+✅ Funciona CON o SIN las nuevas columnas
+✅ Detecta automáticamente si las columnas existen
+✅ Si NO existen, devuelve todos los procesos activos
+✅ Si SÍ existen, aplica filtros por rol
+
+Hasta que subas este archivo, la aplicación seguirá dando error 500.
