@@ -120,6 +120,33 @@ Deno.serve(async (req) => {
     console.log('PHP API response status:', response.status);
     console.log('PHP API response:', data);
 
+    // Si el servidor PHP devuelve un error, convertir a JSON válido
+    if (!response.ok) {
+      console.error('PHP API error:', response.status, data);
+      
+      // Intentar parsear la respuesta como JSON
+      let errorData;
+      try {
+        errorData = JSON.parse(data);
+      } catch {
+        // Si no es JSON válido, crear un objeto de error
+        errorData = {
+          success: false,
+          error: 'Error del servidor',
+          details: data.substring(0, 200), // Primeros 200 caracteres del error
+          status: response.status
+        };
+      }
+      
+      return new Response(JSON.stringify(errorData), {
+        status: 200, // Devolver 200 para que el cliente pueda procesar el error
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
     return new Response(data, {
       status: response.status,
       headers: {
