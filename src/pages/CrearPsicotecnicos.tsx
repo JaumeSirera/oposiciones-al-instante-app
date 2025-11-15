@@ -45,7 +45,7 @@ export default function CrearPsicotecnicos() {
     const loadProcesos = async () => {
       setLoadingProcesos(true);
       try {
-        const data = await testService.getProcesos();
+        const data = await testService.getProcesos(user?.id);
         setProcesos(data);
       } catch (error) {
         console.error('Error al cargar procesos:', error);
@@ -54,7 +54,7 @@ export default function CrearPsicotecnicos() {
       }
     };
     loadProcesos();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const loadSecciones = async () => {
@@ -149,7 +149,40 @@ export default function CrearPsicotecnicos() {
 
     setLoading(true);
     try {
-      const procesoId = formData.proceso ? parseInt(formData.proceso) : 1;
+      let procesoId = formData.proceso ? parseInt(formData.proceso) : null;
+      
+      // Si es proceso personalizado, primero crear el proceso
+      if (useCustomProceso && formData.procesoPersonalizado) {
+        const crearProcesoResponse = await fetch(
+          `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              endpoint: 'crear_proceso.php',
+              method: 'POST',
+              body: {
+                descripcion: formData.procesoPersonalizado,
+                id_usuario: user.id
+              }
+            })
+          }
+        );
+
+        const crearProcesoData = await crearProcesoResponse.json();
+        
+        if (!crearProcesoData.ok) {
+          throw new Error(crearProcesoData.error || 'No se pudo crear el proceso');
+        }
+        
+        procesoId = crearProcesoData.id_proceso;
+      }
+
+      if (!procesoId) {
+        throw new Error('No se pudo determinar el ID del proceso');
+      }
       
       // Calcular total de combinaciones
       const totalCombinaciones = seccionesFinal.length * temasFinal.length;

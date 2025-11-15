@@ -65,7 +65,7 @@ export default function CrearPlanEstudio() {
 
   const cargarProcesos = async () => {
     try {
-      const data = await testService.getProcesos();
+      const data = await testService.getProcesos(user?.id);
       setProcesos(data);
     } catch (error) {
       toast.error("Error al cargar procesos");

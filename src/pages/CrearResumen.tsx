@@ -50,7 +50,7 @@ export default function CrearResumen() {
     const loadProcesos = async () => {
       setLoadingProcesos(true);
       try {
-        const data = await testService.getProcesos();
+        const data = await testService.getProcesos(user?.id);
         setProcesos(data);
       } catch (error) {
         console.error('Error al cargar procesos:', error);
@@ -59,7 +59,7 @@ export default function CrearResumen() {
       }
     };
     loadProcesos();
-  }, []);
+  }, [user]);
 
   // Cargar secciones cuando se selecciona un proceso
   useEffect(() => {
