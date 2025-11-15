@@ -37,7 +37,7 @@ function google_key_or_fail(): string {
  * Obtiene el rol del usuario desde la BD
  */
 function obtener_rol_usuario($conn, $id_usuario): string {
-  $stmt = $conn->prepare("SELECT nivel FROM usuarios WHERE id = ?");
+  $stmt = $conn->prepare("SELECT nivel FROM accounts WHERE id = ?");
   if (!$stmt) {
     log_debug_preg("Error preparando consulta rol: ".$conn->error);
     return 'user';
