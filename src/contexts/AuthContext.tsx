@@ -27,22 +27,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Verificar si hay una sesión activa al cargar
     const checkAuth = async () => {
-      if (authService.isAuthenticated()) {
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
-        } else {
-          // Token válido pero no hay datos del usuario, intentar refrescar
-          const result = await authService.refreshToken();
-          if (result.success) {
-            const refreshedUser = authService.getCurrentUser();
-            setUser(refreshedUser);
+      try {
+        if (authService.isAuthenticated()) {
+          const currentUser = authService.getCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
           } else {
-            authService.logout();
+            // Token válido pero no hay datos del usuario, intentar refrescar
+            const result = await authService.refreshToken();
+            if (result.success) {
+              const refreshedUser = authService.getCurrentUser();
+              setUser(refreshedUser);
+            } else {
+              authService.logout();
+            }
           }
         }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        authService.logout();
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     checkAuth();
