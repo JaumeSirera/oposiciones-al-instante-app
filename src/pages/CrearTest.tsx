@@ -41,23 +41,32 @@ export default function CrearTest() {
 
   useEffect(() => {
     const loadProcesos = async () => {
+      if (!user?.id) return;
+      
       setLoadingProcesos(true);
       try {
-        const data = await testService.getProcesos(user?.id);
-        setProcesos(data);
+        const data = await testService.getProcesos(user.id);
+        setProcesos(data || []);
       } catch (error) {
         console.error('Error al cargar procesos:', error);
+        toast({
+          variant: "destructive",
+          title: "Error al cargar procesos",
+          description: "No se pudieron cargar los procesos disponibles. Intenta recargar la página.",
+        });
+        setProcesos([]);
       } finally {
         setLoadingProcesos(false);
       }
     };
     loadProcesos();
-  }, [user]);
+  }, [user, toast]);
 
   useEffect(() => {
     const loadSecciones = async () => {
       if (!formData.proceso || useCustomProceso) {
         setSecciones([]);
+        setSeccionesSeleccionadas([]);
         return;
       }
       
@@ -65,21 +74,27 @@ export default function CrearTest() {
       try {
         const procesoId = parseInt(formData.proceso);
         const data = await testService.getSeccionesYTemas(procesoId);
-        setSecciones(data.secciones || []);
+        setSecciones(data?.secciones || []);
       } catch (error) {
         console.error('Error al cargar secciones:', error);
         setSecciones([]);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudieron cargar las secciones del proceso seleccionado.",
+        });
       } finally {
         setLoadingSecciones(false);
       }
     };
     loadSecciones();
-  }, [formData.proceso, useCustomProceso]);
+  }, [formData.proceso, useCustomProceso, toast]);
 
   useEffect(() => {
     const loadTemas = async () => {
       if (!formData.proceso || seccionesSeleccionadas.length === 0 || useCustomProceso || useCustomSeccion) {
         setTemas([]);
+        setTemasSeleccionados([]);
         return;
       }
       
@@ -91,12 +106,17 @@ export default function CrearTest() {
       } catch (error) {
         console.error('Error al cargar temas:', error);
         setTemas([]);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudieron cargar los temas de la sección seleccionada.",
+        });
       } finally {
         setLoadingTemas(false);
       }
     };
     loadTemas();
-  }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion]);
+  }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

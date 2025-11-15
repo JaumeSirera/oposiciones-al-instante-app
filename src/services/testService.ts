@@ -47,17 +47,31 @@ class TestService {
     const token = localStorage.getItem('auth_token');
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
-      body: {
-        endpoint,
-        method: options.method || 'GET',
-        ...(options.body ? JSON.parse(options.body as string) : {}),
-      },
-      headers,
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+        body: {
+          endpoint,
+          method: options.method || 'GET',
+          ...(options.body ? JSON.parse(options.body as string) : {}),
+        },
+        headers,
+      });
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Error de conexión con el servidor');
+      }
+
+      // Si la respuesta es un string que parece un error HTML, lanzar error
+      if (typeof data === 'string' && data.includes('<!DOCTYPE')) {
+        throw new Error('Error del servidor. Por favor, verifica que el endpoint PHP esté funcionando correctamente.');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in callAPI:', error);
+      throw error;
+    }
   }
 
   async getProcesos(id_usuario?: number): Promise<Proceso[]> {
@@ -66,10 +80,20 @@ class TestService {
         ? `procesos_usuario.php?id_usuario=${id_usuario}`
         : 'procesos.php';
       const data = await this.callAPI(endpoint);
-      return Array.isArray(data) ? data : [];
+      
+      // Asegurar que siempre devolvemos un array
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      
+      // Si data tiene una propiedad que es un array, devolverla
+      if (data.procesos && Array.isArray(data.procesos)) return data.procesos;
+      if (data.data && Array.isArray(data.data)) return data.data;
+      
+      console.warn('Formato inesperado de respuesta:', data);
+      return [];
     } catch (error) {
       console.error('Error al obtener procesos:', error);
-      throw error;
+      return []; // Devolver array vacío en lugar de lanzar error
     }
   }
 
