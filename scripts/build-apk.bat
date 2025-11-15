@@ -2,13 +2,22 @@
 REM Script para compilar Android APK en Windows
 
 echo ====================================
-echo Configurando JAVA_HOME
+echo Configurando JAVA_HOME y ANDROID_HOME
 echo ====================================
 
 set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
-set "PATH=%JAVA_HOME%\bin;%PATH%"
+set "ANDROID_HOME=%LOCALAPPDATA%\Android\Sdk"
+set "PATH=%JAVA_HOME%\bin;%ANDROID_HOME%\platform-tools;%PATH%"
 
 echo JAVA_HOME: %JAVA_HOME%
+echo ANDROID_HOME: %ANDROID_HOME%
+echo.
+
+echo ====================================
+echo Creando local.properties
+echo ====================================
+echo sdk.dir=%ANDROID_HOME:\=/% > android\local.properties
+echo Archivo local.properties creado
 echo.
 
 echo ====================================
