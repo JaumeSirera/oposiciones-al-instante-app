@@ -59,13 +59,13 @@ if ($method === 'GET') {
         // Obtener id_usuario del query string para filtrar por rol
         $id_usuario = isset($_GET['id_usuario']) ? intval($_GET['id_usuario']) : null;
         
-        $query = "SELECT p.*, u.nivel FROM procesos p LEFT JOIN usuarios u ON p.id_usuario = u.id WHERE 1=1";
+        $query = "SELECT p.*, u.nivel FROM procesos p LEFT JOIN accounts u ON p.id_usuario = u.id WHERE 1=1";
         $params = [];
         $types = '';
         
         // Si hay id_usuario, aplicar filtro por rol
         if ($id_usuario) {
-            $stmtUser = $conn->prepare("SELECT nivel FROM usuarios WHERE id = ?");
+            $stmtUser = $conn->prepare("SELECT nivel FROM accounts WHERE id = ?");
             $stmtUser->bind_param("i", $id_usuario);
             $stmtUser->execute();
             $userResult = $stmtUser->get_result();
@@ -138,7 +138,7 @@ if ($method === 'POST') {
         $id_usuario = $data['id_usuario'];
         
         // Obtener el nivel del usuario
-        $stmt = $conn->prepare("SELECT nivel FROM usuarios WHERE id = ?");
+        $stmt = $conn->prepare("SELECT nivel FROM accounts WHERE id = ?");
         $stmt->bind_param("i", $id_usuario);
         $stmt->execute();
         $result = $stmt->get_result();
