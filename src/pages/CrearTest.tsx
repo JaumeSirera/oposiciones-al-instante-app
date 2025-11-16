@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, X, FileQuestion } from 'lucide-react';
+import { Loader2, ArrowLeft, X, FileQuestion, Upload, FileText } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { testService, type Proceso } from '@/services/testService';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CrearTest() {
   const navigate = useNavigate();
@@ -17,12 +19,15 @@ export default function CrearTest() {
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
+  const [extractingText, setExtractingText] = useState(false);
+  const [archivo, setArchivo] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     proceso: '',
     procesoPersonalizado: '',
     seccionPersonalizada: '',
     temaPersonalizado: '',
     numPreguntas: 50,
+    textoBase: '',
   });
   
   const [seccionesSeleccionadas, setSeccionesSeleccionadas] = useState<string[]>([]);
@@ -118,6 +123,43 @@ export default function CrearTest() {
     loadTemas();
   }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion, toast]);
 
+  const handleArchivoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setArchivo(file);
+    setExtractingText(true);
+
+    try {
+      const formDataFile = new FormData();
+      formDataFile.append('file', file);
+
+      const response = await supabase.functions.invoke('extraer-texto', {
+        body: formDataFile,
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      if (!response.data?.texto) throw new Error('No se pudo extraer el texto');
+
+      setFormData(prev => ({ ...prev, textoBase: response.data.texto }));
+
+      toast({
+        title: "Texto extraído",
+        description: "El texto del documento se ha extraído correctamente",
+      });
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Error al extraer el texto del documento",
+      });
+      setArchivo(null);
+    } finally {
+      setExtractingText(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -126,6 +168,15 @@ export default function CrearTest() {
         variant: "destructive",
         title: "Error",
         description: "Debes iniciar sesión"
+      });
+      return;
+    }
+
+    if (!formData.textoBase) {
+      toast({
+        variant: "destructive",
+        title: "Campo requerido",
+        description: "Debes proporcionar un texto o subir un documento"
       });
       return;
     }
@@ -211,7 +262,7 @@ export default function CrearTest() {
               tema: temaFinal,
               id_usuario: user.id,
               num_preguntas: formData.numPreguntas,
-              texto: ''
+              texto: formData.textoBase
             }
           })
         }
@@ -259,11 +310,135 @@ export default function CrearTest() {
               Generar Test
             </CardTitle>
             <CardDescription>
-              Selecciona el proceso, secciones y temas para generar preguntas de test
+              Genera preguntas de test a partir de un documento o texto
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Documento o Texto Base */}
+              <div className="space-y-4">
+                <div>
+                  <Label>Documento o Texto Base *</Label>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Sube un documento o escribe el texto del cual se generarán las preguntas
+                  </p>
+                  
+                  {!archivo && !formData.textoBase && (
+                    <div className="space-y-4">
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                        <Input
+                          id="archivo"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={handleArchivoChange}
+                          className="hidden"
+                          disabled={extractingText || loading}
+                        />
+                        <label
+                          htmlFor="archivo"
+                          className="cursor-pointer flex flex-col items-center gap-2"
+                        >
+                          <Upload className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            Subir documento
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            PDF, DOC, DOCX o TXT
+                          </span>
+                        </label>
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">
+                            O escribe el texto
+                          </span>
+                        </div>
+                      </div>
+
+                      <Textarea
+                        placeholder="Escribe o pega aquí el texto del cual generar las preguntas..."
+                        value={formData.textoBase}
+                        onChange={(e) => setFormData({ ...formData, textoBase: e.target.value })}
+                        className="min-h-[200px]"
+                        disabled={extractingText || loading}
+                      />
+                    </div>
+                  )}
+
+                  {archivo && (
+                    <div className="border rounded-lg p-4 bg-muted/50">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{archivo.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {(archivo.size / 1024).toFixed(2)} KB
+                            </p>
+                            {extractingText && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span className="text-xs text-muted-foreground">
+                                  Extrayendo texto...
+                                </span>
+                              </div>
+                            )}
+                            {formData.textoBase && !extractingText && (
+                              <p className="text-xs text-green-600 mt-2">
+                                ✓ Texto extraído ({formData.textoBase.length} caracteres)
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setArchivo(null);
+                            setFormData({ ...formData, textoBase: '' });
+                          }}
+                          disabled={extractingText || loading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!archivo && formData.textoBase && (
+                    <div className="border rounded-lg p-4 bg-muted/50">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">Texto proporcionado</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {formData.textoBase.length} caracteres
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFormData({ ...formData, textoBase: '' });
+                          }}
+                          disabled={loading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Proceso */}
               <div className="space-y-2">
                 <Label htmlFor="proceso">Proceso *</Label>
