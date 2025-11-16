@@ -114,15 +114,22 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
       });
       
       const resultText = await response.text();
-      console.log(`Chunk ${i + 1} response:`, resultText);
+      console.log(`Chunk ${i + 1} raw response:`, resultText);
       
       try {
         const result = JSON.parse(resultText);
-        if (result.ok) {
-          totalGenerated += result.generadas || 0;
+        console.log(`Chunk ${i + 1} parsed result:`, JSON.stringify(result));
+        
+        // Check for success - API might return 'ok' or just have 'generadas' field
+        const isSuccess = result.ok === true || result.generadas !== undefined;
+        const generatedCount = result.generadas || 0;
+        
+        if (isSuccess && generatedCount > 0) {
+          totalGenerated += generatedCount;
           allResults.push(result);
+          console.log(`Chunk ${i + 1} succeeded: ${generatedCount} questions, total: ${totalGenerated}`);
         } else {
-          console.error(`Chunk ${i + 1} failed:`, result.error);
+          console.error(`Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
         }
       } catch (e) {
         console.error(`Failed to parse chunk ${i + 1} response:`, e);
@@ -228,11 +235,18 @@ async function handleStreamingResponse(
             });
             
             const resultText = await response.text();
+            console.log(`Chunk ${i + 1} raw response:`, resultText);
             const result = JSON.parse(resultText);
+            console.log(`Chunk ${i + 1} parsed result:`, JSON.stringify(result));
             
-            if (result.ok) {
-              totalGenerated += result.generadas || 0;
+            // Check for success - API might return 'ok' or just have 'generadas' field
+            const isSuccess = result.ok === true || result.generadas !== undefined;
+            const generatedCount = result.generadas || 0;
+            
+            if (isSuccess && generatedCount > 0) {
+              totalGenerated += generatedCount;
               allResults.push(result);
+              console.log(`Chunk ${i + 1} succeeded: ${generatedCount} questions, total: ${totalGenerated}`);
               
               // Send chunk complete update
               controller.enqueue(
@@ -240,12 +254,12 @@ async function handleStreamingResponse(
                   type: 'chunk_complete',
                   current: i + 1,
                   total: chunks.length,
-                  generated: result.generadas || 0,
+                  generated: generatedCount,
                   totalGenerated: totalGenerated
                 })}\n\n`)
               );
             } else {
-              console.error(`Chunk ${i + 1} failed:`, result.error);
+              console.error(`Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
             }
           } catch (e) {
             console.error(`Failed to process chunk ${i + 1}:`, e);
