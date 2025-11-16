@@ -45,9 +45,11 @@ function splitTextIntoChunks(text: string, maxSize: number): string[] {
 // Function to handle generar_preguntas.php with automatic text chunking
 async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string, string>) {
   try {
-    const texto = bodyData.texto || '';
-    const numPreguntas = parseInt(bodyData.num_preguntas || '10');
-    const useStreaming = bodyData.use_streaming === true;
+    // Extract the actual body data (bodyData has { endpoint, method, body: {...} })
+    const actualBody = bodyData.body || bodyData;
+    const texto = actualBody.texto || '';
+    const numPreguntas = parseInt(actualBody.num_preguntas || '10');
+    const useStreaming = actualBody.use_streaming === true;
     
     console.log('Text length:', texto.length, 'Streaming:', useStreaming);
     
@@ -56,12 +58,12 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
       console.log('Text is short, making direct call');
       
       // Remove use_streaming from data sent to PHP
-      const { use_streaming, ...cleanBodyData } = bodyData;
+      const { use_streaming, ...cleanBody } = actualBody;
       
       const response = await fetch('https://oposiciones-test.com/api/generar_preguntas.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cleanBodyData),
+        body: JSON.stringify(cleanBody),
       });
       
       const result = await response.text();
@@ -77,7 +79,7 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
     
     // If streaming is requested, use SSE
     if (useStreaming) {
-      return handleStreamingResponse(bodyData, chunks, numPreguntas, corsHeaders);
+      return handleStreamingResponse(actualBody, chunks, numPreguntas, corsHeaders);
     }
     
     // Calculate questions per chunk
@@ -97,10 +99,10 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
       console.log(`Processing chunk ${i + 1}/${chunks.length}, generating ${questionsForThisChunk} questions`);
       
       // Remove use_streaming before sending to PHP
-      const { use_streaming, ...cleanBodyData } = bodyData;
+      const { use_streaming, ...cleanBody } = actualBody;
       
       const chunkData = {
-        ...cleanBodyData,
+        ...cleanBody,
         texto: chunk,
         num_preguntas: questionsForThisChunk.toString(),
       };
