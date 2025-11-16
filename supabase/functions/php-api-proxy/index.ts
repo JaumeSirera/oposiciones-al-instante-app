@@ -4,6 +4,154 @@ const corsHeaders = {
 };
 
 const PHP_API_URL = 'https://oposiciones-test.com/api/account.php';
+const MAX_CHUNK_SIZE = 6000; // Maximum characters per chunk
+
+// Function to split text into chunks
+function splitTextIntoChunks(text: string, maxSize: number): string[] {
+  if (text.length <= maxSize) {
+    return [text];
+  }
+  
+  const chunks: string[] = [];
+  let currentIndex = 0;
+  
+  while (currentIndex < text.length) {
+    let chunkEnd = currentIndex + maxSize;
+    
+    // If not the last chunk, try to find a paragraph break
+    if (chunkEnd < text.length) {
+      const searchStart = Math.max(currentIndex, chunkEnd - 500);
+      const segment = text.substring(searchStart, chunkEnd + 500);
+      const lastParagraph = segment.lastIndexOf('\n\n');
+      
+      if (lastParagraph !== -1) {
+        chunkEnd = searchStart + lastParagraph;
+      } else {
+        // If no paragraph break, try to find a sentence break
+        const lastPeriod = segment.lastIndexOf('. ');
+        if (lastPeriod !== -1) {
+          chunkEnd = searchStart + lastPeriod + 1;
+        }
+      }
+    }
+    
+    chunks.push(text.substring(currentIndex, chunkEnd).trim());
+    currentIndex = chunkEnd;
+  }
+  
+  return chunks;
+}
+
+// Function to handle generar_preguntas.php with automatic text chunking
+async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string, string>) {
+  try {
+    const texto = bodyData.texto || '';
+    const numPreguntas = parseInt(bodyData.num_preguntas || '10');
+    
+    console.log('Text length:', texto.length);
+    
+    // If text is short enough, make direct call
+    if (texto.length <= MAX_CHUNK_SIZE) {
+      console.log('Text is short, making direct call');
+      const response = await fetch('https://oposiciones-test.com/api/generar_preguntas.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData),
+      });
+      
+      const result = await response.text();
+      return new Response(result, {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Split text into chunks
+    console.log('Text is long, splitting into chunks');
+    const chunks = splitTextIntoChunks(texto, MAX_CHUNK_SIZE);
+    console.log(`Split into ${chunks.length} chunks`);
+    
+    // Calculate questions per chunk
+    const questionsPerChunk = Math.ceil(numPreguntas / chunks.length);
+    
+    // Process each chunk
+    const allResults = [];
+    let totalGenerated = 0;
+    
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const remainingQuestions = numPreguntas - totalGenerated;
+      const questionsForThisChunk = Math.min(questionsPerChunk, remainingQuestions);
+      
+      if (questionsForThisChunk <= 0) break;
+      
+      console.log(`Processing chunk ${i + 1}/${chunks.length}, generating ${questionsForThisChunk} questions`);
+      
+      const chunkData = {
+        ...bodyData,
+        texto: chunk,
+        num_preguntas: questionsForThisChunk.toString(),
+      };
+      
+      const response = await fetch('https://oposiciones-test.com/api/generar_preguntas.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(chunkData),
+      });
+      
+      const resultText = await response.text();
+      console.log(`Chunk ${i + 1} response:`, resultText);
+      
+      try {
+        const result = JSON.parse(resultText);
+        if (result.ok) {
+          totalGenerated += result.generadas || 0;
+          allResults.push(result);
+        } else {
+          console.error(`Chunk ${i + 1} failed:`, result.error);
+        }
+      } catch (e) {
+        console.error(`Failed to parse chunk ${i + 1} response:`, e);
+      }
+    }
+    
+    // Combine results
+    if (allResults.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          ok: false, 
+          error: 'No se pudieron generar preguntas de ningún fragmento' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const combinedResult = {
+      ok: true,
+      generadas: totalGenerated,
+      chunks_procesados: allResults.length,
+      total_chunks: chunks.length,
+      es_publico: allResults[0].es_publico,
+    };
+    
+    console.log('Final result:', combinedResult);
+    
+    return new Response(JSON.stringify(combinedResult), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error in handleGenerarPreguntas:', error);
+    return new Response(
+      JSON.stringify({ 
+        ok: false, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -49,7 +197,12 @@ Deno.serve(async (req) => {
     const cleanEndpoint = endpointParts[0];
     const endpointParams = endpointParts[1] || '';
     
-    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'generar_preguntas.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_tests_realizados.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'generar_psicotecnicos.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php') {
+    // Handle generar_preguntas.php with text chunking
+    if (cleanEndpoint === 'generar_preguntas.php') {
+      return await handleGenerarPreguntas(bodyData, corsHeaders);
+    }
+    
+    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_tests_realizados.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'generar_psicotecnicos.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php') {
       // Direct API calls to specific endpoints
       const baseUrl = 'https://oposiciones-test.com/api/';
       
