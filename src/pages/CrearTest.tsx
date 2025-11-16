@@ -21,6 +21,12 @@ export default function CrearTest() {
   const [loading, setLoading] = useState(false);
   const [extractingText, setExtractingText] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
+  const [progressInfo, setProgressInfo] = useState<{
+    current: number;
+    total: number;
+    message: string;
+    generated?: number;
+  } | null>(null);
   const [formData, setFormData] = useState({
     proceso: '',
     procesoPersonalizado: '',
@@ -212,6 +218,8 @@ export default function CrearTest() {
     }
 
     setLoading(true);
+    setProgressInfo(null);
+    
     try {
       let procesoId = formData.proceso ? parseInt(formData.proceso) : null;
       
@@ -246,39 +254,119 @@ export default function CrearTest() {
         throw new Error('No se pudo determinar el ID del proceso');
       }
       
-      const response = await fetch(
-        `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            endpoint: 'generar_preguntas.php',
+      // Check if text is long enough to use streaming
+      const shouldUseStreaming = formData.textoBase.length > 6000;
+      
+      if (shouldUseStreaming) {
+        // Use SSE for progress updates
+        const response = await fetch(
+          `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+          {
             method: 'POST',
-            body: {
-              id_proceso: procesoId,
-              seccion: seccionFinal,
-              tema: temaFinal,
-              id_usuario: user.id,
-              num_preguntas: formData.numPreguntas,
-              texto: formData.textoBase
-            }
-          })
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              endpoint: 'generar_preguntas.php',
+              method: 'POST',
+              body: {
+                id_proceso: procesoId,
+                seccion: seccionFinal,
+                tema: temaFinal,
+                id_usuario: user.id,
+                num_preguntas: formData.numPreguntas,
+                texto: formData.textoBase,
+                use_streaming: true
+              }
+            })
+          }
+        );
+
+        if (!response.ok || !response.body) {
+          throw new Error('Failed to start streaming');
         }
-      );
 
-      const data = await response.json();
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
 
-      if (data.ok) {
-        toast({
-          title: "¡Preguntas guardadas!",
-          description: `Se han generado y guardado ${data.preguntas} preguntas en la base de datos`
-        });
-        // Solo resetear el número de preguntas, mantener las selecciones
-        setFormData(prev => ({ ...prev, numPreguntas: 50 }));
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6);
+              try {
+                const event = JSON.parse(jsonStr);
+                
+                if (event.type === 'progress') {
+                  setProgressInfo({
+                    current: event.current,
+                    total: event.total,
+                    message: event.message
+                  });
+                } else if (event.type === 'chunk_complete') {
+                  setProgressInfo({
+                    current: event.current,
+                    total: event.total,
+                    message: `Completado fragmento ${event.current}/${event.total}`,
+                    generated: event.totalGenerated
+                  });
+                } else if (event.type === 'complete') {
+                  toast({
+                    title: "¡Preguntas guardadas!",
+                    description: `Se han generado y guardado ${event.generadas} preguntas en la base de datos (${event.chunks_procesados}/${event.total_chunks} fragmentos)`
+                  });
+                  setFormData(prev => ({ ...prev, numPreguntas: 50, textoBase: '' }));
+                } else if (event.type === 'error') {
+                  throw new Error(event.error);
+                }
+              } catch (e) {
+                console.error('Failed to parse SSE event:', e);
+              }
+            }
+          }
+        }
       } else {
-        throw new Error(data.error || 'No se pudieron guardar las preguntas');
+        // Direct call for short texts
+        const response = await fetch(
+          `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              endpoint: 'generar_preguntas.php',
+              method: 'POST',
+              body: {
+                id_proceso: procesoId,
+                seccion: seccionFinal,
+                tema: temaFinal,
+                id_usuario: user.id,
+                num_preguntas: formData.numPreguntas,
+                texto: formData.textoBase
+              }
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.ok) {
+          toast({
+            title: "¡Preguntas guardadas!",
+            description: `Se han generado y guardado ${data.generadas || data.preguntas} preguntas en la base de datos`
+          });
+          setFormData(prev => ({ ...prev, numPreguntas: 50, textoBase: '' }));
+        } else {
+          throw new Error(data.error || 'No se pudieron guardar las preguntas');
+        }
       }
     } catch (error: any) {
       toast({
@@ -288,6 +376,7 @@ export default function CrearTest() {
       });
     } finally {
       setLoading(false);
+      setProgressInfo(null);
     }
   };
 
@@ -704,6 +793,29 @@ export default function CrearTest() {
                   Entre 1 y 200 preguntas
                 </p>
               </div>
+
+              {/* Progress Indicator */}
+              {progressInfo && (
+                <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{progressInfo.message}</span>
+                    <span className="text-muted-foreground">
+                      {progressInfo.current}/{progressInfo.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
+                    <div 
+                      className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-in-out"
+                      style={{ width: `${(progressInfo.current / progressInfo.total) * 100}%` }}
+                    />
+                  </div>
+                  {progressInfo.generated !== undefined && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      {progressInfo.generated} preguntas generadas hasta ahora
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-4">
                 <Button
