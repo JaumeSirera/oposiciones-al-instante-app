@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, X, FileQuestion, Upload, FileText } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { testService, type Proceso } from '@/services/testService';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function CrearTest() {
   const navigate = useNavigate();
