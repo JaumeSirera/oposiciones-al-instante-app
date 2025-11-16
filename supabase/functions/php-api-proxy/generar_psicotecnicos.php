@@ -517,13 +517,17 @@ try {
 $conn->begin_transaction();
 try {
   $fragment_index = 0;
+  $total_fragmentos = count($texto_fragmentos);
   
   while ($pendientes > 0) {
     $lote = min($BATCH_MAX, $pendientes);
     
     // Alternar entre fragmentos para mejor diversidad
-    $texto_actual = $texto_fragmentos[$fragment_index % count($texto_fragmentos)];
+    $fragmento_actual = ($fragment_index % $total_fragmentos) + 1;
+    $texto_actual = $texto_fragmentos[$fragment_index % $total_fragmentos];
     $fragment_index++;
+    
+    log_psico("📝 Procesando fragmento $fragmento_actual/$total_fragmentos");
 
     $items = generar_lote_psico($GEMINI_KEY, $lote, $id_proceso, $seccion, $tema, $texto_actual);
 
@@ -608,7 +612,9 @@ try {
     'tema'=>$tema_db,
     'seccion'=>$seccion_db,
     'es_publico'=>$es_publico,
-    'rol'=>$rol_usuario
+    'rol'=>$rol_usuario,
+    'fragmentos_totales'=>$total_fragmentos,
+    'texto_dividido'=>$total_fragmentos > 1
   ], JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
   $conn->rollback();

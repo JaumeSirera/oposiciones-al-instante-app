@@ -28,6 +28,10 @@ export default function CrearPsicotecnicos() {
     total: number;
     message: string;
     generated?: number;
+    fragmentos?: {
+      total: number;
+      actual: number;
+    };
   } | null>(null);
   const [formData, setFormData] = useState({
     proceso: '',
@@ -291,7 +295,11 @@ export default function CrearPsicotecnicos() {
                   current: combinacionActual,
                   total: totalCombinaciones,
                   message: `Generadas ${totalGeneradas} preguntas`,
-                  generated: totalGeneradas
+                  generated: totalGeneradas,
+                  fragmentos: data.texto_dividido ? {
+                    total: data.fragmentos_totales || 1,
+                    actual: 1
+                  } : undefined
                 });
               } else {
                 errores++;
@@ -365,6 +373,19 @@ export default function CrearPsicotecnicos() {
 
               if (data.ok) {
                 totalGeneradas += data.preguntas;
+                
+                // Update progress for short texts too
+                const combinacionActual = (seccionesFinal.indexOf(seccion) * temasFinal.length) + temasFinal.indexOf(tema) + 1;
+                setProgressInfo({
+                  current: combinacionActual,
+                  total: totalCombinaciones,
+                  message: `Generando preguntas para ${seccion} - ${tema}`,
+                  generated: totalGeneradas,
+                  fragmentos: data.texto_dividido ? {
+                    total: data.fragmentos_totales || 1,
+                    actual: 1
+                  } : undefined
+                });
               } else {
                 errores++;
                 console.error(`Error en ${seccion} - ${tema}:`, data.error);
@@ -859,6 +880,14 @@ export default function CrearPsicotecnicos() {
                     <p className="text-xs text-muted-foreground text-center">
                       {progressInfo.generated} preguntas generadas hasta ahora
                     </p>
+                  )}
+                  {progressInfo.fragmentos && (
+                    <div className="flex items-center justify-between text-xs bg-primary/10 p-2 rounded">
+                      <span className="text-muted-foreground">Fragmentos de texto procesados:</span>
+                      <span className="font-medium text-primary">
+                        {progressInfo.fragmentos.actual}/{progressInfo.fragmentos.total}
+                      </span>
+                    </div>
                   )}
                   <Button
                     type="button"
