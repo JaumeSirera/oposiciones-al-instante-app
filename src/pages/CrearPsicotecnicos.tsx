@@ -327,6 +327,19 @@ export default function CrearPsicotecnicos() {
                       } else if (event.type === 'error') {
                         errores++;
                         console.error(`Error en ${seccion} - ${tema}:`, event.error);
+                        
+                        // Detener inmediatamente y mostrar el error
+                        setAbortController(null);
+                        setProgressInfo(null);
+                        setLoading(false);
+                        
+                        toast({
+                          title: "Error al generar psicotécnicos",
+                          description: event.error,
+                          variant: "destructive",
+                        });
+                        
+                        return; // Salir de la función
                       }
                     } catch (e) {
                       console.error('Failed to parse SSE event:', e);
