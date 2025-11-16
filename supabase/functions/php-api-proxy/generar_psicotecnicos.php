@@ -476,6 +476,7 @@ $tema          = trim($in['tema'] ?? '');
 $seccion       = trim($in['seccion'] ?? '');
 $id_usuario    = intval($in['id_usuario'] ?? 0);
 $num_preguntas = max(1, intval($in['num_preguntas'] ?? 10));
+$texto_input   = trim($in['texto'] ?? ''); // Get texto from input
 
 // límites
 if ($num_preguntas > 100) $num_preguntas = 100;
@@ -511,9 +512,15 @@ $seccion_db = $seccion;
 // ---------- GEMINI ----------
 $GEMINI_KEY = gemini_key_or_fail();
 
-// ---------- GENERAR TEXTO DE INSPIRACIÓN ----------
-log_psico("🤖 Generando texto de inspiración automático...");
-$texto = generar_texto_inspiracion($GEMINI_KEY, $seccion, $tema);
+// ---------- TEXTO DE CONTEXTO ----------
+// Use input texto if provided, otherwise generate inspirational text
+if (!empty($texto_input)) {
+  log_psico("📄 Usando texto proporcionado (".mb_strlen($texto_input, 'UTF-8')." caracteres)");
+  $texto = $texto_input;
+} else {
+  log_psico("🤖 Generando texto de inspiración automático...");
+  $texto = generar_texto_inspiracion($GEMINI_KEY, $seccion, $tema);
+}
 
 // ---------- DIVISIÓN AUTOMÁTICA DE TEXTO LARGO ----------
 const MAX_CHARS_PER_FRAGMENT = 6000;
