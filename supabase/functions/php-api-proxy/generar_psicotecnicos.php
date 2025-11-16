@@ -305,6 +305,8 @@ IMPORTANTE:
 - Incluye: series numéricas, cálculos, problemas de lógica
 - Devuelve SOLO un array JSON válido
 
+Formato: [{\"pregunta\":\"texto\",\"opciones\":{\"A\":\"opción A\",\"B\":\"opción B\",\"C\":\"opción C\",\"D\":\"opción D\"},\"correcta\":\"A\"}]";
+  }
 
   $payload = [
     "contents" => [
