@@ -191,9 +191,9 @@ if (!$id_proceso || !$tema || !$seccion || !$id_usuario) {
   echo json_encode(['ok'=>false,'error'=>'Faltan datos requeridos'], JSON_UNESCAPED_UNICODE);
   exit;
 }
-if ($texto !== '' && mb_strlen($texto) > 7000) {
+if ($texto !== '' && mb_strlen($texto) > 20000) {
   http_response_code(400);
-  echo json_encode(['ok'=>false,'error'=>'Texto demasiado largo'], JSON_UNESCAPED_UNICODE);
+  echo json_encode(['ok'=>false,'error'=>'Texto demasiado largo (máximo 20000 caracteres)'], JSON_UNESCAPED_UNICODE);
   exit;
 }
 if ($num_preguntas < 1) $num_preguntas = 1;
