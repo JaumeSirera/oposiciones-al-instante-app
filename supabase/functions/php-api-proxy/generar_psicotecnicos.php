@@ -1,5 +1,5 @@
 <?php
-// /api/generar_psicotecnicos.php - Versión con Google Gemini
+// /api/generar_psicotecnicos.php - Versión con Google Gemini y visibilidad por roles
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -10,8 +10,8 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require 'db.php';            // $conn (mysqli)
-require_once 'config.php';   // define GOOGLE_API_KEY aquí
+require 'db.php';
+require_once 'config.php';
 
 // ---------- LOGS ----------
 function log_psico($msg){
@@ -28,6 +28,40 @@ function gemini_key_or_fail(): string {
   if (empty($k) && defined('GOOGLE_API_KEY')) $k = GOOGLE_API_KEY;
   if (!$k) bad('Falta GOOGLE_API_KEY (entorno o config.php)', 500);
   return $k;
+}
+
+/**
+ * Obtiene el rol del usuario desde la BD
+ */
+function obtener_rol_usuario_psico($conn, $id_usuario): string {
+  $stmt = $conn->prepare("SELECT nivel FROM accounts WHERE id = ?");
+  if (!$stmt) {
+    log_psico("Error preparando consulta rol: ".$conn->error);
+    return 'user';
+  }
+  $stmt->bind_param("i", $id_usuario);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $row = $result->fetch_assoc();
+  $stmt->close();
+  
+  $rol = isset($row['nivel']) ? strtolower(trim($row['nivel'])) : 'user';
+  log_psico("Usuario $id_usuario tiene rol: $rol");
+  return $rol;
+}
+
+/**
+ * Determina si las preguntas deben ser públicas según el rol
+ */
+function es_publico_segun_rol_psico(string $rol): int {
+  // SA genera preguntas públicas (visibles para todos)
+  if ($rol === 'sa') return 1;
+  
+  // admin genera preguntas privadas (solo visibles para él)
+  if ($rol === 'admin') return 0;
+  
+  // Por defecto, privado
+  return 0;
 }
 
 /** Quita fences ``` (incl. ```json) y devuelve el primer array JSON válido si existe */
@@ -338,7 +372,6 @@ USR;
 
   $j = json_decode($res, true);
   
-  // Log completo de la respuesta para debug
   log_gemini_raw_psico([
     'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
     'model'=>'gemini-2.0-flash-exp','batch'=>$n,
@@ -382,6 +415,22 @@ $num_preguntas = max(1, intval($in['num_preguntas'] ?? 10));
 if ($num_preguntas > 100) $num_preguntas = 100;
 if (!$id_proceso || !$tema || !$seccion || !$id_usuario) bad('Faltan id_proceso, tema, seccion o id_usuario');
 
+// ---------- OBTENER ROL Y DETERMINAR VISIBILIDAD ----------
+$rol_usuario = obtener_rol_usuario_psico($conn, $id_usuario);
+$es_publico = es_publico_segun_rol_psico($rol_usuario);
+
+log_psico("Usuario $id_usuario (rol: $rol_usuario) generará preguntas psico ".($es_publico ? "PÚBLICAS" : "PRIVADAS"));
+
+// ---------- VERIFICAR SI EXISTE COLUMNA es_publico ----------
+$tiene_columna_publico = false;
+$check_col = $conn->query("SHOW COLUMNS FROM preguntas LIKE 'es_publico'");
+if ($check_col && $check_col->num_rows > 0) {
+  $tiene_columna_publico = true;
+  log_psico("✓ Columna 'es_publico' existe en tabla preguntas");
+} else {
+  log_psico("⚠️ Columna 'es_publico' NO existe. Debes ejecutar: ALTER TABLE preguntas ADD COLUMN es_publico TINYINT DEFAULT 0");
+}
+
 // ---------- PREFIJO EXACTO (siempre en tema) ----------
 const PISCO_PREFERRED_PREFIX = 'PISCO - ';
 const PISCO_ALIAS_PREFIX     = 'PSICO - ';
@@ -390,8 +439,8 @@ function ensure_psico_prefijo(string $label): string {
   if (stripos($label, PISCO_ALIAS_PREFIX) === 0) return $label;
   return PISCO_PREFERRED_PREFIX . $label;
 }
-$tema_db    = ensure_psico_prefijo($tema);  // Siempre prefijamos el tema
-$seccion_db = $seccion;  // La sección se mantiene sin prefijo
+$tema_db    = ensure_psico_prefijo($tema);
+$seccion_db = $seccion;
 
 // ---------- GEMINI ----------
 $GEMINI_KEY = gemini_key_or_fail();
@@ -425,7 +474,7 @@ $map         = ['A'=>1,'B'=>2,'C'=>3,'D'=>4];
 // log BD
 try {
   $db_name = $conn->query("SELECT DATABASE()")->fetch_row()[0];
-  log_psico("BD:$db_name | proc=$id_proceso tema_ctx='$tema' secc_ctx='$seccion' -> tema_db='$tema_db' secc_db='$seccion_db' | pedir=$num_preguntas | meta=".($hasMeta?'on':'off'));
+  log_psico("BD:$db_name | proc=$id_proceso tema_ctx='$tema' secc_ctx='$seccion' -> tema_db='$tema_db' secc_db='$seccion_db' | pedir=$num_preguntas | meta=".($hasMeta?'on':'off')." | rol=$rol_usuario publico=$es_publico");
 } catch (Throwable $e) {
   log_psico("DB name error: ".$e->getMessage());
 }
@@ -435,7 +484,6 @@ try {
   while ($pendientes > 0) {
     $lote = min($BATCH_MAX, $pendientes);
 
-    // usamos el contexto sin prefijo para pedir a la IA
     $items = generar_lote_psico($GEMINI_KEY, $lote, $id_proceso, $seccion, $tema, $texto);
 
     foreach ($items as $it) {
@@ -450,8 +498,18 @@ try {
       $corr_txt = trim($ops[$corr] ?? '');
       if ($preg==='' || !is_array($ops) || count($ops)!==4 || $corr_txt==='') { log_psico("⚠️ Ítem inválido tras normalizar"); continue; }
 
-      if ($hasMeta) {
-        // Insert CON meta
+      // INSERT con meta Y es_publico
+      if ($hasMeta && $tiene_columna_publico) {
+        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, tipo, habilidad, dificultad, es_publico)
+                                VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)");
+        if (!$stmt) throw new Exception("Prepare preguntas(meta+publico): ".$conn->error);
+
+        $tipo = $norm['tipo'] ?? null;
+        $hab  = $norm['habilidad'] ?? null;
+        $dif  = $norm['dificultad'];
+        $stmt->bind_param("iissssssii", $id_usuario, $id_proceso, $tema_db, $seccion_db, $preg, $corr_txt, $tipo, $hab, $dif, $es_publico);
+      } elseif ($hasMeta && !$tiene_columna_publico) {
+        // Con meta pero sin es_publico
         $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, tipo, habilidad, dificultad)
                                 VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)");
         if (!$stmt) throw new Exception("Prepare preguntas(meta): ".$conn->error);
@@ -460,8 +518,14 @@ try {
         $hab  = $norm['habilidad'] ?? null;
         $dif  = $norm['dificultad'];
         $stmt->bind_param("iissssssi", $id_usuario, $id_proceso, $tema_db, $seccion_db, $preg, $corr_txt, $tipo, $hab, $dif);
+      } elseif (!$hasMeta && $tiene_columna_publico) {
+        // Sin meta pero con es_publico
+        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico)
+                                VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
+        if (!$stmt) throw new Exception("Prepare preguntas(publico): ".$conn->error);
+        $stmt->bind_param("iissssi", $id_usuario, $id_proceso, $tema_db, $seccion_db, $preg, $corr_txt, $es_publico);
       } else {
-        // Insert SIN meta
+        // Sin meta ni es_publico
         $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion)
                                 VALUES (?, ?, ?, ?, ?, ?, 0)");
         if (!$stmt) throw new Exception("Prepare preguntas: ".$conn->error);
@@ -496,8 +560,15 @@ try {
   }
 
   $conn->commit();
-  log_psico("✅ OK $total_ins insertadas | user=$id_usuario proc=$id_proceso tema='$tema_db' seccion='$seccion_db'");
-  echo json_encode(['ok'=>true,'preguntas'=>$total_ins,'tema'=>$tema_db,'seccion'=>$seccion_db], JSON_UNESCAPED_UNICODE);
+  log_psico("✅ OK $total_ins insertadas ".($es_publico ? "públicas" : "privadas")." | user=$id_usuario proc=$id_proceso tema='$tema_db' seccion='$seccion_db'");
+  echo json_encode([
+    'ok'=>true,
+    'preguntas'=>$total_ins,
+    'tema'=>$tema_db,
+    'seccion'=>$seccion_db,
+    'es_publico'=>$es_publico,
+    'rol'=>$rol_usuario
+  ], JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
   $conn->rollback();
   log_psico("❌ ROLLBACK: ".$e->getMessage());
