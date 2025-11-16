@@ -390,10 +390,14 @@ USR;
 
   $j = json_decode($res, true);
   
+  // Log raw response for debugging
+  log_psico("📋 Raw response preview: " . mb_substr($res, 0, 500));
+  
   // Check for API errors first
   if (isset($j['error'])) {
     $errorMsg = $j['error']['message'] ?? 'Error desconocido de Gemini';
     $errorCode = $j['error']['code'] ?? 'unknown';
+    log_psico("❌ Gemini API Error: [$errorCode] $errorMsg");
     log_gemini_raw_psico([
       'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
       'model'=>'gemini-1.5-flash','batch'=>$n,
@@ -402,6 +406,11 @@ USR;
     ]);
     throw new Exception("Error de Gemini API ($errorCode): $errorMsg");
   }
+  
+  // Log response structure
+  log_psico("📊 Response structure: candidates=" . (isset($j['candidates']) ? 'YES' : 'NO') . 
+    ", count=" . count($j['candidates'] ?? []) .
+    ", has_content=" . (isset($j['candidates'][0]['content']) ? 'YES' : 'NO'));
   
   log_gemini_raw_psico([
     'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
@@ -426,17 +435,27 @@ USR;
   $content = $j['candidates'][0]['content']['parts'][0]['text'] ?? '';
   $finishReason = $j['candidates'][0]['finishReason'] ?? '';
   
+  log_psico("📝 Content length: " . strlen($content) . ", Finish reason: $finishReason");
+  
   // Check for safety blocks or other issues
   if ($content === '') {
+    log_psico("⚠️ Empty content detected!");
+    
+    // Log full response for debugging empty responses
+    log_psico("Full response dump: " . json_encode($j, JSON_UNESCAPED_UNICODE));
+    
     if ($finishReason === 'SAFETY') {
       throw new Exception('Gemini bloqueó la respuesta por seguridad. Intenta con un texto diferente.');
     } elseif ($finishReason === 'MAX_TOKENS') {
       throw new Exception('Respuesta truncada. Reduciendo tamaño del lote...');
+    } elseif ($finishReason === 'RECITATION') {
+      throw new Exception('Contenido bloqueado por recitación. Intenta con un texto diferente.');
     } else {
       $debugInfo = json_encode([
         'finish_reason' => $finishReason,
         'has_candidates' => isset($j['candidates']),
-        'candidates_count' => count($j['candidates'] ?? [])
+        'candidates_count' => count($j['candidates'] ?? []),
+        'prompt_feedback' => $j['promptFeedback'] ?? null
       ]);
       throw new Exception("Respuesta vacía de Gemini. Debug: $debugInfo");
     }

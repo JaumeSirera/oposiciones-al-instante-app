@@ -57,6 +57,9 @@ async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<str
     if (texto.length <= MAX_CHUNK_SIZE) {
       console.log('[Psicotécnicos] Text is short, making direct call');
       
+      const googleApiKey = Deno.env.get('GOOGLE_API_KEY') || '';
+      console.log('[Psicotécnicos] API Key exists:', !!googleApiKey, 'Length:', googleApiKey.length);
+      
       // Remove use_streaming from data sent to PHP
       const { use_streaming, ...cleanBody } = actualBody;
       
@@ -64,12 +67,15 @@ async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<str
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'X-Google-API-Key': Deno.env.get('GOOGLE_API_KEY') || ''
+          'X-Google-API-Key': googleApiKey
         },
         body: JSON.stringify(cleanBody),
       });
       
       const result = await response.text();
+      console.log('[Psicotécnicos] Direct call response status:', response.status);
+      console.log('[Psicotécnicos] Direct call response preview:', result.substring(0, 200));
+      
       return new Response(result, {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -101,6 +107,9 @@ async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<str
       
       console.log(`[Psicotécnicos] Processing chunk ${i + 1}/${chunks.length}, generating ${questionsForThisChunk} questions`);
       
+      const googleApiKey = Deno.env.get('GOOGLE_API_KEY') || '';
+      console.log('[Psicotécnicos] Chunk API Key exists:', !!googleApiKey);
+      
       // Remove use_streaming before sending to PHP
       const { use_streaming, ...cleanBody } = actualBody;
       
@@ -114,7 +123,7 @@ async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<str
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'X-Google-API-Key': Deno.env.get('GOOGLE_API_KEY') || ''
+          'X-Google-API-Key': googleApiKey
         },
         body: JSON.stringify(chunkData),
       });
