@@ -252,8 +252,8 @@ PROMPT;
     ]
   ];
 
-  // Use stable model
-  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey");
+  // Use the same model as working generator
+  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey");
   curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
@@ -351,10 +351,9 @@ USR;
       ]
     ],
     "generationConfig" => [
-      "temperature" => 0.7,
+      "temperature" => 0.35,
       "maxOutputTokens" => 6000,
-      "topP" => 0.95,
-      "topK" => 40
+      "responseMimeType" => "application/json"
     ]
   ];
 
