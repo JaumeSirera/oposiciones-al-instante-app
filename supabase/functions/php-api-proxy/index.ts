@@ -62,7 +62,10 @@ async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<str
       
       const response = await fetch('https://oposiciones-test.com/api/generar_psicotecnicos.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Google-API-Key': Deno.env.get('GOOGLE_API_KEY') || ''
+        },
         body: JSON.stringify(cleanBody),
       });
       
@@ -109,16 +112,23 @@ async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<str
       
       const response = await fetch('https://oposiciones-test.com/api/generar_psicotecnicos.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Google-API-Key': Deno.env.get('GOOGLE_API_KEY') || ''
+        },
         body: JSON.stringify(chunkData),
       });
       
       const resultText = await response.text();
-      console.log(`[Psicotécnicos] Chunk ${i + 1} raw response:`, resultText);
       
       try {
         const result = JSON.parse(resultText);
-        console.log(`[Psicotécnicos] Chunk ${i + 1} parsed result:`, JSON.stringify(result));
+        console.log(`[Psicotécnicos] Chunk ${i + 1}/${chunks.length}:`, {
+          ok: result.ok,
+          preguntas: result.preguntas || 0,
+          error: result.error || null,
+          tiene_fragmentos: result.texto_dividido || false
+        });
         
         // Check for success - API might return 'ok' or just have 'preguntas' field
         const isSuccess = result.ok === true || result.preguntas !== undefined;
