@@ -21,6 +21,7 @@ export default function CrearTest() {
   const [loading, setLoading] = useState(false);
   const [extractingText, setExtractingText] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [progressInfo, setProgressInfo] = useState<{
     current: number;
     total: number;
@@ -258,6 +259,10 @@ export default function CrearTest() {
       const shouldUseStreaming = formData.textoBase.length > 6000;
       
       if (shouldUseStreaming) {
+        // Create abort controller for cancellation
+        const controller = new AbortController();
+        setAbortController(controller);
+        
         // Use SSE for progress updates
         const response = await fetch(
           `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
@@ -266,6 +271,7 @@ export default function CrearTest() {
             headers: {
               'Content-Type': 'application/json',
             },
+            signal: controller.signal,
             body: JSON.stringify({
               endpoint: 'generar_preguntas.php',
               method: 'POST',
@@ -318,12 +324,15 @@ export default function CrearTest() {
                     generated: event.totalGenerated
                   });
                 } else if (event.type === 'complete') {
+                  setAbortController(null);
                   toast({
                     title: "¡Preguntas guardadas!",
                     description: `Se han generado y guardado ${event.generadas} preguntas en la base de datos (${event.chunks_procesados}/${event.total_chunks} fragmentos)`
                   });
                   setFormData(prev => ({ ...prev, numPreguntas: 50, textoBase: '' }));
+                  setProgressInfo(null);
                 } else if (event.type === 'error') {
+                  setAbortController(null);
                   throw new Error(event.error);
                 }
               } catch (e) {
@@ -369,14 +378,39 @@ export default function CrearTest() {
         }
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudo generar el test'
-      });
+      console.error('Error al generar preguntas:', error);
+      
+      // Check if it was cancelled
+      if (error.name === 'AbortError') {
+        toast({
+          title: "Generación cancelada",
+          description: "El proceso ha sido cancelado por el usuario",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || 'No se pudo generar el test'
+        });
+      }
     } finally {
       setLoading(false);
+      setAbortController(null);
       setProgressInfo(null);
+    }
+  };
+
+  const handleCancelar = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setLoading(false);
+      setProgressInfo(null);
+      toast({
+        title: "Cancelado",
+        description: "La generación de preguntas ha sido cancelada"
+      });
     }
   };
 
@@ -814,6 +848,15 @@ export default function CrearTest() {
                       {progressInfo.generated} preguntas generadas hasta ahora
                     </p>
                   )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleCancelar}
+                    className="w-full mt-2"
+                  >
+                    Cancelar generación
+                  </Button>
                 </div>
               )}
 
