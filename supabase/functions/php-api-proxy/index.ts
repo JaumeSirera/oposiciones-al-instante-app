@@ -129,7 +129,22 @@ async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<str
           allResults.push(result);
           console.log(`[Psicotécnicos] Chunk ${i + 1} succeeded: ${generatedCount} questions, total: ${totalGenerated}`);
         } else {
-          console.error(`[Psicotécnicos] Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
+          const errorMsg = result.msg || result.error || 'Error desconocido';
+          console.error(`[Psicotécnicos] Chunk ${i + 1} failed:`, errorMsg, 'Full result:', result);
+          
+          // Si todos los chunks fallan por error de Gemini, devolver error específico
+          if (result.msg && result.msg.includes('Gemini')) {
+            return new Response(
+              JSON.stringify({ 
+                ok: false, 
+                error: `Error en el fragmento ${i + 1}: ${errorMsg}. Por favor, intenta con un texto diferente o más corto.` 
+              }),
+              { 
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              }
+            );
+          }
         }
       } catch (e) {
         console.error(`[Psicotécnicos] Failed to parse chunk ${i + 1} response:`, e);
@@ -259,7 +274,20 @@ async function handleStreamingResponsePsicotecnicos(
                 })}\n\n`)
               );
             } else {
-              console.error(`[Psicotécnicos] Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
+              const errorMsg = result.msg || result.error || 'Error desconocido';
+              console.error(`[Psicotécnicos] Chunk ${i + 1} failed:`, errorMsg, 'Full result:', result);
+              
+              // Si es un error de Gemini, enviar el error específico
+              if (result.msg && result.msg.includes('Gemini')) {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({
+                    type: 'error',
+                    error: `Error en el fragmento ${i + 1}: ${errorMsg}. Por favor, intenta con un texto diferente o más corto.`
+                  })}\n\n`)
+                );
+                controller.close();
+                return;
+              }
             }
           } catch (e) {
             console.error(`[Psicotécnicos] Failed to process chunk ${i + 1}:`, e);
@@ -398,7 +426,22 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
           allResults.push(result);
           console.log(`Chunk ${i + 1} succeeded: ${generatedCount} questions, total: ${totalGenerated}`);
         } else {
-          console.error(`Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
+          const errorMsg = result.msg || result.error || 'Error desconocido';
+          console.error(`Chunk ${i + 1} failed:`, errorMsg, 'Full result:', result);
+          
+          // Si todos los chunks fallan por error de Gemini, devolver error específico
+          if (result.msg && result.msg.includes('Gemini')) {
+            return new Response(
+              JSON.stringify({ 
+                ok: false, 
+                error: `Error en el fragmento ${i + 1}: ${errorMsg}. Por favor, intenta con un texto diferente o más corto.` 
+              }),
+              { 
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              }
+            );
+          }
         }
       } catch (e) {
         console.error(`Failed to parse chunk ${i + 1} response:`, e);
@@ -528,7 +571,20 @@ async function handleStreamingResponse(
                 })}\n\n`)
               );
             } else {
-              console.error(`Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
+              const errorMsg = result.msg || result.error || 'Error desconocido';
+              console.error(`Chunk ${i + 1} failed:`, errorMsg, 'Full result:', result);
+              
+              // Si es un error de Gemini, enviar el error específico
+              if (result.msg && result.msg.includes('Gemini')) {
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({
+                    type: 'error',
+                    error: `Error en el fragmento ${i + 1}: ${errorMsg}. Por favor, intenta con un texto diferente o más corto.`
+                  })}\n\n`)
+                );
+                controller.close();
+                return;
+              }
             }
           } catch (e) {
             console.error(`Failed to process chunk ${i + 1}:`, e);
