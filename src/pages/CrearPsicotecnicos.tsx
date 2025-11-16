@@ -264,15 +264,15 @@ export default function CrearPsicotecnicos() {
             try {
               // Use SSE for progress updates
               const response = await fetch(
-                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/generar-psicotecnicos`,
+                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
                 {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
                   },
                   signal: controller.signal,
                   body: JSON.stringify({
+                    endpoint: 'generar_psicotecnicos.php',
                     id_proceso: procesoId,
                     tema: tema,
                     seccion: seccion,
@@ -343,14 +343,14 @@ export default function CrearPsicotecnicos() {
           for (const tema of temasFinal) {
             try {
               const response = await fetch(
-                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/generar-psicotecnicos`,
+                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
                 {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
                   },
                   body: JSON.stringify({
+                    endpoint: 'generar_psicotecnicos.php',
                     id_proceso: procesoId,
                     tema: tema,
                     seccion: seccion,
