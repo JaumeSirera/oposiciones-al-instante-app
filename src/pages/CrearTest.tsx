@@ -323,7 +323,26 @@ export default function CrearTest() {
                     Sube un documento o escribe el texto del cual se generarán las preguntas
                   </p>
                   
-                  {!archivo && !formData.textoBase && (
+                  {extractingText && (
+                    <div className="border-2 border-primary rounded-lg p-8 bg-primary/5">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative">
+                          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                          <div className="absolute inset-0 animate-ping">
+                            <Loader2 className="h-12 w-12 text-primary/30" />
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="font-semibold text-lg mb-1">Extrayendo texto del documento</p>
+                          <p className="text-sm text-muted-foreground">
+                            Esto puede tardar unos segundos...
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!extractingText && !archivo && !formData.textoBase && (
                     <div className="space-y-4">
                       <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                         <Input
@@ -369,7 +388,7 @@ export default function CrearTest() {
                     </div>
                   )}
 
-                  {archivo && (
+                  {!extractingText && archivo && (
                     <div className="border rounded-lg p-4 bg-muted/50">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3 flex-1">
@@ -379,18 +398,13 @@ export default function CrearTest() {
                             <p className="text-xs text-muted-foreground mt-1">
                               {(archivo.size / 1024).toFixed(2)} KB
                             </p>
-                            {extractingText && (
+                            {formData.textoBase && (
                               <div className="flex items-center gap-2 mt-2">
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                                <span className="text-xs text-muted-foreground">
-                                  Extrayendo texto...
-                                </span>
+                                <div className="h-2 w-2 rounded-full bg-green-600 animate-pulse" />
+                                <p className="text-xs text-green-600 font-medium">
+                                  Texto extraído correctamente ({formData.textoBase.length} caracteres)
+                                </p>
                               </div>
-                            )}
-                            {formData.textoBase && !extractingText && (
-                              <p className="text-xs text-green-600 mt-2">
-                                ✓ Texto extraído ({formData.textoBase.length} caracteres)
-                              </p>
                             )}
                           </div>
                         </div>
