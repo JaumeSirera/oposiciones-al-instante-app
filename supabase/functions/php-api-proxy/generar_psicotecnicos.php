@@ -359,9 +359,9 @@ USR;
   ];
 
   $t0 = microtime(true);
-  // Use stable model instead of experimental
-  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey");
-  log_psico("🤖 Llamando a Gemini 1.5 Flash (estable)");
+  // Use the same model as generar_preguntas (works correctly)
+  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey");
+  log_psico("🤖 Llamando a Gemini 2.5 Flash");
   curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
@@ -379,7 +379,7 @@ USR;
   if ($res === false || $curlError) {
     log_gemini_raw_psico([
       'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-      'model'=>'gemini-1.5-flash','batch'=>$n,
+      'model'=>'gemini-2.5-flash','batch'=>$n,
       'summary'=>['has_texto'=>$texto!=='' ,'id_proceso'=>$id_proceso,'seccion'=>$seccion_ctx,'tema'=>$tema_ctx],
       'curl_error'=>$curlError
     ]);
@@ -400,7 +400,7 @@ USR;
     log_psico("❌ Gemini API Error: [$errorCode] $errorMsg");
     log_gemini_raw_psico([
       'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-      'model'=>'gemini-1.5-flash','batch'=>$n,
+      'model'=>'gemini-2.5-flash','batch'=>$n,
       'error'=>$errorMsg, 'error_code'=>$errorCode,
       'raw'=>$res
     ]);
@@ -414,7 +414,7 @@ USR;
   
   log_gemini_raw_psico([
     'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-    'model'=>'gemini-1.5-flash','batch'=>$n,
+    'model'=>'gemini-2.5-flash','batch'=>$n,
     'summary'=>['has_texto'=>$texto!=='' ,'id_proceso'=>$id_proceso,'seccion'=>$seccion_ctx,'tema'=>$tema_ctx],
     'response_structure'=>[
       'has_candidates'=>isset($j['candidates']),
