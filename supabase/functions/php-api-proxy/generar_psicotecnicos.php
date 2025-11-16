@@ -338,9 +338,10 @@ USR;
       ]
     ],
     "generationConfig" => [
-      "temperature" => 0.5,
-      "maxOutputTokens" => 4000,
-      "responseMimeType" => "application/json"
+      "temperature" => 0.7,
+      "maxOutputTokens" => 6000,
+      "topP" => 0.95,
+      "topK" => 40
     ]
   ];
 
@@ -372,6 +373,19 @@ USR;
 
   $j = json_decode($res, true);
   
+  // Check for API errors first
+  if (isset($j['error'])) {
+    $errorMsg = $j['error']['message'] ?? 'Error desconocido de Gemini';
+    $errorCode = $j['error']['code'] ?? 'unknown';
+    log_gemini_raw_psico([
+      'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
+      'model'=>'gemini-2.0-flash-exp','batch'=>$n,
+      'error'=>$errorMsg, 'error_code'=>$errorCode,
+      'raw'=>$res
+    ]);
+    throw new Exception("Error de Gemini API ($errorCode): $errorMsg");
+  }
+  
   log_gemini_raw_psico([
     'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
     'model'=>'gemini-2.0-flash-exp','batch'=>$n,
@@ -383,15 +397,29 @@ USR;
       'has_parts'=>isset($j['candidates'][0]['content']['parts']),
       'parts_count'=>count($j['candidates'][0]['content']['parts'] ?? []),
       'content_length'=>strlen($j['candidates'][0]['content']['parts'][0]['text'] ?? ''),
-      'content_preview'=>mb_substr($j['candidates'][0]['content']['parts'][0]['text'] ?? '', 0, 200)
+      'content_preview'=>mb_substr($j['candidates'][0]['content']['parts'][0]['text'] ?? '', 0, 200),
+      'finish_reason'=>$j['candidates'][0]['finishReason'] ?? 'unknown'
     ],
     'raw'=>$res
   ]);
 
   $content = $j['candidates'][0]['content']['parts'][0]['text'] ?? '';
+  $finishReason = $j['candidates'][0]['finishReason'] ?? '';
   
+  // Check for safety blocks or other issues
   if ($content === '') {
-    throw new Exception('Respuesta vacía de Gemini');
+    if ($finishReason === 'SAFETY') {
+      throw new Exception('Gemini bloqueó la respuesta por seguridad. Intenta con un texto diferente.');
+    } elseif ($finishReason === 'MAX_TOKENS') {
+      throw new Exception('Respuesta truncada. Reduciendo tamaño del lote...');
+    } else {
+      $debugInfo = json_encode([
+        'finish_reason' => $finishReason,
+        'has_candidates' => isset($j['candidates']),
+        'candidates_count' => count($j['candidates'] ?? [])
+      ]);
+      throw new Exception("Respuesta vacía de Gemini. Debug: $debugInfo");
+    }
   }
 
   $items = extract_json_array_psico($content);
@@ -518,6 +546,7 @@ $conn->begin_transaction();
 try {
   $fragment_index = 0;
   $total_fragmentos = count($texto_fragmentos);
+  $max_retries = 3;
   
   while ($pendientes > 0) {
     $lote = min($BATCH_MAX, $pendientes);
@@ -527,9 +556,37 @@ try {
     $texto_actual = $texto_fragmentos[$fragment_index % $total_fragmentos];
     $fragment_index++;
     
-    log_psico("📝 Procesando fragmento $fragmento_actual/$total_fragmentos");
+    log_psico("📝 Procesando fragmento $fragmento_actual/$total_fragmentos (pedido: $lote preguntas)");
 
-    $items = generar_lote_psico($GEMINI_KEY, $lote, $id_proceso, $seccion, $tema, $texto_actual);
+    // Retry logic con backoff exponencial
+    $items = null;
+    $last_error = null;
+    for ($retry = 0; $retry < $max_retries; $retry++) {
+      try {
+        if ($retry > 0) {
+          $wait_seconds = pow(2, $retry);
+          log_psico("⏳ Reintento $retry/$max_retries después de $wait_seconds segundos...");
+          sleep($wait_seconds);
+        }
+        
+        $items = generar_lote_psico($GEMINI_KEY, $lote, $id_proceso, $seccion, $tema, $texto_actual);
+        break; // Success, exit retry loop
+      } catch (Exception $e) {
+        $last_error = $e->getMessage();
+        log_psico("⚠️ Error en intento ".($retry+1).": ".$last_error);
+        
+        // Si es un error de MAX_TOKENS, reducir el lote
+        if (strpos($last_error, 'MAX_TOKENS') !== false && $lote > 3) {
+          $lote = max(3, (int)($lote / 2));
+          log_psico("📉 Reduciendo tamaño del lote a $lote preguntas");
+        }
+      }
+    }
+    
+    // Si después de todos los reintentos no tenemos items, lanzar error
+    if ($items === null) {
+      throw new Exception("Error en el fragmento $fragmento_actual: $last_error");
+    }
 
     foreach ($items as $it) {
       $norm = normalizar_item_psico($it);
