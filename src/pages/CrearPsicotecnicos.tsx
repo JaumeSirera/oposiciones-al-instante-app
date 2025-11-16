@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, X, Brain, Upload, FileText } from 'lucide-react';
 import { testService, type Proceso } from '@/services/testService';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function CrearPsicotecnicos() {
   const navigate = useNavigate();
