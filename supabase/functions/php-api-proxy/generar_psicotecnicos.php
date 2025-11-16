@@ -449,6 +449,41 @@ $GEMINI_KEY = gemini_key_or_fail();
 log_psico("🤖 Generando texto de inspiración automático...");
 $texto = generar_texto_inspiracion($GEMINI_KEY, $seccion, $tema);
 
+// ---------- DIVISIÓN AUTOMÁTICA DE TEXTO LARGO ----------
+const MAX_CHARS_PER_FRAGMENT = 6000;
+$texto_fragmentos = [];
+
+if (mb_strlen($texto, 'UTF-8') > MAX_CHARS_PER_FRAGMENT) {
+  log_psico("⚠️ Texto excede ".MAX_CHARS_PER_FRAGMENT." caracteres (".mb_strlen($texto, 'UTF-8')." chars). Dividiendo en fragmentos...");
+  
+  // Dividir por párrafos primero
+  $paragraphs = preg_split('/\n\s*\n/', $texto);
+  $current_fragment = '';
+  
+  foreach ($paragraphs as $para) {
+    $para = trim($para);
+    if (empty($para)) continue;
+    
+    // Si añadir este párrafo excede el límite, guardar fragmento actual
+    if (mb_strlen($current_fragment . "\n\n" . $para, 'UTF-8') > MAX_CHARS_PER_FRAGMENT && !empty($current_fragment)) {
+      $texto_fragmentos[] = trim($current_fragment);
+      $current_fragment = $para;
+    } else {
+      $current_fragment .= (empty($current_fragment) ? '' : "\n\n") . $para;
+    }
+  }
+  
+  // Añadir último fragmento
+  if (!empty($current_fragment)) {
+    $texto_fragmentos[] = trim($current_fragment);
+  }
+  
+  log_psico("✅ Texto dividido en ".count($texto_fragmentos)." fragmentos");
+} else {
+  // Texto no es muy largo, usar como está
+  $texto_fragmentos[] = $texto;
+}
+
 // ---------- META SCHEMA CHECK ----------
 function preguntas_has_psico_meta(mysqli $conn): bool {
   static $cache = null;
@@ -481,10 +516,16 @@ try {
 
 $conn->begin_transaction();
 try {
+  $fragment_index = 0;
+  
   while ($pendientes > 0) {
     $lote = min($BATCH_MAX, $pendientes);
+    
+    // Alternar entre fragmentos para mejor diversidad
+    $texto_actual = $texto_fragmentos[$fragment_index % count($texto_fragmentos)];
+    $fragment_index++;
 
-    $items = generar_lote_psico($GEMINI_KEY, $lote, $id_proceso, $seccion, $tema, $texto);
+    $items = generar_lote_psico($GEMINI_KEY, $lote, $id_proceso, $seccion, $tema, $texto_actual);
 
     foreach ($items as $it) {
       $norm = normalizar_item_psico($it);
