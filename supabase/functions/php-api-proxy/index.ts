@@ -47,8 +47,9 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
   try {
     const texto = bodyData.texto || '';
     const numPreguntas = parseInt(bodyData.num_preguntas || '10');
+    const useStreaming = bodyData.use_streaming === true;
     
-    console.log('Text length:', texto.length);
+    console.log('Text length:', texto.length, 'Streaming:', useStreaming);
     
     // If text is short enough, make direct call
     if (texto.length <= MAX_CHUNK_SIZE) {
@@ -69,6 +70,11 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
     console.log('Text is long, splitting into chunks');
     const chunks = splitTextIntoChunks(texto, MAX_CHUNK_SIZE);
     console.log(`Split into ${chunks.length} chunks`);
+    
+    // If streaming is requested, use SSE
+    if (useStreaming) {
+      return handleStreamingResponse(bodyData, chunks, numPreguntas, corsHeaders);
+    }
     
     // Calculate questions per chunk
     const questionsPerChunk = Math.ceil(numPreguntas / chunks.length);
@@ -151,6 +157,132 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
       }
     );
   }
+}
+
+// Function to handle streaming response with progress updates
+async function handleStreamingResponse(
+  bodyData: any,
+  chunks: string[],
+  numPreguntas: number,
+  corsHeaders: Record<string, string>
+) {
+  const encoder = new TextEncoder();
+  const questionsPerChunk = Math.ceil(numPreguntas / chunks.length);
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // Send initial progress
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({
+            type: 'progress',
+            current: 0,
+            total: chunks.length,
+            message: 'Iniciando procesamiento...'
+          })}\n\n`)
+        );
+        
+        const allResults = [];
+        let totalGenerated = 0;
+        
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
+          const remainingQuestions = numPreguntas - totalGenerated;
+          const questionsForThisChunk = Math.min(questionsPerChunk, remainingQuestions);
+          
+          if (questionsForThisChunk <= 0) break;
+          
+          // Send progress update
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({
+              type: 'progress',
+              current: i,
+              total: chunks.length,
+              message: `Procesando fragmento ${i + 1} de ${chunks.length}...`
+            })}\n\n`)
+          );
+          
+          const chunkData = {
+            ...bodyData,
+            texto: chunk,
+            num_preguntas: questionsForThisChunk.toString(),
+          };
+          
+          try {
+            const response = await fetch('https://oposiciones-test.com/api/generar_preguntas.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(chunkData),
+            });
+            
+            const resultText = await response.text();
+            const result = JSON.parse(resultText);
+            
+            if (result.ok) {
+              totalGenerated += result.generadas || 0;
+              allResults.push(result);
+              
+              // Send chunk complete update
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({
+                  type: 'chunk_complete',
+                  current: i + 1,
+                  total: chunks.length,
+                  generated: result.generadas || 0,
+                  totalGenerated: totalGenerated
+                })}\n\n`)
+              );
+            } else {
+              console.error(`Chunk ${i + 1} failed:`, result.error);
+            }
+          } catch (e) {
+            console.error(`Failed to process chunk ${i + 1}:`, e);
+          }
+        }
+        
+        // Send final result
+        if (allResults.length === 0) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({
+              type: 'error',
+              error: 'No se pudieron generar preguntas de ningún fragmento'
+            })}\n\n`)
+          );
+        } else {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({
+              type: 'complete',
+              ok: true,
+              generadas: totalGenerated,
+              chunks_procesados: allResults.length,
+              total_chunks: chunks.length,
+              es_publico: allResults[0].es_publico
+            })}\n\n`)
+          );
+        }
+        
+        controller.close();
+      } catch (error) {
+        console.error('Streaming error:', error);
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({
+            type: 'error',
+            error: error instanceof Error ? error.message : 'Error desconocido'
+          })}\n\n`)
+        );
+        controller.close();
+      }
+    }
+  });
+  
+  return new Response(stream, {
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }
 
 Deno.serve(async (req) => {
