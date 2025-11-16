@@ -279,38 +279,76 @@ PROMPT;
 
 /** Llama a Google Gemini para devolver EXACTAMENTE $n psicotécnicos (array JSON) */
 function generar_lote_psico(string $apiKey, int $n, int $id_proceso, string $seccion_ctx, string $tema_ctx, string $texto = ''): array {
-  
+  $systemPrompt = <<<SYS
+Eres un generador de PRUEBAS PSICOTÉCNICAS para oposiciones en español.
+
+CONTEXTO DE LAS PREGUNTAS:
+- Usa vocabulario y términos del tema/sección proporcionado para ambientar las preguntas
+- Las preguntas deben ser psicotécnicas (evalúan razonamiento, atención, cálculo, lógica, memoria)
+- NO preguntes conocimientos factuales, definiciones técnicas, leyes, procedimientos específicos o fechas
+
+ESTILO DE PREGUNTAS:
+- Series numéricas con contexto: "Un equipo revisa 2, 4, 8, 16 sistemas. ¿Cuántos revisará después?"
+- Cálculo con vocabulario: "Juan cuenta 15 elementos del tipo A y 23 del tipo B. ¿Cuántos en total?"
+- Verbal con términos: "¿Qué palabra es sinónimo de INSPECCIONAR?" (usando vocabulario del tema)
+- Atención: "En un inventario hay: sistema-A, herramienta-B, sistema-C. ¿Cuántos sistemas hay?"
+- Espacial en texto: "La zona 1 está al norte de la zona 2. La zona 3 al este de la 1. ¿Dónde está la 3 respecto a la 2?"
+
+Responde ÚNICAMENTE con un array JSON válido (sin texto adicional, sin markdown, sin backticks).
+Cada elemento DEBE incluir: "pregunta", "opciones" (A,B,C,D), "correcta" (A-D).
+Opcionalmente: "tipo", "habilidad", "dificultad" (1-5), pero NUNCA explicaciones.
+Equilibra la distribución de respuestas correctas entre A-D.
+SYS;
+
   if ($texto !== '') {
-    $prompt = "Genera EXACTAMENTE $n preguntas PSICOTÉCNICAS de razonamiento, cálculo y lógica en ESPAÑOL basadas en el contexto del texto proporcionado.
+    $userPrompt = <<<USR
+Genera EXACTAMENTE $n preguntas PSICOTÉCNICAS ambientadas en el contexto de: Proceso=$id_proceso, Sección="$seccion_ctx", Tema="$tema_ctx".
 
-IMPORTANTE:
-- Las preguntas deben evaluar capacidades psicotécnicas (razonamiento, cálculo, lógica, atención)
-- Usa vocabulario del texto para ambientar las preguntas
-- NO preguntes conocimientos técnicos, leyes o definiciones
-- Incluye: series numéricas, cálculos, problemas de lógica verbal, atención
+USA EL VOCABULARIO del texto inspiracional para crear situaciones psicotécnicas:
+- Series numéricas con elementos del contexto
+- Cálculos con inventarios, turnos, conteos de equipos/zonas
+- Preguntas verbales usando sinónimos/antónimos de términos del contexto
+- Problemas de atención contando elementos mencionados en el texto
+- Orientación espacial con zonas/áreas/sistemas mencionados
 
-TEXTO:
+TEXTO INSPIRACIONAL:
+---
 $texto
+---
 
-Devuelve SOLO un array JSON válido sin texto adicional.
-Formato: [{\"pregunta\":\"texto\",\"opciones\":{\"A\":\"opción A\",\"B\":\"opción B\",\"C\":\"opción C\",\"D\":\"opción D\"},\"correcta\":\"A\"}]";
+Tipos: serie_numerica (30-40%), verbal (20-30%), atencion_calculo (20-30%), espacial_texto (15-25%).
+RECUERDA: Son preguntas PSICOTÉCNICAS (razonamiento/cálculo/lógica), NO conocimiento técnico.
+
+Formato JSON:
+[{"pregunta":"...","opciones":{"A":"...","B":"...","C":"...","D":"..."},"correcta":"X","tipo":"opcional","habilidad":"opcional","dificultad":2}]
+USR;
   } else {
-    $prompt = "Genera EXACTAMENTE $n preguntas PSICOTÉCNICAS en ESPAÑOL para:
-- Proceso: $id_proceso
-- Sección: $seccion_ctx
-- Tema: $tema_ctx
+    $userPrompt = <<<USR
+Genera EXACTAMENTE $n preguntas PSICOTÉCNICAS ambientadas en: Proceso=$id_proceso, Sección="$seccion_ctx", Tema="$tema_ctx".
 
-IMPORTANTE:
-- Evalúa razonamiento, cálculo y lógica (NO conocimientos técnicos)
-- Incluye: series numéricas, cálculos, problemas de lógica
-- Devuelve SOLO un array JSON válido
+Crea preguntas psicotécnicas usando vocabulario del contexto:
+- Series: "En un inventario de sistemas hay 2, 4, 8, 16 unidades. ¿Cuántas habrá después?"
+- Cálculo: "Juan cuenta 15 equipos del tipo A y 23 del tipo B. ¿Total?"
+- Verbal: "Sinónimo de REVISAR en el contexto de inspección"
+- Atención: "Lista: equipo-1, herramienta-2, equipo-3, sistema-4. ¿Cuántos equipos?"
+- Espacial: "La zona A está al norte de B. C está al este de A. ¿Posición de C respecto a B?"
 
-Formato: [{\"pregunta\":\"texto\",\"opciones\":{\"A\":\"opción A\",\"B\":\"opción B\",\"C\":\"opción C\",\"D\":\"opción D\"},\"correcta\":\"A\"}]";
+Tipos: serie_numerica (30-40%), verbal (20-30%), atencion_calculo (20-30%), espacial_texto (15-25%).
+IMPORTANTE: Preguntas PSICOTÉCNICAS con vocabulario del contexto, NO conocimiento técnico factual.
+
+Formato JSON:
+[{"pregunta":"...","opciones":{"A":"...","B":"...","C":"...","D":"..."},"correcta":"A","tipo":"...","habilidad":"...","dificultad":3}]
+USR;
   }
 
   $payload = [
     "contents" => [
-      ["parts" => [["text" => $prompt]]]
+      [
+        "role" => "user",
+        "parts" => [
+          ["text" => $systemPrompt . "\n\n" . $userPrompt]
+        ]
+      ]
     ],
     "generationConfig" => [
       "temperature" => 0.35,
