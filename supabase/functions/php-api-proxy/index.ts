@@ -42,6 +42,275 @@ function splitTextIntoChunks(text: string, maxSize: number): string[] {
   return chunks;
 }
 
+// Function to handle generar_psicotecnicos.php with automatic text chunking
+async function handleGenerarPsicotecnicos(bodyData: any, corsHeaders: Record<string, string>) {
+  try {
+    // Extract the actual body data
+    const actualBody = bodyData.body || bodyData;
+    const texto = actualBody.texto || '';
+    const numPreguntas = parseInt(actualBody.num_preguntas || '10');
+    const useStreaming = actualBody.use_streaming === true;
+    
+    console.log('[Psicotécnicos] Text length:', texto.length, 'Streaming:', useStreaming);
+    
+    // If text is short enough, make direct call
+    if (texto.length <= MAX_CHUNK_SIZE) {
+      console.log('[Psicotécnicos] Text is short, making direct call');
+      
+      // Remove use_streaming from data sent to PHP
+      const { use_streaming, ...cleanBody } = actualBody;
+      
+      const response = await fetch('https://oposiciones-test.com/api/generar_psicotecnicos.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cleanBody),
+      });
+      
+      const result = await response.text();
+      return new Response(result, {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Split text into chunks
+    console.log('[Psicotécnicos] Text is long, splitting into chunks');
+    const chunks = splitTextIntoChunks(texto, MAX_CHUNK_SIZE);
+    console.log(`[Psicotécnicos] Split into ${chunks.length} chunks`);
+    
+    // If streaming is requested, use SSE
+    if (useStreaming) {
+      return handleStreamingResponsePsicotecnicos(actualBody, chunks, numPreguntas, corsHeaders);
+    }
+    
+    // Calculate questions per chunk
+    const questionsPerChunk = Math.ceil(numPreguntas / chunks.length);
+    
+    // Process each chunk
+    const allResults = [];
+    let totalGenerated = 0;
+    
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const remainingQuestions = numPreguntas - totalGenerated;
+      const questionsForThisChunk = Math.min(questionsPerChunk, remainingQuestions);
+      
+      if (questionsForThisChunk <= 0) break;
+      
+      console.log(`[Psicotécnicos] Processing chunk ${i + 1}/${chunks.length}, generating ${questionsForThisChunk} questions`);
+      
+      // Remove use_streaming before sending to PHP
+      const { use_streaming, ...cleanBody } = actualBody;
+      
+      const chunkData = {
+        ...cleanBody,
+        texto: chunk,
+        num_preguntas: questionsForThisChunk.toString(),
+      };
+      
+      const response = await fetch('https://oposiciones-test.com/api/generar_psicotecnicos.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(chunkData),
+      });
+      
+      const resultText = await response.text();
+      console.log(`[Psicotécnicos] Chunk ${i + 1} raw response:`, resultText);
+      
+      try {
+        const result = JSON.parse(resultText);
+        console.log(`[Psicotécnicos] Chunk ${i + 1} parsed result:`, JSON.stringify(result));
+        
+        // Check for success - API might return 'ok' or just have 'preguntas' field
+        const isSuccess = result.ok === true || result.preguntas !== undefined;
+        const generatedCount = result.preguntas || 0;
+        
+        if (isSuccess && generatedCount > 0) {
+          totalGenerated += generatedCount;
+          allResults.push(result);
+          console.log(`[Psicotécnicos] Chunk ${i + 1} succeeded: ${generatedCount} questions, total: ${totalGenerated}`);
+        } else {
+          console.error(`[Psicotécnicos] Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
+        }
+      } catch (e) {
+        console.error(`[Psicotécnicos] Failed to parse chunk ${i + 1} response:`, e);
+      }
+    }
+    
+    // Combine results
+    if (allResults.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          ok: false, 
+          error: 'No se pudieron generar preguntas psicotécnicas de ningún fragmento' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const combinedResult = {
+      ok: true,
+      preguntas: totalGenerated,
+      chunks_procesados: allResults.length,
+      total_chunks: chunks.length,
+      es_publico: allResults[0].es_publico,
+    };
+    
+    console.log('[Psicotécnicos] Final result:', combinedResult);
+    
+    return new Response(JSON.stringify(combinedResult), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('[Psicotécnicos] Error in handleGenerarPsicotecnicos:', error);
+    return new Response(
+      JSON.stringify({ 
+        ok: false, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+}
+
+// Function to handle streaming response for psicotécnicos with progress updates
+async function handleStreamingResponsePsicotecnicos(
+  bodyData: any,
+  chunks: string[],
+  numPreguntas: number,
+  corsHeaders: Record<string, string>
+) {
+  const encoder = new TextEncoder();
+  const questionsPerChunk = Math.ceil(numPreguntas / chunks.length);
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // Send initial progress
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({
+            type: 'progress',
+            current: 0,
+            total: chunks.length,
+            message: 'Iniciando procesamiento...'
+          })}\n\n`)
+        );
+        
+        const allResults = [];
+        let totalGenerated = 0;
+        
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
+          const remainingQuestions = numPreguntas - totalGenerated;
+          const questionsForThisChunk = Math.min(questionsPerChunk, remainingQuestions);
+          
+          if (questionsForThisChunk <= 0) break;
+          
+          // Send progress update
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({
+              type: 'progress',
+              current: i,
+              total: chunks.length,
+              message: `Procesando fragmento ${i + 1} de ${chunks.length}...`
+            })}\n\n`)
+          );
+          
+          // Remove use_streaming before sending to PHP
+          const { use_streaming, ...cleanBodyData } = bodyData;
+          
+          const chunkData = {
+            ...cleanBodyData,
+            texto: chunk,
+            num_preguntas: questionsForThisChunk.toString(),
+          };
+          
+          try {
+            const response = await fetch('https://oposiciones-test.com/api/generar_psicotecnicos.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(chunkData),
+            });
+            
+            const resultText = await response.text();
+            console.log(`[Psicotécnicos] Chunk ${i + 1} raw response:`, resultText);
+            const result = JSON.parse(resultText);
+            console.log(`[Psicotécnicos] Chunk ${i + 1} parsed result:`, JSON.stringify(result));
+            
+            // Check for success - API might return 'ok' or just have 'preguntas' field
+            const isSuccess = result.ok === true || result.preguntas !== undefined;
+            const generatedCount = result.preguntas || 0;
+            
+            if (isSuccess && generatedCount > 0) {
+              totalGenerated += generatedCount;
+              allResults.push(result);
+              console.log(`[Psicotécnicos] Chunk ${i + 1} succeeded: ${generatedCount} questions, total: ${totalGenerated}`);
+              
+              // Send chunk complete update
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({
+                  type: 'chunk_complete',
+                  current: i + 1,
+                  total: chunks.length,
+                  generated: generatedCount,
+                  totalGenerated: totalGenerated
+                })}\n\n`)
+              );
+            } else {
+              console.error(`[Psicotécnicos] Chunk ${i + 1} failed:`, result.error || 'Unknown error', 'Full result:', result);
+            }
+          } catch (e) {
+            console.error(`[Psicotécnicos] Failed to process chunk ${i + 1}:`, e);
+          }
+        }
+        
+        // Send final result
+        if (allResults.length === 0) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({
+              type: 'error',
+              error: 'No se pudieron generar preguntas psicotécnicas de ningún fragmento'
+            })}\n\n`)
+          );
+        } else {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({
+              type: 'complete',
+              ok: true,
+              generadas: totalGenerated,
+              chunks_procesados: allResults.length,
+              total_chunks: chunks.length,
+              es_publico: allResults[0].es_publico
+            })}\n\n`)
+          );
+        }
+        
+        controller.close();
+      } catch (error) {
+        console.error('[Psicotécnicos] Streaming error:', error);
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({
+            type: 'error',
+            error: error instanceof Error ? error.message : 'Error desconocido'
+          })}\n\n`)
+        );
+        controller.close();
+      }
+    }
+  });
+  
+  return new Response(stream, {
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
+}
+
 // Function to handle generar_preguntas.php with automatic text chunking
 async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string, string>) {
   try {
@@ -360,7 +629,12 @@ Deno.serve(async (req) => {
       return await handleGenerarPreguntas(bodyData, corsHeaders);
     }
     
-    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_tests_realizados.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'generar_psicotecnicos.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php') {
+    // Handle generar_psicotecnicos.php with text chunking
+    if (cleanEndpoint === 'generar_psicotecnicos.php') {
+      return await handleGenerarPsicotecnicos(bodyData, corsHeaders);
+    }
+    
+    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_tests_realizados.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php') {
       // Direct API calls to specific endpoints
       const baseUrl = 'https://oposiciones-test.com/api/';
       

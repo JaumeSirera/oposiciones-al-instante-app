@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, X, Brain, Upload, FileText } from 'lucide-react';
 import { testService, type Proceso } from '@/services/testService';
@@ -22,6 +22,13 @@ export default function CrearPsicotecnicos() {
   const [loading, setLoading] = useState(false);
   const [extractingText, setExtractingText] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [progressInfo, setProgressInfo] = useState<{
+    current: number;
+    total: number;
+    message: string;
+    generated?: number;
+  } | null>(null);
   const [formData, setFormData] = useState({
     proceso: '',
     procesoPersonalizado: '',
@@ -198,6 +205,7 @@ export default function CrearPsicotecnicos() {
     }
 
     setLoading(true);
+    setProgressInfo(null);
     try {
       let procesoId = formData.proceso ? parseInt(formData.proceso) : null;
       
@@ -236,68 +244,209 @@ export default function CrearPsicotecnicos() {
       const totalCombinaciones = seccionesFinal.length * temasFinal.length;
       const preguntasPorCombinacion = Math.ceil(formData.numPreguntas / totalCombinaciones);
       
-      let totalGeneradas = 0;
-      let errores = 0;
-
-      // Hacer una llamada por cada combinación sección-tema
-      for (const seccion of seccionesFinal) {
-        for (const tema of temasFinal) {
-          try {
-            const response = await fetch(
-              `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  endpoint: 'generar_psicotecnicos.php',
+      // Check if text is long enough to use streaming
+      const shouldUseStreaming = formData.textoBase.length > 6000;
+      
+      if (shouldUseStreaming) {
+        // Create abort controller for cancellation
+        const controller = new AbortController();
+        setAbortController(controller);
+        
+        let totalGeneradas = 0;
+        let errores = 0;
+        let combinacionActual = 0;
+        
+        // Hacer una llamada por cada combinación sección-tema
+        for (const seccion of seccionesFinal) {
+          for (const tema of temasFinal) {
+            combinacionActual++;
+            
+            try {
+              // Use SSE for progress updates
+              const response = await fetch(
+                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+                {
                   method: 'POST',
-                  body: {
-                    id_proceso: procesoId,
-                    tema: tema,
-                    seccion: seccion,
-                    id_usuario: user.id,
-                    num_preguntas: preguntasPorCombinacion,
-                    texto: formData.textoBase
-                  }
-                }),
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  signal: controller.signal,
+                  body: JSON.stringify({
+                    endpoint: 'generar_psicotecnicos.php',
+                    method: 'POST',
+                    body: {
+                      id_proceso: procesoId,
+                      tema: tema,
+                      seccion: seccion,
+                      id_usuario: user.id,
+                      num_preguntas: preguntasPorCombinacion,
+                      texto: formData.textoBase,
+                      use_streaming: true
+                    }
+                  })
+                }
+              );
+
+              if (!response.ok || !response.body) {
+                throw new Error('Failed to start streaming');
               }
-            );
 
-            const data = await response.json();
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+              let buffer = '';
 
-            if (data.ok) {
-              totalGeneradas += data.preguntas;
-            } else {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    const jsonStr = line.slice(6);
+                    try {
+                      const event = JSON.parse(jsonStr);
+                      
+                      if (event.type === 'progress') {
+                        setProgressInfo({
+                          current: event.current,
+                          total: event.total,
+                          message: `Procesando ${seccion} - ${tema}: ${event.message}`,
+                        });
+                      } else if (event.type === 'chunk_complete') {
+                        setProgressInfo({
+                          current: event.current,
+                          total: event.total,
+                          message: `${seccion} - ${tema}: Fragmento ${event.current}/${event.total}`,
+                          generated: event.totalGenerated
+                        });
+                      } else if (event.type === 'complete') {
+                        totalGeneradas += event.generadas || 0;
+                      } else if (event.type === 'error') {
+                        errores++;
+                        console.error(`Error en ${seccion} - ${tema}:`, event.error);
+                      }
+                    } catch (e) {
+                      console.error('Failed to parse SSE event:', e);
+                    }
+                  }
+                }
+              }
+            } catch (error: any) {
+              if (error.name === 'AbortError') {
+                throw error; // Re-throw abort errors
+              }
               errores++;
-              console.error(`Error en ${seccion} - ${tema}:`, data.error);
+              console.error(`Error en ${seccion} - ${tema}:`, error);
             }
-          } catch (error) {
-            errores++;
-            console.error(`Error en ${seccion} - ${tema}:`, error);
           }
         }
-      }
-
-      if (totalGeneradas > 0) {
-        toast({
-          title: "¡Psicotécnicos guardados!",
-          description: `Se han generado y guardado ${totalGeneradas} preguntas psicotécnicas${errores > 0 ? ` (${errores} combinación${errores > 1 ? 'es' : ''} fallaron)` : ''}`
-        });
-        // Resetear número de preguntas, mantener las selecciones
-        setFormData(prev => ({ ...prev, numPreguntas: 10 }));
+        
+        setAbortController(null);
+        setProgressInfo(null);
+        
+        if (totalGeneradas > 0) {
+          toast({
+            title: "¡Psicotécnicos guardados!",
+            description: `Se han generado y guardado ${totalGeneradas} preguntas psicotécnicas${errores > 0 ? ` (${errores} combinación${errores > 1 ? 'es' : ''} fallaron)` : ''}`
+          });
+          setFormData(prev => ({ ...prev, numPreguntas: 10, textoBase: '' }));
+        } else {
+          throw new Error('No se pudieron generar preguntas para ninguna combinación');
+        }
       } else {
-        throw new Error('No se pudieron generar preguntas para ninguna combinación');
+        // Direct calls for short texts (original logic)
+        let totalGeneradas = 0;
+        let errores = 0;
+
+        // Hacer una llamada por cada combinación sección-tema
+        for (const seccion of seccionesFinal) {
+          for (const tema of temasFinal) {
+            try {
+              const response = await fetch(
+                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    endpoint: 'generar_psicotecnicos.php',
+                    method: 'POST',
+                    body: {
+                      id_proceso: procesoId,
+                      tema: tema,
+                      seccion: seccion,
+                      id_usuario: user.id,
+                      num_preguntas: preguntasPorCombinacion,
+                      texto: formData.textoBase
+                    }
+                  }),
+                }
+              );
+
+              const data = await response.json();
+
+              if (data.ok) {
+                totalGeneradas += data.preguntas;
+              } else {
+                errores++;
+                console.error(`Error en ${seccion} - ${tema}:`, data.error);
+              }
+            } catch (error) {
+              errores++;
+              console.error(`Error en ${seccion} - ${tema}:`, error);
+            }
+          }
+        }
+
+        if (totalGeneradas > 0) {
+          toast({
+            title: "¡Psicotécnicos guardados!",
+            description: `Se han generado y guardado ${totalGeneradas} preguntas psicotécnicas${errores > 0 ? ` (${errores} combinación${errores > 1 ? 'es' : ''} fallaron)` : ''}`
+          });
+          // Resetear número de preguntas, mantener las selecciones
+          setFormData(prev => ({ ...prev, numPreguntas: 10 }));
+        } else {
+          throw new Error('No se pudieron generar preguntas para ninguna combinación');
+        }
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudieron generar los psicotécnicos'
-      });
+      console.error('Error al generar psicotécnicos:', error);
+      
+      // Check if it was cancelled
+      if (error.name === 'AbortError') {
+        toast({
+          title: "Generación cancelada",
+          description: "El proceso ha sido cancelado por el usuario",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || 'No se pudieron generar los psicotécnicos'
+        });
+      }
     } finally {
       setLoading(false);
+      setAbortController(null);
+      setProgressInfo(null);
+    }
+  };
+
+  const handleCancelar = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setLoading(false);
+      setProgressInfo(null);
+      toast({
+        title: "Cancelado",
+        description: "La generación de psicotécnicos ha sido cancelada"
+      });
     }
   };
 
@@ -716,6 +865,38 @@ export default function CrearPsicotecnicos() {
                   Entre 1 y 100 preguntas
                 </p>
               </div>
+
+              {/* Progress Indicator */}
+              {progressInfo && (
+                <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{progressInfo.message}</span>
+                    <span className="text-muted-foreground">
+                      {progressInfo.current}/{progressInfo.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
+                    <div 
+                      className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-in-out"
+                      style={{ width: `${(progressInfo.current / progressInfo.total) * 100}%` }}
+                    />
+                  </div>
+                  {progressInfo.generated !== undefined && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      {progressInfo.generated} preguntas generadas hasta ahora
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleCancelar}
+                    className="w-full mt-2"
+                  >
+                    Cancelar generación
+                  </Button>
+                </div>
+              )}
 
               <div className="flex gap-4">
                 <Button
