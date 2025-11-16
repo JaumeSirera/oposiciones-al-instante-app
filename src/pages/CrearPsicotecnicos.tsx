@@ -264,87 +264,51 @@ export default function CrearPsicotecnicos() {
             try {
               // Use SSE for progress updates
               const response = await fetch(
-                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/generar-psicotecnicos`,
                 {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
                   },
                   signal: controller.signal,
                   body: JSON.stringify({
-                    endpoint: 'generar_psicotecnicos.php',
-                    method: 'POST',
-                    body: {
-                      id_proceso: procesoId,
-                      tema: tema,
-                      seccion: seccion,
-                      id_usuario: user.id,
-                      num_preguntas: preguntasPorCombinacion,
-                      texto: formData.textoBase,
-                      use_streaming: true
-                    }
+                    id_proceso: procesoId,
+                    tema: tema,
+                    seccion: seccion,
+                    id_usuario: user.id,
+                    num_preguntas: preguntasPorCombinacion,
+                    texto: formData.textoBase
                   })
                 }
               );
 
-              if (!response.ok || !response.body) {
-                throw new Error('Failed to start streaming');
-              }
-
-              const reader = response.body.getReader();
-              const decoder = new TextDecoder();
-              let buffer = '';
-
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                  if (line.startsWith('data: ')) {
-                    const jsonStr = line.slice(6);
-                    try {
-                      const event = JSON.parse(jsonStr);
-                      
-                      if (event.type === 'progress') {
-                        setProgressInfo({
-                          current: event.current,
-                          total: event.total,
-                          message: `Procesando ${seccion} - ${tema}: ${event.message}`,
-                        });
-                      } else if (event.type === 'chunk_complete') {
-                        setProgressInfo({
-                          current: event.current,
-                          total: event.total,
-                          message: `${seccion} - ${tema}: Fragmento ${event.current}/${event.total}`,
-                          generated: event.totalGenerated
-                        });
-                      } else if (event.type === 'complete') {
-                        totalGeneradas += event.generadas || 0;
-                      } else if (event.type === 'error') {
-                        errores++;
-                        console.error(`Error en ${seccion} - ${tema}:`, event.error);
-                        
-                        // Detener inmediatamente y mostrar el error
-                        setAbortController(null);
-                        setProgressInfo(null);
-                        setLoading(false);
-                        
-                        toast({
-                          title: "Error al generar psicotécnicos",
-                          description: event.error,
-                          variant: "destructive",
-                        });
-                        
-                        return; // Salir de la función
-                      }
-                    } catch (e) {
-                      console.error('Failed to parse SSE event:', e);
-                    }
-                  }
+              const data = await response.json();
+              
+              if (data.ok) {
+                totalGeneradas += data.preguntas || 0;
+                setProgressInfo({
+                  current: combinacionActual,
+                  total: totalCombinaciones,
+                  message: `Generadas ${totalGeneradas} preguntas`,
+                  generated: totalGeneradas
+                });
+              } else {
+                errores++;
+                console.error(`Error en ${seccion} - ${tema}:`, data.error);
+                
+                if (data.error && (data.error.includes('Límite') || data.error.includes('Créditos'))) {
+                  setAbortController(null);
+                  setProgressInfo(null);
+                  setLoading(false);
+                  
+                  toast({
+                    title: "Error al generar psicotécnicos",
+                    description: data.error,
+                    variant: "destructive",
+                  });
+                  
+                  return;
                 }
               }
             } catch (error: any) {
@@ -379,23 +343,20 @@ export default function CrearPsicotecnicos() {
           for (const tema of temasFinal) {
             try {
               const response = await fetch(
-                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/generar-psicotecnicos`,
                 {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
                   },
                   body: JSON.stringify({
-                    endpoint: 'generar_psicotecnicos.php',
-                    method: 'POST',
-                    body: {
-                      id_proceso: procesoId,
-                      tema: tema,
-                      seccion: seccion,
-                      id_usuario: user.id,
-                      num_preguntas: preguntasPorCombinacion,
-                      texto: formData.textoBase
-                    }
+                    id_proceso: procesoId,
+                    tema: tema,
+                    seccion: seccion,
+                    id_usuario: user.id,
+                    num_preguntas: preguntasPorCombinacion,
+                    texto: formData.textoBase
                   }),
                 }
               );
