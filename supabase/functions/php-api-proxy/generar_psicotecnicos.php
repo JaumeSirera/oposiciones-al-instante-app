@@ -24,9 +24,21 @@ function bad($m,$c=400){ http_response_code($c); echo json_encode(['ok'=>false,'
 
 // ---------- HELPERS ----------
 function gemini_key_or_fail(): string {
-  $k = getenv('GOOGLE_API_KEY');
+  // Try to get from header first (from edge function)
+  $k = $_SERVER['HTTP_X_GOOGLE_API_KEY'] ?? '';
+  
+  // Fall back to environment variable
+  if (empty($k)) $k = getenv('GOOGLE_API_KEY');
+  
+  // Fall back to config.php constant
   if (empty($k) && defined('GOOGLE_API_KEY')) $k = GOOGLE_API_KEY;
-  if (!$k) bad('Falta GOOGLE_API_KEY (entorno o config.php)', 500);
+  
+  if (!$k) {
+    log_psico("❌ No se encontró GOOGLE_API_KEY en ninguna fuente");
+    bad('Falta GOOGLE_API_KEY (entorno o config.php)', 500);
+  }
+  
+  log_psico("✅ GOOGLE_API_KEY encontrada (longitud: ".strlen($k).")");
   return $k;
 }
 
@@ -240,7 +252,8 @@ PROMPT;
     ]
   ];
 
-  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey");
+  // Use stable model
+  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey");
   curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
@@ -346,7 +359,9 @@ USR;
   ];
 
   $t0 = microtime(true);
-  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey");
+  // Use stable model instead of experimental
+  $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey");
+  log_psico("🤖 Llamando a Gemini 1.5 Flash (estable)");
   curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
@@ -358,18 +373,20 @@ USR;
   $res = curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   $latencyMs = (int)round((microtime(true)-$t0)*1000);
+  $curlError = curl_error($ch);
   curl_close($ch);
 
-  if ($res === false) {
-    $err = curl_error($ch);
+  if ($res === false || $curlError) {
     log_gemini_raw_psico([
       'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-      'model'=>'gemini-2.0-flash-exp','batch'=>$n,
+      'model'=>'gemini-1.5-flash','batch'=>$n,
       'summary'=>['has_texto'=>$texto!=='' ,'id_proceso'=>$id_proceso,'seccion'=>$seccion_ctx,'tema'=>$tema_ctx],
-      'curl_error'=>$err
+      'curl_error'=>$curlError
     ]);
-    throw new Exception("Error llamando a Gemini: $err");
+    throw new Exception("Error llamando a Gemini: $curlError");
   }
+  
+  log_psico("📥 Respuesta HTTP $httpCode recibida en {$latencyMs}ms");
 
   $j = json_decode($res, true);
   
@@ -379,7 +396,7 @@ USR;
     $errorCode = $j['error']['code'] ?? 'unknown';
     log_gemini_raw_psico([
       'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-      'model'=>'gemini-2.0-flash-exp','batch'=>$n,
+      'model'=>'gemini-1.5-flash','batch'=>$n,
       'error'=>$errorMsg, 'error_code'=>$errorCode,
       'raw'=>$res
     ]);
@@ -388,7 +405,7 @@ USR;
   
   log_gemini_raw_psico([
     'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-    'model'=>'gemini-2.0-flash-exp','batch'=>$n,
+    'model'=>'gemini-1.5-flash','batch'=>$n,
     'summary'=>['has_texto'=>$texto!=='' ,'id_proceso'=>$id_proceso,'seccion'=>$seccion_ctx,'tema'=>$tema_ctx],
     'response_structure'=>[
       'has_candidates'=>isset($j['candidates']),
@@ -398,10 +415,13 @@ USR;
       'parts_count'=>count($j['candidates'][0]['content']['parts'] ?? []),
       'content_length'=>strlen($j['candidates'][0]['content']['parts'][0]['text'] ?? ''),
       'content_preview'=>mb_substr($j['candidates'][0]['content']['parts'][0]['text'] ?? '', 0, 200),
-      'finish_reason'=>$j['candidates'][0]['finishReason'] ?? 'unknown'
+      'finish_reason'=>$j['candidates'][0]['finishReason'] ?? 'unknown',
+      'prompt_feedback'=>$j['promptFeedback'] ?? null
     ],
-    'raw'=>$res
+    'raw'=>mb_substr($res, 0, 2000) // Only log first 2000 chars
   ]);
+  
+  log_psico("📊 Candidates: ".(count($j['candidates'] ?? 0)).", Content length: ".strlen($j['candidates'][0]['content']['parts'][0]['text'] ?? ''));
 
   $content = $j['candidates'][0]['content']['parts'][0]['text'] ?? '';
   $finishReason = $j['candidates'][0]['finishReason'] ?? '';
