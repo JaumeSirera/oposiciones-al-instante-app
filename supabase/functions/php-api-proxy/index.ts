@@ -54,10 +54,14 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
     // If text is short enough, make direct call
     if (texto.length <= MAX_CHUNK_SIZE) {
       console.log('Text is short, making direct call');
+      
+      // Remove use_streaming from data sent to PHP
+      const { use_streaming, ...cleanBodyData } = bodyData;
+      
       const response = await fetch('https://oposiciones-test.com/api/generar_preguntas.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bodyData),
+        body: JSON.stringify(cleanBodyData),
       });
       
       const result = await response.text();
@@ -92,8 +96,11 @@ async function handleGenerarPreguntas(bodyData: any, corsHeaders: Record<string,
       
       console.log(`Processing chunk ${i + 1}/${chunks.length}, generating ${questionsForThisChunk} questions`);
       
+      // Remove use_streaming before sending to PHP
+      const { use_streaming, ...cleanBodyData } = bodyData;
+      
       const chunkData = {
-        ...bodyData,
+        ...cleanBodyData,
         texto: chunk,
         num_preguntas: questionsForThisChunk.toString(),
       };
@@ -202,8 +209,11 @@ async function handleStreamingResponse(
             })}\n\n`)
           );
           
+          // Remove use_streaming before sending to PHP
+          const { use_streaming, ...cleanBodyData } = bodyData;
+          
           const chunkData = {
-            ...bodyData,
+            ...cleanBodyData,
             texto: chunk,
             num_preguntas: questionsForThisChunk.toString(),
           };
