@@ -310,7 +310,7 @@ export default function CrearTest() {
               Generar Test
             </CardTitle>
             <CardDescription>
-              Genera preguntas de test a partir de un documento o texto
+              Genera preguntas de test a partir de un documento o texto base
             </CardDescription>
           </CardHeader>
           <CardContent>
