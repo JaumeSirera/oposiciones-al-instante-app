@@ -26,13 +26,14 @@ if ($method === 'GET') {
     }
     
     try {
-        // Obtener secciones únicas del proceso
+        // Obtener secciones únicas del proceso (excluyendo preguntas ignoradas)
         $stmtSecciones = $conn->prepare("
             SELECT DISTINCT seccion 
             FROM preguntas 
             WHERE id_proceso = ? 
             AND seccion IS NOT NULL 
             AND seccion != ''
+            AND (ignorar = 0 OR ignorar IS NULL)
             ORDER BY seccion ASC
         ");
         $stmtSecciones->bind_param("i", $proceso_id);
@@ -44,13 +45,14 @@ if ($method === 'GET') {
             $secciones[] = $row['seccion'];
         }
         
-        // Obtener temas únicos del proceso
+        // Obtener temas únicos del proceso (excluyendo preguntas ignoradas)
         $stmtTemas = $conn->prepare("
             SELECT DISTINCT tema 
             FROM preguntas 
             WHERE id_proceso = ? 
             AND tema IS NOT NULL 
             AND tema != ''
+            AND (ignorar = 0 OR ignorar IS NULL)
             ORDER BY tema ASC
         ");
         $stmtTemas->bind_param("i", $proceso_id);
