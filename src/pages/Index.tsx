@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/lib/supabaseClient';
+import { ModalPlanEstudio } from '@/components/ModalPlanEstudio';
 
 const BASE_FOTO_URL = 'https://oposiciones-test.com/api/uploads/procesos/';
 const PROXY_FUNCTION = 'php-api-proxy';
@@ -50,6 +51,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [ccaaTooltip, setCcaaTooltip] = useState<{ nombre: string; x: number; y: number } | null>(null);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [showModalPlan, setShowModalPlan] = useState(false);
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
@@ -241,6 +243,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      <ModalPlanEstudio open={showModalPlan} onOpenChange={setShowModalPlan} />
       <div className="container mx-auto px-4 py-8">
         {/* SEO H1 */}
         <h1 className="sr-only">Oposiciones-Test · App para opositores</h1>
@@ -294,6 +297,28 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Call to Action - Planes de Estudio */}
+        <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-xl mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">¿Listo para empezar?</h3>
+                <p className="opacity-90 mb-4">Crea un plan de estudio personalizado para tu oposición</p>
+                <Button
+                  onClick={() => setShowModalPlan(true)}
+                  variant="secondary"
+                  size="lg"
+                  className="bg-white text-purple-600 hover:bg-gray-100"
+                >
+                  <Calendar className="mr-2 h-5 w-5" />
+                  Crear Plan de Estudio
+                </Button>
+              </div>
+              <BookOpen className="h-24 w-24 opacity-20" />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

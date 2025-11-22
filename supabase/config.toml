@@ -20,3 +20,12 @@ verify_jwt = false
 
 [functions.generar-descripcion-plan]
 verify_jwt = false
+
+[functions.generar-plan-automatico]
+verify_jwt = false
+
+[functions.guardar-plan-generado]
+verify_jwt = false
+
+[functions.enviar-recordatorio-plan]
+verify_jwt = false
