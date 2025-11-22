@@ -199,8 +199,8 @@ class AuthService {
         body: {
           action: 'reset_password',
           token,
-          email,
-          new_password: newPassword,
+          email: email.toLowerCase().trim(),
+          password: newPassword,
         },
       });
 
