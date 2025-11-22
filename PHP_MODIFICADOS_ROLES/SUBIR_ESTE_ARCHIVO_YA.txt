@@ -3,9 +3,8 @@
 ARCHIVOS QUE DEBES SUBIR AL SERVIDOR:
 
 1. procesos_usuario.php - URGENTE ❗
-2. secciones_temas.php - NUEVO ARCHIVO NECESARIO ❗
-3. recordatorios_plan.php - Para sistema de recordatorios
-4. cron_enviar_recordatorios.php - Para envío automático de emails
+2. recordatorios_plan.php - Para sistema de recordatorios
+3. cron_enviar_recordatorios.php - Para envío automático de emails
 
 ==================================================
 PROBLEMA ACTUAL:
@@ -17,22 +16,14 @@ El error 500 que estás viendo ocurre porque:
 3. Está fallando al intentar obtener los procesos
 
 ==================================================
-NUEVO ARCHIVO CRÍTICO: secciones_temas.php
-==================================================
-
-Este archivo es ESENCIAL para que la generación de planes con IA funcione correctamente.
-
-❌ SIN ESTE ARCHIVO: Los planes mostrarán "Tema 1, Tema 2, Tema 3..." (valores genéricos)
-✅ CON ESTE ARCHIVO: Los planes mostrarán las secciones y temas REALES de tu base de datos
-
 PASOS INMEDIATOS:
+==================================================
 
 1. Ve a: https://oposiciones-test.com/api/
 2. Sube estos archivos en orden de prioridad:
    a) procesos_usuario.php (para que funcione el listado de procesos)
-   b) secciones_temas.php (para que los planes IA usen datos reales)
-   c) recordatorios_plan.php (para gestionar recordatorios)
-   d) cron_enviar_recordatorios.php (para envío automático)
+   b) recordatorios_plan.php (para gestionar recordatorios)
+   c) cron_enviar_recordatorios.php (para envío automático)
 
 ==================================================
 OPCIONAL (pero recomendado):
@@ -52,10 +43,9 @@ La nueva versión de procesos_usuario.php:
 ✅ Si NO existen, devuelve todos los procesos activos
 ✅ Si SÍ existen, aplica filtros por rol
 
-El archivo secciones_temas.php:
-✅ Obtiene las secciones únicas de la tabla `preguntas`
-✅ Obtiene los temas únicos de la tabla `preguntas`
-✅ Funciona con cualquier proceso que tenga preguntas
-✅ Mejora significativamente la experiencia del usuario con IA
+El sistema de recordatorios:
+✅ Los recordatorios se crean automáticamente al guardar un plan con notificaciones
+✅ Se usa el archivo preguntas_auxiliares.php (que ya existe en tu servidor) para obtener secciones y temas
+✅ El cron job envía emails diarios según la configuración
 
 Hasta que subas estos archivos, la aplicación seguirá con problemas.
