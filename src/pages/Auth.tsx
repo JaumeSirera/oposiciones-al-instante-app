@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { authService } from '@/services/authService';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +24,9 @@ const Auth: React.FC = () => {
   const from = state?.from?.pathname || '/dashboard';
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showRecoverDialog, setShowRecoverDialog] = useState(false);
+  const [recoverEmail, setRecoverEmail] = useState('');
+  const [isRecovering, setIsRecovering] = useState(false);
 
   // Login form
   const [loginEmail, setLoginEmail] = useState('');
@@ -130,6 +135,48 @@ const Auth: React.FC = () => {
     }
   };
 
+  const handleRecover = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!recoverEmail) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, introduce tu email',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recoverEmail)) {
+      toast({
+        title: 'Error',
+        description: 'Por favor, introduce un email válido',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsRecovering(true);
+    const result = await authService.recoverPassword(recoverEmail);
+    setIsRecovering(false);
+
+    if (result.success) {
+      toast({
+        title: 'Email enviado',
+        description: 'Revisa tu correo para restablecer tu contraseña',
+      });
+      setShowRecoverDialog(false);
+      setRecoverEmail('');
+    } else {
+      toast({
+        title: 'Error',
+        description: result.error || 'No se pudo enviar el email de recuperación',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
       <Helmet>
@@ -195,19 +242,29 @@ const Auth: React.FC = () => {
                       required
                     />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(!!checked)}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(!!checked)}
+                        disabled={isLoading}
+                      />
+                      <label
+                        htmlFor="remember"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Recordarme
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowRecoverDialog(true)}
+                      className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
                       disabled={isLoading}
-                    />
-                    <label
-                      htmlFor="remember"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      Recordarme durante 30 días
-                    </label>
+                      ¿Olvidaste tu contraseña?
+                    </button>
                   </div>
                   <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
                     {isLoading ? (
@@ -299,6 +356,44 @@ const Auth: React.FC = () => {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Diálogo de recuperación de contraseña */}
+        <Dialog open={showRecoverDialog} onOpenChange={setShowRecoverDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Recuperar contraseña</DialogTitle>
+              <DialogDescription>
+                Introduce tu email y te enviaremos un enlace para restablecer tu contraseña
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleRecover} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="recover-email">Email</Label>
+                <Input
+                  id="recover-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="tu@email.com"
+                  value={recoverEmail}
+                  onChange={(e) => setRecoverEmail(e.target.value)}
+                  disabled={isRecovering}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isRecovering}>
+                {isRecovering ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar enlace de recuperación'
+                )}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
