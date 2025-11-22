@@ -36,32 +36,62 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Obtener secciones y temas del PHP API
-    const { data: funcionProxy } = await supabase.functions.invoke(
+    // Obtener secciones del proceso desde preguntas_auxiliares.php
+    const { data: seccionesResponse } = await supabase.functions.invoke(
       "php-api-proxy",
       {
         body: {
-          endpoint: `secciones_temas.php?proceso_id=${id_proceso}`,
+          endpoint: `preguntas_auxiliares.php?id_proceso=${id_proceso}`,
           method: "GET",
         },
       }
     );
 
-    console.log("Respuesta PHP API:", funcionProxy);
+    console.log("Respuesta secciones:", seccionesResponse);
 
     let secciones: string[] = [];
-    let temas: string[] = [];
-
-    if (funcionProxy && funcionProxy.success) {
-      secciones = funcionProxy.secciones || [];
-      temas = funcionProxy.temas || [];
+    
+    if (seccionesResponse && seccionesResponse.success && Array.isArray(seccionesResponse.secciones)) {
+      secciones = seccionesResponse.secciones;
     }
 
-    // Validar que hay datos de la base de datos
-    if (secciones.length === 0 || temas.length === 0) {
+    // Validar que hay secciones
+    if (secciones.length === 0) {
       throw new Error(
-        `No se encontraron ${secciones.length === 0 ? 'secciones' : 'temas'} para el proceso ${id_proceso}. ` +
+        `No se encontraron secciones para el proceso ${id_proceso}. ` +
         `Asegúrate de que existen preguntas en la base de datos para este proceso.`
+      );
+    }
+
+    // Obtener temas de todas las secciones
+    const temasPromises = secciones.map(seccion => 
+      supabase.functions.invoke("php-api-proxy", {
+        body: {
+          endpoint: `preguntas_auxiliares.php?id_proceso=${id_proceso}&seccion=${encodeURIComponent(seccion)}`,
+          method: "GET",
+        },
+      })
+    );
+
+    const temasResponses = await Promise.all(temasPromises);
+    
+    // Combinar todos los temas únicos
+    const temas: string[] = [];
+    temasResponses.forEach(response => {
+      if (response.data && response.data.success && Array.isArray(response.data.temas)) {
+        response.data.temas.forEach((tema: string) => {
+          if (!temas.includes(tema)) {
+            temas.push(tema);
+          }
+        });
+      }
+    });
+
+    // Validar que hay temas
+    if (temas.length === 0) {
+      throw new Error(
+        `No se encontraron temas para el proceso ${id_proceso}. ` +
+        `Asegúrate de que existen preguntas con temas en la base de datos.`
       );
     }
 
