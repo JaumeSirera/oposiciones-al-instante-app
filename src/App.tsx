@@ -60,7 +60,7 @@ const App: React.FC = () => {
                 {/* Públicas */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/ResetPassword" element={<ResetPassword />} />
+                <Route path="/auth/reset-password" element={<ResetPassword />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
                 {/* Públicas SEO */}
