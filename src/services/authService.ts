@@ -193,6 +193,29 @@ class AuthService {
     }
   }
 
+  async resetPassword(token: string, email: string, newPassword: string): Promise<AuthResponse> {
+    try {
+      const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+        body: {
+          action: 'reset_password',
+          token,
+          email,
+          new_password: newPassword,
+        },
+      });
+
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return {
+        success: false,
+        error: 'Error al restablecer la contraseña',
+      };
+    }
+  }
+
   logout(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
