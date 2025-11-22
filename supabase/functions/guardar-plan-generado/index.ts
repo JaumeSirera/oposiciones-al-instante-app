@@ -150,40 +150,44 @@ Responde SOLO con JSON válido.`;
 
     // Si se solicitaron notificaciones, crear recordatorios
     if (notificaciones_email) {
-      const diasConTareas = [];
+      console.log("Creando recordatorios para el plan...");
+      
+      const recordatorios = [];
       const temasTotal = plan.temas.length;
-      const temasPorDia = Math.max(1, Math.floor(temasTotal / dias_totales));
+      const temasPorDia = Math.max(1, Math.ceil(temasTotal / dias_totales));
 
-      // Crear recordatorio para cada día
+      // Crear recordatorio para cada día con temas distribuidos
       for (let i = 0; i < dias_totales; i++) {
         const fecha = new Date(fecha_inicio);
-        fecha.setDate(fecha.setDate() + i);
+        fecha.setDate(fecha_inicio.getDate() + i);
         
         const inicio = i * temasPorDia;
         const fin = Math.min((i + 1) * temasPorDia, temasTotal);
         const temasDelDia = plan.temas.slice(inicio, fin);
 
         if (temasDelDia.length > 0) {
-          diasConTareas.push({
+          recordatorios.push({
             fecha: fecha.toISOString().split("T")[0],
             temas: temasDelDia,
           });
         }
       }
 
-      // Guardar configuración de recordatorios
-      await supabase.functions.invoke("php-api-proxy", {
+      console.log(`Guardando ${recordatorios.length} recordatorios...`);
+
+      // Guardar recordatorios en la base de datos PHP
+      const { data: recordatoriosResult } = await supabase.functions.invoke("php-api-proxy", {
         body: {
           endpoint: "recordatorios_plan.php",
           method: "POST",
-          action: "configurar",
+          action: "crear",
           id_plan,
           id_usuario,
-          notificaciones_email,
-          hora_notificacion,
-          calendario: diasConTareas,
+          recordatorios,
         },
       });
+
+      console.log("Resultado guardado recordatorios:", recordatoriosResult);
     }
 
     return new Response(
