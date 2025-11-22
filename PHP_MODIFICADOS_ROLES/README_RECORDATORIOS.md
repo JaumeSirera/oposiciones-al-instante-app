@@ -4,7 +4,8 @@
 
 1. **recordatorios_plan.php** - API para gestionar recordatorios
 2. **cron_enviar_recordatorios.php** - Script del cron job
-3. **CREAR_TABLAS_RECORDATORIOS.sql** - Tablas necesarias en la BD
+3. **secciones_temas.php** - API para obtener secciones y temas de procesos
+4. **CREAR_TABLAS_RECORDATORIOS.sql** - Tablas necesarias en la BD
 
 ## 🗄️ Paso 1: Crear las tablas en la base de datos
 
@@ -19,6 +20,7 @@ Este script creará:
 Sube estos archivos a la misma carpeta donde tienes tu API PHP:
 - `recordatorios_plan.php`
 - `cron_enviar_recordatorios.php`
+- `secciones_temas.php`
 
 Asegúrate de que estén en la misma carpeta que `config.php` (tu archivo de conexión a la BD).
 

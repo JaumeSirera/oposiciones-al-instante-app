@@ -1,27 +1,61 @@
 ⚠️⚠️⚠️ ATENCIÓN - ACCIÓN REQUERIDA ⚠️⚠️⚠️
 
-DEBES SUBIR EL ARCHIVO procesos_usuario.php AL SERVIDOR YA
+ARCHIVOS QUE DEBES SUBIR AL SERVIDOR:
+
+1. procesos_usuario.php - URGENTE ❗
+2. secciones_temas.php - NUEVO ARCHIVO NECESARIO ❗
+3. recordatorios_plan.php - Para sistema de recordatorios
+4. cron_enviar_recordatorios.php - Para envío automático de emails
+
+==================================================
+PROBLEMA ACTUAL:
+==================================================
 
 El error 500 que estás viendo ocurre porque:
 1. La aplicación está intentando llamar a procesos_usuario.php
 2. El archivo actual en tu servidor NO tiene el código actualizado
 3. Está fallando al intentar obtener los procesos
 
+==================================================
+NUEVO ARCHIVO CRÍTICO: secciones_temas.php
+==================================================
+
+Este archivo es ESENCIAL para que la generación de planes con IA funcione correctamente.
+
+❌ SIN ESTE ARCHIVO: Los planes mostrarán "Tema 1, Tema 2, Tema 3..." (valores genéricos)
+✅ CON ESTE ARCHIVO: Los planes mostrarán las secciones y temas REALES de tu base de datos
+
 PASOS INMEDIATOS:
 
 1. Ve a: https://oposiciones-test.com/api/
-2. Busca el archivo: procesos_usuario.php
-3. REEMPLÁZALO con el archivo de esta carpeta: procesos_usuario.php
+2. Sube estos archivos en orden de prioridad:
+   a) procesos_usuario.php (para que funcione el listado de procesos)
+   b) secciones_temas.php (para que los planes IA usen datos reales)
+   c) recordatorios_plan.php (para gestionar recordatorios)
+   d) cron_enviar_recordatorios.php (para envío automático)
 
+==================================================
 OPCIONAL (pero recomendado):
-- También sube procesos.php para tener la funcionalidad completa
-- Ejecuta ALTER_TABLE_PROCESOS.sql para agregar las columnas
+==================================================
 
+- Sube procesos.php para tener la funcionalidad completa
+- Ejecuta ALTER_TABLE_PROCESOS.sql para agregar las columnas
+- Ejecuta CREAR_TABLAS_RECORDATORIOS.sql para el sistema de recordatorios
+
+==================================================
 NOTA IMPORTANTE:
+==================================================
+
 La nueva versión de procesos_usuario.php:
 ✅ Funciona CON o SIN las nuevas columnas
 ✅ Detecta automáticamente si las columnas existen
 ✅ Si NO existen, devuelve todos los procesos activos
 ✅ Si SÍ existen, aplica filtros por rol
 
-Hasta que subas este archivo, la aplicación seguirá dando error 500.
+El archivo secciones_temas.php:
+✅ Obtiene las secciones únicas de la tabla `preguntas`
+✅ Obtiene los temas únicos de la tabla `preguntas`
+✅ Funciona con cualquier proceso que tenga preguntas
+✅ Mejora significativamente la experiencia del usuario con IA
+
+Hasta que subas estos archivos, la aplicación seguirá con problemas.
