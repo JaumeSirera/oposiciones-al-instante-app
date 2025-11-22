@@ -57,12 +57,12 @@ serve(async (req) => {
       temas = funcionProxy.temas || [];
     }
 
-    // Si no hay datos, usar valores por defecto
-    if (secciones.length === 0) {
-      secciones = ["Temario General", "Legislación", "Conocimientos Específicos"];
-    }
-    if (temas.length === 0) {
-      temas = ["Tema 1", "Tema 2", "Tema 3", "Tema 4", "Tema 5"];
+    // Validar que hay datos de la base de datos
+    if (secciones.length === 0 || temas.length === 0) {
+      throw new Error(
+        `No se encontraron ${secciones.length === 0 ? 'secciones' : 'temas'} para el proceso ${id_proceso}. ` +
+        `Asegúrate de que existen preguntas en la base de datos para este proceso.`
+      );
     }
 
     console.log("Secciones disponibles:", secciones);
