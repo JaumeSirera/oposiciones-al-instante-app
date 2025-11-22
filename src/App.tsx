@@ -12,6 +12,7 @@ import { Layout } from "@/components/Layout";
 // Públicas
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Landing from "./pages/Landing";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
@@ -59,6 +60,7 @@ const App: React.FC = () => {
                 {/* Públicas */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/ResetPassword" element={<ResetPassword />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
                 {/* Públicas SEO */}
