@@ -35,6 +35,9 @@ export interface TestConfig {
   numPreguntas: number;
   minutos: number;
   tipo: 'simulacion' | 'examen';
+  dificultad?: string;
+  tipoPsico?: string;
+  habilidad?: string;
 }
 
 const ConfigTest: React.FC<ConfigTestProps> = ({ 
@@ -60,6 +63,9 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
   const [minutos, setMinutos] = useState('30');
   const [tipoTest, setTipoTest] = useState<'simulacion' | 'examen'>(initialType);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [dificultad, setDificultad] = useState<string>('todas');
+  const [tipoPsico, setTipoPsico] = useState<string>('todos');
+  const [habilidad, setHabilidad] = useState<string>('todas');
 
   // Cargar procesos al montar
   useEffect(() => {
@@ -286,6 +292,9 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
       numPreguntas: numPreguntasInt,
       minutos: minutosInt,
       tipo: tipoTest,
+      dificultad: dificultad !== 'todas' ? dificultad : undefined,
+      tipoPsico: isPsicotecnico && tipoPsico !== 'todos' ? tipoPsico : undefined,
+      habilidad: isPsicotecnico && habilidad !== 'todas' ? habilidad : undefined,
     });
   };
 
@@ -417,6 +426,64 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                       onChange={(e) => setMinutos(e.target.value)}
                     />
                   </div>
+                </div>
+
+                <Separator />
+
+                {/* Filtros de dificultad */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dificultad">Dificultad</Label>
+                    <Select value={dificultad} onValueChange={setDificultad}>
+                      <SelectTrigger id="dificultad">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todas">Todas las dificultades</SelectItem>
+                        <SelectItem value="facil">Fácil</SelectItem>
+                        <SelectItem value="media">Media</SelectItem>
+                        <SelectItem value="dificil">Difícil</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {isPsicotecnico && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="tipoPsico">Tipo de Pregunta</Label>
+                        <Select value={tipoPsico} onValueChange={setTipoPsico}>
+                          <SelectTrigger id="tipoPsico">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todos">Todos los tipos</SelectItem>
+                            <SelectItem value="numerica">Numérica</SelectItem>
+                            <SelectItem value="verbal">Verbal</SelectItem>
+                            <SelectItem value="abstracta">Abstracta</SelectItem>
+                            <SelectItem value="espacial">Espacial</SelectItem>
+                            <SelectItem value="mecanica">Mecánica</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="habilidad">Habilidad</Label>
+                        <Select value={habilidad} onValueChange={setHabilidad}>
+                          <SelectTrigger id="habilidad">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todas">Todas las habilidades</SelectItem>
+                            <SelectItem value="razonamiento">Razonamiento</SelectItem>
+                            <SelectItem value="memoria">Memoria</SelectItem>
+                            <SelectItem value="atencion">Atención</SelectItem>
+                            <SelectItem value="percepcion">Percepción</SelectItem>
+                            <SelectItem value="calculo">Cálculo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <Button

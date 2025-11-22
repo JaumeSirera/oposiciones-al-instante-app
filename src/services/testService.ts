@@ -124,6 +124,9 @@ class TestService {
     secciones: string[];
     temas: string[];
     numPreguntas: number;
+    dificultad?: string;
+    tipo?: string;
+    habilidad?: string;
   }): Promise<Pregunta[]> {
     try {
       const queryParams = new URLSearchParams({
@@ -132,6 +135,16 @@ class TestService {
         temas: params.temas.join(','),
         numPreguntas: params.numPreguntas.toString(),
       });
+
+      if (params.dificultad) {
+        queryParams.append('dificultad', params.dificultad);
+      }
+      if (params.tipo) {
+        queryParams.append('tipo', params.tipo);
+      }
+      if (params.habilidad) {
+        queryParams.append('habilidad', params.habilidad);
+      }
 
       console.log('🔗 Llamando a genera_test.php con:', queryParams.toString());
       const data = await this.callAPI(`genera_test.php?${queryParams.toString()}`);
