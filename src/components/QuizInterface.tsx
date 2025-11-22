@@ -90,6 +90,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         secciones: config.secciones,
         temas: config.temas,
         numPreguntas: config.numPreguntas,
+        dificultad: config.dificultad,
+        tipo: config.tipoPsico,
+        habilidad: config.habilidad,
       });
 
       if (preguntas.length === 0) {
