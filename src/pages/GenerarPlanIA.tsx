@@ -96,6 +96,12 @@ export default function GenerarPlanIA() {
   const confirmarYGuardar = async () => {
     if (!planGenerado || !user?.id || !selectedProceso) return;
 
+    const phpToken = localStorage.getItem("auth_token");
+    if (!phpToken) {
+      toast.error("Sesión no válida. Vuelve a iniciar sesión.");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("guardar-plan-generado", {
@@ -105,6 +111,7 @@ export default function GenerarPlanIA() {
           plan: planGenerado,
           notificaciones_email: notificacionesEmail,
           hora_notificacion: horaNotificacion,
+          php_token: phpToken,
         },
       });
 

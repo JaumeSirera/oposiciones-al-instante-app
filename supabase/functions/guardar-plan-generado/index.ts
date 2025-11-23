@@ -18,16 +18,15 @@ serve(async (req) => {
       plan,
       notificaciones_email,
       hora_notificacion,
+      php_token,
     } = await req.json();
 
     if (!id_usuario || !id_proceso || !plan) {
       throw new Error("Faltan parámetros requeridos");
     }
 
-    // Obtener token de autenticación
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No se proporcionó token de autenticación");
+    if (!php_token) {
+      throw new Error("Falta el token de autenticación PHP");
     }
 
     // Obtener URL de Supabase
@@ -39,8 +38,8 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": authHeader,
-        "apikey": supabaseKey,
+        "Authorization": `Bearer ${php_token}`,
+        apikey: supabaseKey,
       },
       body: JSON.stringify({
         endpoint: "planes_estudio.php",
@@ -149,8 +148,8 @@ Responde SOLO con JSON válido.`;
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": authHeader,
-            "apikey": supabaseKey,
+            "Authorization": `Bearer ${php_token}`,
+            apikey: supabaseKey,
           },
           body: JSON.stringify({
             endpoint: "guardar_plan_ia.php",
@@ -195,8 +194,8 @@ Responde SOLO con JSON válido.`;
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": authHeader,
-          "apikey": supabaseKey,
+          "Authorization": `Bearer ${php_token}`,
+          apikey: supabaseKey,
         },
         body: JSON.stringify({
           endpoint: "recordatorios_plan.php",
