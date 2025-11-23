@@ -204,6 +204,7 @@ Responde SOLO con JSON válido.`;
           id_plan,
           id_usuario,
           recordatorios,
+          tipo_plan: "estudio",
         }),
       });
       
