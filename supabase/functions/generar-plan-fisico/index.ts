@@ -22,10 +22,12 @@ serve(async (req) => {
       fecha_fin,
     } = await req.json();
 
-    // Limitar semanas a máximo 6
-    const semanasLimitadas = Math.min(semanas || 6, 6);
+    // Limitar semanas a máximo 4 para evitar respuestas demasiado largas
+    const semanasLimitadas = Math.min(semanas || 4, 4);
+    // Limitar días por semana usados por la IA para que el JSON sea compacto
+    const diasSemanaIA = Math.min(dias_semana || 3, 4);
 
-    if (!titulo || !tipo_prueba || !semanasLimitadas || !dias_semana || !fecha_inicio || !fecha_fin) {
+    if (!titulo || !tipo_prueba || !semanasLimitadas || !diasSemanaIA || !fecha_inicio || !fecha_fin) {
       return new Response(
         JSON.stringify({ success: false, error: "Faltan parámetros requeridos" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -47,7 +49,7 @@ serve(async (req) => {
 - Tipo: ${tipo_prueba}
 - Objetivo: ${descripcion || "Mejorar condición física"}
 - Duración: ${semanasLimitadas} semanas
-- Días/semana: ${dias_semana}
+- Días/semana (IA): ${diasSemanaIA}
 - Nivel: ${nivel_fisico}
 - Periodo: ${fecha_inicio} a ${fecha_fin}
 
@@ -72,13 +74,13 @@ serve(async (req) => {
             {
               "tipo": "Calentamiento",
               "ejercicios": [
-                {"nombre": "Ejercicio 1", "series": 2, "repeticiones": "10", "descanso": "30s", "notas": "Técnica"}
+                {"nombre": "Ejercicio 1", "notas": "Instrucción breve"}
               ]
             },
             {
               "tipo": "Principal",
               "ejercicios": [
-                {"nombre": "Ejercicio 2", "series": 3, "repeticiones": "12", "descanso": "60s", "notas": "Forma"}
+                {"nombre": "Ejercicio 2", "notas": "Instrucción breve"}
               ]
             }
           ]
@@ -91,11 +93,13 @@ serve(async (req) => {
 
 **IMPORTANTE:**
 - Genera las ${semanasLimitadas} semanas COMPLETAS
-- Cada semana debe tener ${dias_semana} sesiones (distribuidas en días: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo según corresponda)
+- Cada semana debe tener exactamente ${diasSemanaIA} sesiones (aunque el usuario haya indicado más)
+- Distribuye las sesiones en días: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo según corresponda
 - Cada sesión: 2 bloques máximo (Calentamiento + Principal)
-- Cada bloque: 1-2 ejercicios
-- Textos concisos (máx 10 palabras)
+- Cada bloque: 1 ejercicio con nombre y una nota corta
+- Textos muy concisos (máx 8 palabras por nota)
 - Calcula las fechas de cada semana correctamente
+- NO uses markdown, ni listas, ni ```
 
 **Enfoque ${tipo_prueba}:**
 ${getTipoPruebaGuidelines(tipo_prueba)}
@@ -115,10 +119,11 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.3,
             topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 12288,
+            topP: 0.9,
+            maxOutputTokens: 4096,
+          },
           },
         }),
       }
