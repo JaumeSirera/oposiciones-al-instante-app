@@ -56,7 +56,7 @@ Genera un plan de entrenamiento físico personalizado con las siguientes caracte
 Genera un JSON con esta estructura exacta:
 {
   "titulo": "${titulo}",
-  "descripcion": "Descripción completa del plan adaptada a ${tipo_prueba}",
+  "descripcion": "Descripción breve del plan (máximo 2 líneas)",
   "tipo_prueba": "${tipo_prueba}",
   "fecha_inicio": "${fecha_inicio}",
   "fecha_fin": "${fecha_fin}",
@@ -65,7 +65,7 @@ Genera un JSON con esta estructura exacta:
       "titulo": "Semana 1: Adaptación",
       "fecha_inicio": "YYYY-MM-DD",
       "fecha_fin": "YYYY-MM-DD",
-      "resumen": "Resumen de objetivos de la semana",
+      "resumen": "Objetivo breve (1 línea)",
       "sesiones": [
         {
           "dia": "Lunes",
@@ -74,11 +74,11 @@ Genera un JSON con esta estructura exacta:
               "tipo": "Calentamiento",
               "ejercicios": [
                 {
-                  "nombre": "Ejercicio específico",
+                  "nombre": "Ejercicio",
                   "series": 3,
                   "repeticiones": "10-12",
-                  "descanso": "60 seg",
-                  "notas": "Observaciones técnicas"
+                  "descanso": "60s",
+                  "notas": "Técnica"
                 }
               ]
             },
@@ -95,23 +95,26 @@ Genera un JSON con esta estructura exacta:
       ]
     }
   ],
-  "resumen": "Resumen general del plan de ${semanas} semanas"
+  "resumen": "Resumen general breve (máx 2 líneas)"
 }
+
+**IMPORTANTE - Mantén el JSON CONCISO:**
+- Descripciones: máximo 2 líneas
+- Máximo 3 ejercicios por bloque
+- Notas técnicas: 1 línea máximo
 
 **Criterios específicos para ${tipo_prueba}:**
 ${getTipoPruebaGuidelines(tipo_prueba)}
 
 **Criterios generales:**
-1. Distribuye ${dias_semana} sesiones por semana de forma equilibrada
-2. Progresión gradual de intensidad según el nivel ${nivel_fisico}
-3. Incluye calentamiento (10-15 min), parte principal (30-45 min) y vuelta a la calma (10 min)
-4. Cada sesión debe tener bloques: Calentamiento, Principal, Vuelta a la calma
-5. Especifica series, repeticiones, descansos y notas técnicas
-6. Las últimas 2 semanas deben ser de consolidación y puesta a punto
-7. Incluye días de descanso activo o completo
-8. Adapta la intensidad al nivel: principiante (60-70%), intermedio (70-80%), avanzado (80-90%)
+1. ${dias_semana} sesiones/semana equilibradas
+2. Progresión gradual según nivel ${nivel_fisico}
+3. Calentamiento, principal y vuelta a la calma en cada sesión
+4. Especifica series, reps, descansos
+5. Últimas 2 semanas: consolidación
+6. Intensidad: principiante (60-70%), intermedio (70-80%), avanzado (80-90%)
 
-Genera el plan completo en formato JSON válido.`;
+Genera el plan COMPLETO en formato JSON válido y CONCISO.`;
 
     const aiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
@@ -124,7 +127,7 @@ Genera el plan completo en formato JSON válido.`;
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 8192,
+            maxOutputTokens: 16384,
           },
         }),
       }
