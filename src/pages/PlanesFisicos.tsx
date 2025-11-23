@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { Calendar as CalendarIcon, Dumbbell, Pencil, Trash2, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Dumbbell, Pencil, Trash2, Plus, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +37,7 @@ export default function PlanesFisicos() {
   const [editMode, setEditMode] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -195,6 +196,7 @@ export default function PlanesFisicos() {
     if (!window.confirm('¿Seguro que quieres eliminar este plan?')) return;
     if (!user?.id) return;
 
+    setDeletingId(id);
     try {
       const token = authService.getToken();
       const response = await fetch(`${API_BASE}/planes_fisicos.php?action=eliminar`, {
@@ -218,6 +220,8 @@ export default function PlanesFisicos() {
       }
     } catch (error) {
       toast.error('Error de conexión');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -242,10 +246,16 @@ export default function PlanesFisicos() {
         </p>
       </div>
 
-      <Button onClick={handleCreate} className="mb-6">
-        <Plus className="h-4 w-4 mr-2" />
-        Nuevo plan físico
-      </Button>
+      <div className="flex gap-3 mb-6">
+        <Button onClick={handleCreate}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo plan físico
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/generar-plan-fisico-ia')}>
+          <Sparkles className="h-4 w-4 mr-2" />
+          Generar con IA
+        </Button>
+      </div>
 
       {planes.length === 0 ? (
         <Card>
@@ -259,9 +269,17 @@ export default function PlanesFisicos() {
           {planes.map((plan) => (
             <Card
               key={plan.id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
+              className="hover:shadow-lg transition-shadow cursor-pointer relative"
               onClick={() => navigate(`/planes-fisicos/${plan.id}`)}
             >
+              {deletingId === plan.id && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-20 rounded-lg">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-sm text-muted-foreground">Eliminando...</p>
+                  </div>
+                </div>
+              )}
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -276,6 +294,7 @@ export default function PlanesFisicos() {
                         e.stopPropagation();
                         handleEdit(plan);
                       }}
+                      disabled={deletingId === plan.id}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -286,6 +305,7 @@ export default function PlanesFisicos() {
                         e.stopPropagation();
                         handleDelete(plan.id);
                       }}
+                      disabled={deletingId === plan.id}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

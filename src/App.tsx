@@ -39,6 +39,7 @@ import GenerarPlanIA from "./pages/GenerarPlanIA";
 import PlanEstudioDetalle from "./pages/PlanEstudioDetalle";
 import PlanesFisicos from "./pages/PlanesFisicos";
 import PlanFisicoDetalle from "./pages/PlanFisicoDetalle";
+import GenerarPlanFisicoIA from "./pages/GenerarPlanFisicoIA";
 import TestPersonalidad from "./pages/TestPersonalidad";
 import TestPage from "./pages/TestPage";
 import EstadisticasPage from "./pages/EstadisticasPage";
@@ -101,6 +102,7 @@ const App: React.FC = () => {
                   <Route path="/generar-plan-ia" element={<GenerarPlanIA />} />
                   <Route path="/plan-estudio/:id" element={<PlanEstudioDetalle />} />
                   <Route path="/planes-fisicos" element={<PlanesFisicos />} />
+                  <Route path="/generar-plan-fisico-ia" element={<GenerarPlanFisicoIA />} />
                   <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
                   <Route path="/test-personalidad" element={<TestPersonalidad />} />
                 </Route>
