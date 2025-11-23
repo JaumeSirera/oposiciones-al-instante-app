@@ -40,84 +40,59 @@ serve(async (req) => {
       );
     }
 
-    const prompt = `Eres un experto entrenador deportivo especializado en preparación física para oposiciones y competiciones.
+    const prompt = `Eres un experto entrenador deportivo. Genera un plan de entrenamiento físico RESUMIDO.
 
-Genera un plan de entrenamiento físico personalizado con las siguientes características:
-
-**Información del plan:**
+**Datos del plan:**
 - Título: ${titulo}
-- Tipo de prueba: ${tipo_prueba}
-- Descripción/Objetivos: ${descripcion || "Sin objetivos específicos"}
-- Duración: ${semanasLimitadas} semanas
-- Días de entrenamiento por semana: ${dias_semana}
-- Nivel físico: ${nivel_fisico}
-- Fecha inicio: ${fecha_inicio}
-- Fecha fin: ${fecha_fin}
+- Tipo: ${tipo_prueba}
+- Objetivo: ${descripcion || "Mejorar condición física"}
+- Duración: ${semanasLimitadas} semanas (${dias_semana} días/semana)
+- Nivel: ${nivel_fisico}
+- Periodo: ${fecha_inicio} a ${fecha_fin}
 
-**Estructura requerida:**
-
-Genera un JSON con esta estructura exacta:
+**CRÍTICO - Genera JSON COMPACTO:**
 {
   "titulo": "${titulo}",
-  "descripcion": "Descripción breve del plan (máximo 2 líneas)",
+  "descripcion": "1 línea",
   "tipo_prueba": "${tipo_prueba}",
   "fecha_inicio": "${fecha_inicio}",
   "fecha_fin": "${fecha_fin}",
   "semanas": [
     {
-      "titulo": "Semana 1: Adaptación",
+      "titulo": "Semana X: Fase",
       "fecha_inicio": "YYYY-MM-DD",
       "fecha_fin": "YYYY-MM-DD",
-      "resumen": "Objetivo breve (1 línea)",
+      "resumen": "1 línea objetivo",
       "sesiones": [
         {
           "dia": "Lunes",
           "bloques": [
             {
               "tipo": "Calentamiento",
-              "ejercicios": [
-                {
-                  "nombre": "Ejercicio",
-                  "series": 3,
-                  "repeticiones": "10-12",
-                  "descanso": "60s",
-                  "notas": "Técnica"
-                }
-              ]
+              "ejercicios": [{"nombre": "Ejercicio", "series": 3, "repeticiones": "10", "descanso": "60s", "notas": "breve"}]
             },
             {
               "tipo": "Principal",
-              "ejercicios": [...]
-            },
-            {
-              "tipo": "Vuelta a la calma",
-              "ejercicios": [...]
+              "ejercicios": [{"nombre": "Ejercicio", "series": 4, "repeticiones": "8", "descanso": "90s", "notas": "breve"}]
             }
           ]
         }
       ]
     }
   ],
-  "resumen": "Resumen general breve (máx 2 líneas)"
+  "resumen": "1 línea"
 }
 
-**IMPORTANTE - Mantén el JSON CONCISO:**
-- Descripciones: máximo 2 líneas
-- Máximo 3 ejercicios por bloque
-- Notas técnicas: 1 línea máximo
+**LÍMITES ESTRICTOS:**
+- Solo ${Math.min(dias_semana, 3)} días/semana (primeros días)
+- Máximo 2 bloques por sesión (Calentamiento + Principal)
+- Máximo 2 ejercicios por bloque
+- Descripciones: máximo 5 palabras
+- NO generar sesiones completas para todas las semanas
 
-**Criterios específicos para ${tipo_prueba}:**
 ${getTipoPruebaGuidelines(tipo_prueba)}
 
-**Criterios generales:**
-1. ${dias_semana} sesiones/semana equilibradas
-2. Progresión gradual según nivel ${nivel_fisico}
-3. Calentamiento, principal y vuelta a la calma en cada sesión
-4. Especifica series, reps, descansos
-5. Últimas 2 semanas: consolidación
-6. Intensidad: principiante (60-70%), intermedio (70-80%), avanzado (80-90%)
-
-Genera el plan COMPLETO en formato JSON válido y CONCISO.`;
+Responde SOLO con el JSON, sin explicaciones adicionales.`;
 
     const aiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
@@ -130,7 +105,7 @@ Genera el plan COMPLETO en formato JSON válido y CONCISO.`;
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 16384,
+            maxOutputTokens: 8192,
           },
         }),
       }
@@ -162,34 +137,77 @@ Genera el plan COMPLETO en formato JSON válido y CONCISO.`;
 
     // Limpiar markdown y caracteres especiales
     content = content.trim();
-    // Remover bloques de código markdown
     content = content.replace(/```json\s*/g, "").replace(/```\s*/g, "");
-    // Remover posibles comentarios
     content = content.replace(/\/\*[\s\S]*?\*\//g, "");
     content = content.replace(/\/\/.*/g, "");
     
     let planData;
     try {
-      // Intentar parsear directamente primero
+      // Intentar parsear directamente
       try {
         planData = JSON.parse(content);
       } catch (directParseError) {
-        console.log("Parse directo falló, intentando extraer JSON...");
-        // Si falla, buscar el JSON dentro del contenido
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          throw new Error("No se encontró JSON válido en la respuesta");
+        console.log("Parse directo falló, buscando JSON válido...");
+        
+        // Buscar el inicio del JSON
+        const startIdx = content.indexOf('{');
+        if (startIdx === -1) {
+          throw new Error("No se encontró inicio de JSON");
         }
-        console.log("JSON extraído (primeros 500 chars):", jsonMatch[0].substring(0, 500));
-        planData = JSON.parse(jsonMatch[0]);
+        
+        // Intentar encontrar el JSON completo con balance de llaves
+        let braceCount = 0;
+        let endIdx = startIdx;
+        let inString = false;
+        let escapeNext = false;
+        
+        for (let i = startIdx; i < content.length; i++) {
+          const char = content[i];
+          
+          if (escapeNext) {
+            escapeNext = false;
+            continue;
+          }
+          
+          if (char === '\\') {
+            escapeNext = true;
+            continue;
+          }
+          
+          if (char === '"' && !escapeNext) {
+            inString = !inString;
+            continue;
+          }
+          
+          if (!inString) {
+            if (char === '{') braceCount++;
+            if (char === '}') {
+              braceCount--;
+              if (braceCount === 0) {
+                endIdx = i + 1;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (braceCount !== 0) {
+          console.error("JSON truncado o malformado. Braces no balanceadas:", braceCount);
+          throw new Error("JSON incompleto o malformado");
+        }
+        
+        const jsonStr = content.substring(startIdx, endIdx);
+        console.log("JSON extraído (length):", jsonStr.length);
+        planData = JSON.parse(jsonStr);
       }
     } catch (parseError) {
       console.error("Error parseando JSON:", parseError);
-      console.error("Contenido que falló:", content.substring(0, 1000));
+      console.error("Contenido (primeros 1000):", content.substring(0, 1000));
+      console.error("Contenido (últimos 500):", content.substring(Math.max(0, content.length - 500)));
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Error al procesar respuesta de IA: " + parseError.message,
+          error: "Error al procesar respuesta de IA. Intenta reducir el número de semanas o días.",
           debug: content.substring(0, 500)
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
@@ -214,46 +232,15 @@ Genera el plan COMPLETO en formato JSON válido y CONCISO.`;
 
 function getTipoPruebaGuidelines(tipo: string): string {
   const guidelines = {
-    "Bombero": `- Enfoque en fuerza funcional y resistencia cardiovascular
-- Incluir ejercicios específicos: dominadas, flexiones, carrera, natación
-- Trabajo de resistencia aeróbica y anaeróbica
-- Circuitos funcionales con material específico`,
-    
-    "Policía Nacional": `- Equilibrio entre fuerza, velocidad y resistencia
-- Circuitos de fuerza-resistencia
-- Trabajo de velocidad en distancias cortas
-- Natación técnica y resistencia`,
-    
-    "Policía Local": `- Similar a Policía Nacional adaptado
-- Enfoque en resistencia y pruebas físicas generales
-- Circuitos metabólicos`,
-    
-    "Guardia Civil": `- Programa integral de condición física
-- Resistencia cardiovascular de larga duración
-- Fuerza funcional y natación`,
-    
-    "Militar": `- Alto componente de resistencia física y mental
-- Marchas con carga
-- Trabajo de fuerza-resistencia intenso`,
-    
-    "CrossFit": `- Alta intensidad y variedad de movimientos
-- WODs (Workout of the Day) variados
-- Trabajo de gimnásticos, halterofilia y metcon
-- Énfasis en movimientos funcionales a alta intensidad`,
-    
-    "Hyrox": `- Formato específico: 8km carrera + 8 estaciones
-- Trabajo de resistencia aeróbica base
-- Entrenamiento en las 8 estaciones oficiales
-- Transiciones rápidas entre ejercicios`,
-    
-    "Hybrid": `- Combinación de CrossFit y Hyrox
-- Balance entre fuerza, potencia y resistencia
-- Sesiones mixtas de gimnásticos + metcon
-- Trabajo cardiovascular específico`,
-    
-    "Otro": `- Plan general de condición física
-- Trabajo equilibrado de todas las capacidades
-- Adaptable a diferentes objetivos`,
+    "Bombero": "Fuerza funcional + resistencia. Incluir: dominadas, flexiones, carrera.",
+    "Policía Nacional": "Equilibrio fuerza-velocidad-resistencia. Circuitos y natación.",
+    "Policía Local": "Resistencia + pruebas físicas generales. Circuitos metabólicos.",
+    "Guardia Civil": "Resistencia cardiovascular + fuerza funcional + natación.",
+    "Militar": "Alta resistencia física. Marchas con carga + fuerza-resistencia.",
+    "CrossFit": "Alta intensidad. WODs variados: gimnásticos + halterofilia + metcon.",
+    "Hyrox": "8km carrera + 8 estaciones. Resistencia aeróbica + transiciones rápidas.",
+    "Hybrid": "CrossFit + Hyrox. Balance fuerza-potencia-resistencia.",
+    "Otro": "Condición física general. Trabajo equilibrado.",
   };
   
   return guidelines[tipo] || guidelines["Otro"];
