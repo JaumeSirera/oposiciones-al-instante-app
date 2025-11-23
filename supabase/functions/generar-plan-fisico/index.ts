@@ -22,10 +22,10 @@ serve(async (req) => {
       fecha_fin,
     } = await req.json();
 
-    // Limitar semanas a máximo 4 para evitar respuestas demasiado largas
-    const semanasLimitadas = Math.min(semanas || 4, 4);
+    // Limitar semanas a máximo 3 para evitar respuestas demasiado largas
+    const semanasLimitadas = Math.min(semanas || 3, 3);
     // Limitar días por semana usados por la IA para que el JSON sea compacto
-    const diasSemanaIA = Math.min(dias_semana || 3, 4);
+    const diasSemanaIA = Math.min(dias_semana || 3, 3);
 
     if (!titulo || !tipo_prueba || !semanasLimitadas || !diasSemanaIA || !fecha_inicio || !fecha_fin) {
       return new Response(
@@ -74,13 +74,13 @@ serve(async (req) => {
             {
               "tipo": "Calentamiento",
               "ejercicios": [
-                {"nombre": "Ejercicio 1", "notas": "Instrucción breve"}
+                {"nombre": "Movilidad"}
               ]
             },
             {
               "tipo": "Principal",
               "ejercicios": [
-                {"nombre": "Ejercicio 2", "notas": "Instrucción breve"}
+                {"nombre": "Carrera 20min"}
               ]
             }
           ]
@@ -92,14 +92,13 @@ serve(async (req) => {
 }
 
 **IMPORTANTE:**
-- Genera las ${semanasLimitadas} semanas COMPLETAS
-- Cada semana debe tener exactamente ${diasSemanaIA} sesiones (aunque el usuario haya indicado más)
-- Distribuye las sesiones en días: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo según corresponda
-- Cada sesión: 2 bloques máximo (Calentamiento + Principal)
-- Cada bloque: 1 ejercicio con nombre y una nota corta
-- Textos muy concisos (máx 8 palabras por nota)
-- Calcula las fechas de cada semana correctamente
-- NO uses markdown ni bloques de código
+- Genera EXACTAMENTE ${semanasLimitadas} semanas COMPLETAS
+- Cada semana: EXACTAMENTE ${diasSemanaIA} sesiones (Lunes, Martes, Miércoles, etc.)
+- Cada sesión: 2 bloques (Calentamiento + Principal)
+- Cada bloque: 1 ejercicio SOLO con "nombre" (muy breve, máx 4 palabras)
+- NO incluyas "notas", "series", "repeticiones" ni "descanso"
+- Calcula fechas correctamente
+- Responde JSON puro sin markdown
 
 **Enfoque ${tipo_prueba}:**
 ${getTipoPruebaGuidelines(tipo_prueba)}
@@ -122,7 +121,7 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
             temperature: 0.3,
             topK: 40,
             topP: 0.9,
-            maxOutputTokens: 4096,
+            maxOutputTokens: 6144,
           },
         }),
       }
