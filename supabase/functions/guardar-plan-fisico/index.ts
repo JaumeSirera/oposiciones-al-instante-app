@@ -96,6 +96,12 @@ serve(async (req) => {
       }
 
       if (recordatorios.length > 0) {
+        // Convertir recordatorios de plan físico al formato estándar
+        const recordatoriosFormateados = recordatorios.map(r => ({
+          fecha: r.fecha,
+          temas: [r.contenido], // Convertir contenido a array de temas
+        }));
+
         await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
           method: "POST",
           headers: {
@@ -104,13 +110,13 @@ serve(async (req) => {
             apikey: supabaseKey,
           },
           body: JSON.stringify({
-            endpoint: "recordatorios_plan_fisico.php",
+            endpoint: "recordatorios_plan.php",
             method: "POST",
             action: "crear",
             id_plan: result.id_plan,
             id_usuario,
-            recordatorios,
-            hora_notificacion,
+            recordatorios: recordatoriosFormateados,
+            tipo_plan: "fisico",
           }),
         });
       }
