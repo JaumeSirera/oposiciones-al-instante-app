@@ -482,9 +482,61 @@ function enviarRecordatorioAhora() {
     $recordatorio = $result->fetch_assoc();
     $recordatorio['temas'] = json_decode($recordatorio['temas'], true);
     
-    // Aquí deberías integrar con tu sistema de envío de emails
-    // Por ahora solo marcamos como enviado
+    // Llamar al edge function de Supabase para enviar el email
+    $supabase_url = 'https://yrjwyeuqfleqhbveohrf.supabase.co';
+    $supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlyand5ZXVxZmxlcWhidmVvaHJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjM1OTUsImV4cCI6MjA3NTUzOTU5NX0.QeAWfPjecNzz_d1MY1UHYmVN9bYl23rzot9gDsUtXKY';
     
+    $edge_function_url = $supabase_url . '/functions/v1/enviar-recordatorio-plan';
+    
+    $payload = json_encode([
+        'id_plan' => $recordatorio['id_plan'],
+        'id_usuario' => $recordatorio['id_usuario'],
+        'fecha' => $recordatorio['fecha'],
+        'temas' => $recordatorio['temas'],
+        'email_usuario' => $recordatorio['email_usuario'],
+        'tipo_plan' => $recordatorio['tipo_plan']
+    ]);
+    
+    error_log("Llamando a edge function: $edge_function_url");
+    error_log("Payload: $payload");
+    
+    $ch = curl_init($edge_function_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $supabase_key,
+        'apikey: ' . $supabase_key
+    ]);
+    
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
+    curl_close($ch);
+    
+    error_log("Edge function response code: $http_code");
+    error_log("Edge function response: $response");
+    
+    if ($curl_error) {
+        error_log("CURL Error: $curl_error");
+        throw new Exception("Error al enviar email: $curl_error");
+    }
+    
+    if ($http_code !== 200) {
+        error_log("Error HTTP $http_code al enviar email");
+        throw new Exception("Error al enviar email. HTTP $http_code");
+    }
+    
+    $email_result = json_decode($response, true);
+    
+    if (!$email_result || !$email_result['success']) {
+        $error_msg = $email_result['error'] ?? 'Error desconocido';
+        error_log("Error en edge function: $error_msg");
+        throw new Exception("Error al enviar email: $error_msg");
+    }
+    
+    // Marcar como enviado en la BD
     $stmt = $conn->prepare("
         UPDATE recordatorios_plan 
         SET enviado = 1, fecha_envio = NOW() 
