@@ -118,8 +118,8 @@ function obtenerRecordatoriosPendientes() {
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
         INNER JOIN accounts u ON r.id_usuario = u.id
-        LEFT JOIN planes_estudio pe ON r.id_plan = pe.id_plan AND r.tipo_plan = 'estudio'
-        LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id_plan AND r.tipo_plan = 'fisico'
+        LEFT JOIN planes_estudio pe ON r.id_plan = pe.id AND r.tipo_plan = 'estudio'
+        LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id AND r.tipo_plan = 'fisico'
         WHERE r.fecha = ? 
         AND r.enviado = 0
         ORDER BY r.fecha ASC
@@ -231,8 +231,8 @@ function obtenerTodosRecordatorios() {
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
         INNER JOIN accounts u ON r.id_usuario = u.id
-        LEFT JOIN planes_estudio pe ON r.id_plan = pe.id_plan AND r.tipo_plan = 'estudio'
-        LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id_plan AND r.tipo_plan = 'fisico'
+        LEFT JOIN planes_estudio pe ON r.id_plan = pe.id AND r.tipo_plan = 'estudio'
+        LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id AND r.tipo_plan = 'fisico'
         WHERE 1=1
     ";
     
@@ -404,8 +404,8 @@ function enviarRecordatorioAhora() {
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
         INNER JOIN accounts u ON r.id_usuario = u.id
-        LEFT JOIN planes_estudio pe ON r.id_plan = pe.id_plan AND r.tipo_plan = 'estudio'
-        LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id_plan AND r.tipo_plan = 'fisico'
+        LEFT JOIN planes_estudio pe ON r.id_plan = pe.id AND r.tipo_plan = 'estudio'
+        LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id AND r.tipo_plan = 'fisico'
         WHERE r.id_recordatorio = ?
     ");
     
