@@ -25,10 +25,22 @@ serve(async (req) => {
       throw new Error("Faltan parámetros requeridos");
     }
 
-    // Crear cliente Supabase
+    // Obtener token de autenticación
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No se proporcionó token de autenticación");
+    }
+
+    // Crear cliente Supabase con el token del usuario
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    });
 
     // Guardar plan básico mediante PHP API
     const { data: planCreado } = await supabase.functions.invoke(
