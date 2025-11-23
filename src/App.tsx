@@ -46,6 +46,7 @@ import EstadisticasPage from "./pages/EstadisticasPage";
 import HistorialPage from "./pages/HistorialPage";
 import RankingPage from "./pages/RankingPage";
 import Donacion from "./pages/Donacion";
+import AdministrarRecordatorios from "./pages/AdministrarRecordatorios";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,7 @@ const App: React.FC = () => {
                   <Route path="/generar-plan-fisico-ia" element={<GenerarPlanFisicoIA />} />
                   <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
                   <Route path="/test-personalidad" element={<TestPersonalidad />} />
+                  <Route path="/administrar-recordatorios" element={<AdministrarRecordatorios />} />
                 </Route>
 
                 {/* Fallback global */}
