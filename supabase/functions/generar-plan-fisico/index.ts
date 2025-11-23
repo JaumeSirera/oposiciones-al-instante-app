@@ -142,25 +142,50 @@ Genera el plan completo en formato JSON válido.`;
     const aiData = await aiResponse.json();
     let content = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
+    console.log("Respuesta de Gemini (raw):", JSON.stringify(aiData).substring(0, 500));
+
     if (!content) {
+      console.error("No se generó contenido de la IA");
       return new Response(
         JSON.stringify({ success: false, error: "No se generó contenido" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
 
-    // Limpiar markdown y extraer JSON
-    content = content.trim().replace(/^```json\s*/, "").replace(/\s*```$/, "");
-    let planData;
+    console.log("Contenido recibido (primeros 500 chars):", content.substring(0, 500));
+
+    // Limpiar markdown y caracteres especiales
+    content = content.trim();
+    // Remover bloques de código markdown
+    content = content.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+    // Remover posibles comentarios
+    content = content.replace(/\/\*[\s\S]*?\*\//g, "");
+    content = content.replace(/\/\/.*/g, "");
     
+    let planData;
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No se encontró JSON en la respuesta");
-      planData = JSON.parse(jsonMatch[0]);
+      // Intentar parsear directamente primero
+      try {
+        planData = JSON.parse(content);
+      } catch (directParseError) {
+        console.log("Parse directo falló, intentando extraer JSON...");
+        // Si falla, buscar el JSON dentro del contenido
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("No se encontró JSON válido en la respuesta");
+        }
+        console.log("JSON extraído (primeros 500 chars):", jsonMatch[0].substring(0, 500));
+        planData = JSON.parse(jsonMatch[0]);
+      }
     } catch (parseError) {
       console.error("Error parseando JSON:", parseError);
+      console.error("Contenido que falló:", content.substring(0, 1000));
       return new Response(
-        JSON.stringify({ success: false, error: "Error al procesar respuesta de IA" }),
+        JSON.stringify({ 
+          success: false, 
+          error: "Error al procesar respuesta de IA: " + parseError.message,
+          debug: content.substring(0, 500)
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
