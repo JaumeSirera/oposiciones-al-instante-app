@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { authService } from '@/services/authService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,8 +14,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-
-const API_BASE = 'https://oposiciones-test.com/api';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PlanFisico {
   id: number;
@@ -64,22 +62,22 @@ export default function PlanesFisicos() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const token = authService.getToken();
-      const response = await fetch(
-        `${API_BASE}/planes_fisicos.php?action=listar&id_usuario=${user.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const { data, error } = await supabase.functions.invoke('php-api-proxy', {
+        body: {
+          endpoint: `planes_fisicos.php?action=listar&id_usuario=${user.id}`,
+          method: 'GET'
         }
-      );
-      const data = await response.json();
+      });
+      
+      if (error) throw error;
+      
       if (data.success) {
         setPlanes(data.planes || []);
       } else {
         toast.error(data.error || 'Error al cargar los planes físicos');
       }
     } catch (error) {
+      console.error('Error al cargar planes físicos:', error);
       toast.error('Error de conexión al cargar planes');
     } finally {
       setLoading(false);
@@ -153,7 +151,6 @@ export default function PlanesFisicos() {
 
     setSaving(true);
     try {
-      const token = authService.getToken();
       const payload = {
         id_usuario: user.id,
         titulo: formData.titulo.trim(),
@@ -163,20 +160,20 @@ export default function PlanesFisicos() {
         fecha_fin: format(formData.fecha_fin!, 'yyyy-MM-dd'),
       };
 
-      const url = editMode
-        ? `${API_BASE}/planes_fisicos.php?action=actualizar&id_plan=${editingId}`
-        : `${API_BASE}/planes_fisicos.php?action=crear`;
+      const endpoint = editMode
+        ? `planes_fisicos.php?action=actualizar&id_plan=${editingId}`
+        : `planes_fisicos.php?action=crear`;
 
-      const response = await fetch(url, {
-        method: editMode ? 'PUT' : 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      const { data, error } = await supabase.functions.invoke('php-api-proxy', {
+        body: {
+          endpoint,
+          method: editMode ? 'PUT' : 'POST',
+          ...payload
+        }
       });
 
-      const data = await response.json();
+      if (error) throw error;
+
       if (data.success) {
         toast.success(editMode ? 'Plan actualizado' : 'Plan creado');
         setModalOpen(false);
@@ -186,6 +183,7 @@ export default function PlanesFisicos() {
         toast.error(data.error || 'Error al guardar el plan');
       }
     } catch (error) {
+      console.error('Error al guardar plan físico:', error);
       toast.error('Error de conexión');
     } finally {
       setSaving(false);
@@ -198,20 +196,17 @@ export default function PlanesFisicos() {
 
     setDeletingId(id);
     try {
-      const token = authService.getToken();
-      const response = await fetch(`${API_BASE}/planes_fisicos.php?action=eliminar`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('php-api-proxy', {
+        body: {
+          endpoint: 'planes_fisicos.php?action=eliminar',
+          method: 'POST',
           id_plan: id,
-          id_usuario: user.id,
-        }),
+          id_usuario: user.id
+        }
       });
 
-      const data = await response.json();
+      if (error) throw error;
+
       if (data.success) {
         toast.success('Plan eliminado');
         fetchPlanes();
@@ -219,6 +214,7 @@ export default function PlanesFisicos() {
         toast.error(data.error || 'Error al eliminar el plan');
       }
     } catch (error) {
+      console.error('Error al eliminar plan físico:', error);
       toast.error('Error de conexión');
     } finally {
       setDeletingId(null);
