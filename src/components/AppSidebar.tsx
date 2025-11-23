@@ -14,7 +14,8 @@ import {
   PlusCircle,
   Calendar,
   Dumbbell,
-  User
+  User,
+  Bell
 } from "lucide-react";
 import {
   Sidebar,
@@ -63,6 +64,7 @@ const menuItems = [
       { title: "Crear Resumen", url: "/crear-resumen", icon: PlusCircle },
       { title: "Planes de Estudio", url: "/planes-estudio", icon: Calendar, notForUsuario: true },
       { title: "Planes Físicos", url: "/planes-fisicos", icon: Dumbbell, notForUsuario: true },
+      { title: "Recordatorios", url: "/administrar-recordatorios", icon: Bell, requiresAdmin: true },
     ]
   },
   {
@@ -95,7 +97,14 @@ export function AppSidebar() {
       if (isAdmin) {
         return {
           ...section,
-          items: section.items.filter(item => !(item as any).requiresSA)
+          items: section.items.filter(item => {
+            const itemAny = item as any;
+            // Filtrar items que requieren SA
+            if (itemAny.requiresSA) return false;
+            // Filtrar items que requieren admin
+            if (itemAny.requiresAdmin && !isAdmin && !isSuperAdmin) return false;
+            return true;
+          })
         };
       }
       
