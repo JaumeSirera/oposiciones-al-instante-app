@@ -273,6 +273,17 @@ function obtenerTodosRecordatorios() {
     
     $stmt = $conn->prepare($query);
     
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error al preparar la consulta de recordatorios',
+            'sql' => $query,
+            'db_error' => $conn->error,
+        ]);
+        exit();
+    }
+    
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
     }
