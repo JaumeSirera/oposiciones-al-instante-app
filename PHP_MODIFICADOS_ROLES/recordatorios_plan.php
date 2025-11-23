@@ -226,7 +226,7 @@ function obtenerTodosRecordatorios() {
             r.enviado,
             r.fecha_envio,
             r.tipo_plan,
-            u.nombre as nombre_usuario,
+            u.username as nombre_usuario,
             u.email as email_usuario,
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
@@ -274,6 +274,7 @@ function obtenerTodosRecordatorios() {
     $stmt = $conn->prepare($query);
     
     if (!$stmt) {
+        error_log("Error en obtenerTodosRecordatorios prepare: " . $conn->error . " | SQL: " . str_replace(["\n", "\r"], ' ', $query));
         http_response_code(500);
         echo json_encode([
             'success' => false,
@@ -399,7 +400,7 @@ function enviarRecordatorioAhora() {
             r.temas,
             r.tipo_plan,
             u.email as email_usuario,
-            u.nombre as nombre_usuario,
+            u.username as nombre_usuario,
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
         INNER JOIN accounts u ON r.id_usuario = u.id
