@@ -59,7 +59,7 @@ export default function GenerarPlanFisicoIA() {
   const [titulo, setTitulo] = useState('');
   const [tipo, setTipo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [semanas, setSemanas] = useState(12);
+  const [semanas, setSemanas] = useState(6);
   const [diasSemana, setDiasSemana] = useState(4);
   const [nivelFisico, setNivelFisico] = useState('intermedio');
   const [fechaInicio, setFechaInicio] = useState<Date>(new Date());
@@ -203,7 +203,7 @@ export default function GenerarPlanFisicoIA() {
                   id="semanas"
                   type="number"
                   min={4}
-                  max={52}
+                  max={6}
                   value={semanas}
                   onChange={(e) => setSemanas(Number(e.target.value))}
                 />
