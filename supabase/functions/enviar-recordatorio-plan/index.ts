@@ -148,7 +148,7 @@ serve(async (req) => {
     console.log("Enviando email a:", email_usuario);
 
     const { error: emailError } = await resend.emails.send({
-      from: "Oposiciones-Test <soporte@oposiciones-test.com>",
+      from: "Oposiciones-Test <notificaciones@oposiciones-test.com>",
       to: [email_usuario],
       subject: `${esPlanFisico ? '💪' : '📚'} Recordatorio: ${esPlanFisico ? 'Entrenar' : 'Estudiar'} hoy - ${nombrePlan}`,
       html: emailHTML,
