@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.enviar-recordatorio-plan]
 verify_jwt = false
+
+[functions.generar-plan-fisico]
+verify_jwt = false
+
+[functions.guardar-plan-fisico]
+verify_jwt = false
