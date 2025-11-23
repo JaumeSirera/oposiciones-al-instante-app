@@ -61,10 +61,16 @@ export default function PlanesEstudio() {
             Gestiona y realiza seguimiento de tus planes de preparación
           </p>
         </div>
-        <Button onClick={() => navigate("/crear-plan-estudio")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Plan
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={() => navigate("/crear-plan-estudio")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo Plan
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/generar-plan-ia")}>
+            <TrendingUp className="mr-2 h-4 w-4" />
+            Generar con IA
+          </Button>
+        </div>
       </div>
 
       {planes.length === 0 ? (
