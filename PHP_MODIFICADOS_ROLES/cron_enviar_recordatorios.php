@@ -28,11 +28,13 @@ try {
             r.id_usuario,
             r.fecha,
             r.temas,
+            r.tipo_plan,
             u.email as email_usuario,
-            p.titulo as titulo_plan
+            COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
-        INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
-        INNER JOIN planes_estudio p ON r.id_plan = p.id_plan
+        INNER JOIN accounts u ON r.id_usuario = u.id
+        LEFT JOIN planes_estudio pe ON r.id_plan = pe.id AND r.tipo_plan = 'estudio'
+        LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id AND r.tipo_plan = 'fisico'
         WHERE r.fecha = ? 
         AND r.enviado = 0
         ORDER BY r.fecha ASC
@@ -68,7 +70,8 @@ try {
             'id_usuario' => $recordatorio['id_usuario'],
             'fecha' => $recordatorio['fecha'],
             'temas' => $recordatorio['temas'],
-            'email_usuario' => $recordatorio['email_usuario']
+            'email_usuario' => $recordatorio['email_usuario'],
+            'tipo_plan' => $recordatorio['tipo_plan']
         ];
         
         $ch = curl_init($SUPABASE_FUNCTION_URL);
