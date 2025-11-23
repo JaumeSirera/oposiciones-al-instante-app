@@ -40,59 +40,72 @@ serve(async (req) => {
       );
     }
 
-    const prompt = `Eres un experto entrenador deportivo. Genera un plan de entrenamiento físico RESUMIDO.
+    const prompt = `Eres un experto entrenador deportivo. Genera un plan de entrenamiento físico personalizado.
 
-**Datos del plan:**
+**Datos:**
 - Título: ${titulo}
 - Tipo: ${tipo_prueba}
 - Objetivo: ${descripcion || "Mejorar condición física"}
-- Duración: ${semanasLimitadas} semanas (${dias_semana} días/semana)
+- Duración: ${semanasLimitadas} semanas
+- Días/semana: ${dias_semana}
 - Nivel: ${nivel_fisico}
 - Periodo: ${fecha_inicio} a ${fecha_fin}
 
-**CRÍTICO - Genera JSON COMPACTO:**
+**Genera JSON con esta estructura EXACTA:**
+
 {
   "titulo": "${titulo}",
-  "descripcion": "1 línea",
+  "descripcion": "Descripción breve del enfoque del plan (máx 150 caracteres)",
   "tipo_prueba": "${tipo_prueba}",
   "fecha_inicio": "${fecha_inicio}",
   "fecha_fin": "${fecha_fin}",
   "semanas": [
     {
-      "titulo": "Semana X: Fase",
+      "titulo": "Semana 1: Fase Inicial",
       "fecha_inicio": "YYYY-MM-DD",
       "fecha_fin": "YYYY-MM-DD",
-      "resumen": "1 línea objetivo",
+      "resumen": "Objetivo semanal breve",
       "sesiones": [
         {
           "dia": "Lunes",
           "bloques": [
             {
               "tipo": "Calentamiento",
-              "ejercicios": [{"nombre": "Ejercicio", "series": 3, "repeticiones": "10", "descanso": "60s", "notas": "breve"}]
+              "ejercicios": [
+                {"nombre": "Ejercicio 1", "series": 2, "repeticiones": "10", "descanso": "30s", "notas": "Técnica"}
+              ]
             },
             {
               "tipo": "Principal",
-              "ejercicios": [{"nombre": "Ejercicio", "series": 4, "repeticiones": "8", "descanso": "90s", "notas": "breve"}]
+              "ejercicios": [
+                {"nombre": "Ejercicio 2", "series": 3, "repeticiones": "12", "descanso": "60s", "notas": "Forma"}
+              ]
             }
           ]
         }
       ]
     }
   ],
-  "resumen": "1 línea"
+  "resumen": "Resumen del enfoque general"
 }
 
-**LÍMITES ESTRICTOS:**
-- Solo ${Math.min(dias_semana, 3)} días/semana (primeros días)
-- Máximo 2 bloques por sesión (Calentamiento + Principal)
-- Máximo 2 ejercicios por bloque
-- Descripciones: máximo 5 palabras
-- NO generar sesiones completas para todas las semanas
+**IMPORTANTE:**
+- Genera las ${semanasLimitadas} semanas COMPLETAS
+- Cada semana debe tener ${diasSemana} sesiones (distribuidas en días: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo según corresponda)
+- Cada sesión: 2 bloques máximo (Calentamiento + Principal)
+- Cada bloque: 1-2 ejercicios
+- Textos concisos (máx 10 palabras)
+- Calcula las fechas de cada semana correctamente
 
+**Enfoque ${tipo_prueba}:**
 ${getTipoPruebaGuidelines(tipo_prueba)}
 
-Responde SOLO con el JSON, sin explicaciones adicionales.`;
+**Criterios generales:**
+- Progresión gradual según nivel ${nivel_fisico}
+- Intensidad: principiante 60-70%, intermedio 70-80%, avanzado 80-90%
+- Últimas 2 semanas: consolidación
+
+Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
 
     const aiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
@@ -105,7 +118,7 @@ Responde SOLO con el JSON, sin explicaciones adicionales.`;
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 8192,
+            maxOutputTokens: 12288,
           },
         }),
       }
