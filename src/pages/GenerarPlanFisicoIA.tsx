@@ -63,7 +63,7 @@ export default function GenerarPlanFisicoIA() {
   const [diasSemana, setDiasSemana] = useState(4);
   const [nivelFisico, setNivelFisico] = useState('intermedio');
   const [fechaInicio, setFechaInicio] = useState<Date>(new Date());
-  const [notificacionesEmail, setNotificacionesEmail] = useState(false);
+  const [notificacionesEmail, setNotificacionesEmail] = useState(true);
   const [horaNotificacion, setHoraNotificacion] = useState('09:00');
 
   const generarPlanConIA = async () => {
