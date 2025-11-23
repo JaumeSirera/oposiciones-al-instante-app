@@ -92,59 +92,71 @@ serve(async (req) => {
         'sabado': 6,
       };
 
-      // Crear recordatorio para cada semana con sus sesiones
-      if (plan.semanas && Array.isArray(plan.semanas)) {
-        for (const semana of plan.semanas) {
-          if (!semana.sesiones || !Array.isArray(semana.sesiones)) continue;
-          
-          const fechaInicioSemana = new Date(semana.fecha_inicio);
-          
-          for (const sesion of semana.sesiones) {
-            const diaNombre = (sesion.dia || '').toLowerCase().trim();
-            const diaNumero = diasSemanaMap[diaNombre];
-            
-            if (diaNumero === undefined) {
-              console.warn(`Día no reconocido: ${sesion.dia}`);
-              continue;
-            }
-            
-            // Calcular la fecha exacta de la sesión
-            const fechaSesion = new Date(fechaInicioSemana);
-            const diaActualSemana = fechaSesion.getDay();
-            let diasAjuste = diaNumero - diaActualSemana;
-            
-            // Si el día ya pasó en esta semana, no lo incluimos
-            if (diasAjuste < 0) {
-              continue;
-            }
-            
-            fechaSesion.setDate(fechaSesion.getDate() + diasAjuste);
-            
-            // Construir descripción de la sesión
-            const descripcionSesion = [];
-            for (const bloque of sesion.bloques || []) {
-              if (bloque.tipo && bloque.ejercicios && bloque.ejercicios.length > 0) {
-                const ejerciciosNombres = bloque.ejercicios
-                  .map((ej: any) => ej.nombre)
-                  .filter(Boolean)
-                  .join(', ');
-                if (ejerciciosNombres) {
-                  descripcionSesion.push(`${bloque.tipo}: ${ejerciciosNombres}`);
-                }
-              }
-            }
-            
-            recordatorios.push({
-              fecha: fechaSesion.toISOString().split("T")[0],
-              temas: descripcionSesion.length > 0 
-                ? descripcionSesion 
-                : [`${semana.titulo} - ${sesion.dia}`],
-            });
-          }
-        }
-      }
-
-      console.log(`Se crearon ${recordatorios.length} recordatorios`);
+       // Crear recordatorio para cada semana con sus sesiones (si existen)
+       if (plan.semanas && Array.isArray(plan.semanas)) {
+         for (const semana of plan.semanas) {
+           let tieneRecordatoriosSemana = false;
+ 
+           if (semana.sesiones && Array.isArray(semana.sesiones)) {
+             const fechaInicioSemana = new Date(semana.fecha_inicio);
+ 
+             for (const sesion of semana.sesiones) {
+               const diaNombre = (sesion.dia || '').toLowerCase().trim();
+               const diaNumero = diasSemanaMap[diaNombre];
+               
+               if (diaNumero === undefined) {
+                 console.warn(`Día no reconocido: ${sesion.dia}`);
+                 continue;
+               }
+               
+               // Calcular la fecha exacta de la sesión
+               const fechaSesion = new Date(fechaInicioSemana);
+               const diaActualSemana = fechaSesion.getDay();
+               let diasAjuste = diaNumero - diaActualSemana;
+               
+               // Si el día ya pasó en esta semana, no lo incluimos
+               if (diasAjuste < 0) {
+                 continue;
+               }
+               
+               fechaSesion.setDate(fechaSesion.getDate() + diasAjuste);
+               
+               // Construir descripción de la sesión
+               const descripcionSesion = [] as string[];
+               for (const bloque of sesion.bloques || []) {
+                 if (bloque.tipo && bloque.ejercicios && bloque.ejercicios.length > 0) {
+                   const ejerciciosNombres = bloque.ejercicios
+                     .map((ej: any) => ej.nombre)
+                     .filter(Boolean)
+                     .join(', ');
+                   if (ejerciciosNombres) {
+                     descripcionSesion.push(`${bloque.tipo}: ${ejerciciosNombres}`);
+                   }
+                 }
+               }
+               
+               recordatorios.push({
+                 fecha: fechaSesion.toISOString().split("T")[0],
+                 temas: descripcionSesion.length > 0 
+                   ? descripcionSesion 
+                   : [`${semana.titulo} - ${sesion.dia}`],
+               });
+               tieneRecordatoriosSemana = true;
+             }
+           }
+ 
+           // Fallback: si la semana no tiene sesiones válidas, crear un recordatorio genérico en su fecha de inicio
+           if (!tieneRecordatoriosSemana) {
+             const fechaSemana = new Date(semana.fecha_inicio);
+             recordatorios.push({
+               fecha: fechaSemana.toISOString().split("T")[0],
+               temas: [semana.resumen || semana.titulo || 'Sesión de entrenamiento'],
+             });
+           }
+         }
+       }
+ 
+       console.log(`Se crearon ${recordatorios.length} recordatorios`);
 
       if (recordatorios.length > 0) {
         const recordResponse = await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
