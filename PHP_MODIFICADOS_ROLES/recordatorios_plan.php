@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-require_once 'config.php';
+require 'db.php';
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
