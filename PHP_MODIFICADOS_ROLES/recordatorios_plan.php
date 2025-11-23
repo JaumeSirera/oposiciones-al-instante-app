@@ -269,7 +269,7 @@ function obtenerTodosRecordatorios() {
         $types .= "s";
     }
     
-    $query .= " ORDER BY r.fecha DESC, r.created_at DESC LIMIT 500";
+    $query .= " ORDER BY r.fecha DESC, r.id_recordatorio DESC LIMIT 500";
     
     $stmt = $conn->prepare($query);
     
