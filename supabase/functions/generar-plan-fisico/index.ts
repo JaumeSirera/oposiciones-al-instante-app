@@ -99,7 +99,7 @@ serve(async (req) => {
 - Cada bloque: 1 ejercicio con nombre y una nota corta
 - Textos muy concisos (máx 8 palabras por nota)
 - Calcula las fechas de cada semana correctamente
-- NO uses markdown, ni listas, ni ```
+- NO uses markdown ni bloques de código
 
 **Enfoque ${tipo_prueba}:**
 ${getTipoPruebaGuidelines(tipo_prueba)}
