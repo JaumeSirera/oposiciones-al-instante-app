@@ -117,7 +117,7 @@ function obtenerRecordatoriosPendientes() {
             u.email as email_usuario,
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
-        INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
+        INNER JOIN accounts u ON r.id_usuario = u.id_usuario
         LEFT JOIN planes_estudio pe ON r.id_plan = pe.id_plan AND r.tipo_plan = 'estudio'
         LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id_plan AND r.tipo_plan = 'fisico'
         WHERE r.fecha = ? 
@@ -230,7 +230,7 @@ function obtenerTodosRecordatorios() {
             u.email as email_usuario,
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
-        INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
+        INNER JOIN accounts u ON r.id_usuario = u.id_usuario
         LEFT JOIN planes_estudio pe ON r.id_plan = pe.id_plan AND r.tipo_plan = 'estudio'
         LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id_plan AND r.tipo_plan = 'fisico'
         WHERE 1=1
@@ -402,7 +402,7 @@ function enviarRecordatorioAhora() {
             u.nombre as nombre_usuario,
             COALESCE(pe.titulo, pf.titulo) as titulo_plan
         FROM recordatorios_plan r
-        INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
+        INNER JOIN accounts u ON r.id_usuario = u.id_usuario
         LEFT JOIN planes_estudio pe ON r.id_plan = pe.id_plan AND r.tipo_plan = 'estudio'
         LEFT JOIN planes_fisicos pf ON r.id_plan = pf.id_plan AND r.tipo_plan = 'fisico'
         WHERE r.id_recordatorio = ?
