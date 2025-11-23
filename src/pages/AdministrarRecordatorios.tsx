@@ -88,14 +88,15 @@ export default function AdministrarRecordatorios() {
       if (filtroFechaHasta) params.append("fecha_hasta", filtroFechaHasta);
 
       const paramsString = params.toString();
-      const endpoint = paramsString 
-        ? `recordatorios_plan.php?action=obtener_todos&${paramsString}`
-        : `recordatorios_plan.php?action=obtener_todos`;
+      const endpoint = paramsString
+        ? `recordatorios_plan.php?${paramsString}`
+        : `recordatorios_plan.php`;
 
       const { data, error } = await supabase.functions.invoke("php-api-proxy", {
         body: {
           endpoint,
           method: "GET",
+          action: "obtener_todos",
         },
       });
 
