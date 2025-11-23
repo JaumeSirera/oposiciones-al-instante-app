@@ -22,12 +22,10 @@ serve(async (req) => {
       fecha_fin,
     } = await req.json();
 
-    // Limitar semanas a máximo 3 para evitar respuestas demasiado largas
-    const semanasLimitadas = Math.min(semanas || 3, 3);
-    // Limitar días por semana usados por la IA para que el JSON sea compacto
-    const diasSemanaIA = Math.min(dias_semana || 3, 3);
+    const semanasTotal = Math.min(semanas || 6, 6);
+    const diasSemanaIA = Math.min(dias_semana || 4, 4);
 
-    if (!titulo || !tipo_prueba || !semanasLimitadas || !diasSemanaIA || !fecha_inicio || !fecha_fin) {
+    if (!titulo || !tipo_prueba || !semanasTotal || !diasSemanaIA || !fecha_inicio || !fecha_fin) {
       return new Response(
         JSON.stringify({ success: false, error: "Faltan parámetros requeridos" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -42,28 +40,47 @@ serve(async (req) => {
       );
     }
 
-    const prompt = `Eres un experto entrenador deportivo. Genera un plan de entrenamiento físico personalizado.
+    console.log(`Generando plan de ${semanasTotal} semanas en múltiples llamadas...`);
+
+    // Dividir las semanas en chunks de 2
+    const SEMANAS_POR_CHUNK = 2;
+    const numChunks = Math.ceil(semanasTotal / SEMANAS_POR_CHUNK);
+    const todasLasSemanas = [];
+
+    // Calcular fecha de inicio para cada chunk
+    const fechaInicio = new Date(fecha_inicio);
+
+    for (let chunk = 0; chunk < numChunks; chunk++) {
+      const semanaInicio = chunk * SEMANAS_POR_CHUNK + 1;
+      const semanaFin = Math.min((chunk + 1) * SEMANAS_POR_CHUNK, semanasTotal);
+      const semanasEnChunk = semanaFin - semanaInicio + 1;
+
+      // Calcular fechas para este chunk
+      const fechaInicioChunk = new Date(fechaInicio);
+      fechaInicioChunk.setDate(fechaInicio.getDate() + (chunk * SEMANAS_POR_CHUNK * 7));
+      
+      const fechaFinChunk = new Date(fechaInicioChunk);
+      fechaFinChunk.setDate(fechaInicioChunk.getDate() + (semanasEnChunk * 7) - 1);
+
+      console.log(`Generando semanas ${semanaInicio}-${semanaFin} (chunk ${chunk + 1}/${numChunks})`);
+
+      const prompt = `Eres un experto entrenador deportivo. Genera las semanas ${semanaInicio} a ${semanaFin} de un plan de ${semanasTotal} semanas.
 
 **Datos:**
 - Título: ${titulo}
 - Tipo: ${tipo_prueba}
 - Objetivo: ${descripcion || "Mejorar condición física"}
-- Duración: ${semanasLimitadas} semanas
-- Días/semana (IA): ${diasSemanaIA}
+- Semanas a generar: ${semanaInicio} a ${semanaFin} de ${semanasTotal} total
+- Días/semana: ${diasSemanaIA}
 - Nivel: ${nivel_fisico}
-- Periodo: ${fecha_inicio} a ${fecha_fin}
+- Periodo chunk: ${fechaInicioChunk.toISOString().split('T')[0]} a ${fechaFinChunk.toISOString().split('T')[0]}
 
 **Genera JSON con esta estructura EXACTA:**
 
 {
-  "titulo": "${titulo}",
-  "descripcion": "Descripción breve del enfoque del plan (máx 150 caracteres)",
-  "tipo_prueba": "${tipo_prueba}",
-  "fecha_inicio": "${fecha_inicio}",
-  "fecha_fin": "${fecha_fin}",
   "semanas": [
     {
-      "titulo": "Semana 1: Fase Inicial",
+      "titulo": "Semana ${semanaInicio}: Título descriptivo",
       "fecha_inicio": "YYYY-MM-DD",
       "fecha_fin": "YYYY-MM-DD",
       "resumen": "Objetivo semanal breve",
@@ -87,114 +104,98 @@ serve(async (req) => {
         }
       ]
     }
-  ],
-  "resumen": "Resumen del enfoque general"
+  ]
 }
 
 **IMPORTANTE:**
-- Genera EXACTAMENTE ${semanasLimitadas} semanas COMPLETAS
+- Genera EXACTAMENTE ${semanasEnChunk} semanas (${semanaInicio} a ${semanaFin})
 - Cada semana: EXACTAMENTE ${diasSemanaIA} sesiones (Lunes, Martes, Miércoles, etc.)
 - Cada sesión: 2 bloques (Calentamiento + Principal)
 - Cada bloque: 1 ejercicio SOLO con "nombre" (muy breve, máx 4 palabras)
 - NO incluyas "notas", "series", "repeticiones" ni "descanso"
-- Calcula fechas correctamente
+- Calcula fechas correctamente desde ${fechaInicioChunk.toISOString().split('T')[0]}
 - Responde JSON puro sin markdown
 
 **Enfoque ${tipo_prueba}:**
 ${getTipoPruebaGuidelines(tipo_prueba)}
 
-**Criterios generales:**
-- Progresión gradual según nivel ${nivel_fisico}
-- Intensidad: principiante 60-70%, intermedio 70-80%, avanzado 80-90%
-- Últimas 2 semanas: consolidación
+**Progresión:**
+${getProgresionGuidelines(semanaInicio, semanasTotal, nivel_fisico)}
 
 Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
 
-    const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            topK: 40,
-            topP: 0.9,
-            maxOutputTokens: 6144,
-          },
-        }),
+      const aiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              topK: 40,
+              topP: 0.9,
+              maxOutputTokens: 4096,
+            },
+          }),
+        }
+      );
+
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error(`Error en chunk ${chunk + 1}:`, errorText);
+        return new Response(
+          JSON.stringify({ success: false, error: `Error al generar semanas ${semanaInicio}-${semanaFin}` }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
       }
-    );
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("Error de Gemini:", errorText);
-      return new Response(
-        JSON.stringify({ success: false, error: "Error al generar plan con IA" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
-    }
+      const aiData = await aiResponse.json();
+      let content = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    const aiData = await aiResponse.json();
-    let content = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!content) {
+        console.error(`No se generó contenido para chunk ${chunk + 1}`);
+        return new Response(
+          JSON.stringify({ success: false, error: `No se generó contenido para semanas ${semanaInicio}-${semanaFin}` }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
 
-    console.log("Respuesta de Gemini (raw):", JSON.stringify(aiData).substring(0, 500));
+      // Limpiar markdown
+      content = content.trim();
+      content = content.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+      content = content.replace(/\/\*[\s\S]*?\*\//g, "");
+      content = content.replace(/\/\/.*/g, "");
 
-    if (!content) {
-      console.error("No se generó contenido de la IA");
-      return new Response(
-        JSON.stringify({ success: false, error: "No se generó contenido" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
-    }
-
-    console.log("Contenido recibido (primeros 500 chars):", content.substring(0, 500));
-
-    // Limpiar markdown y caracteres especiales
-    content = content.trim();
-    content = content.replace(/```json\s*/g, "").replace(/```\s*/g, "");
-    content = content.replace(/\/\*[\s\S]*?\*\//g, "");
-    content = content.replace(/\/\/.*/g, "");
-    
-    let planData;
-    try {
-      // Intentar parsear directamente
+      let chunkData;
       try {
-        planData = JSON.parse(content);
+        chunkData = JSON.parse(content);
       } catch (directParseError) {
-        console.log("Parse directo falló, buscando JSON válido...");
-        
-        // Buscar el inicio del JSON
+        // Buscar JSON válido
         const startIdx = content.indexOf('{');
         if (startIdx === -1) {
-          throw new Error("No se encontró inicio de JSON");
+          throw new Error(`No se encontró JSON en chunk ${chunk + 1}`);
         }
-        
-        // Intentar encontrar el JSON completo con balance de llaves
+
         let braceCount = 0;
         let endIdx = startIdx;
         let inString = false;
         let escapeNext = false;
-        
+
         for (let i = startIdx; i < content.length; i++) {
           const char = content[i];
-          
           if (escapeNext) {
             escapeNext = false;
             continue;
           }
-          
           if (char === '\\') {
             escapeNext = true;
             continue;
           }
-          
           if (char === '"' && !escapeNext) {
             inString = !inString;
             continue;
           }
-          
           if (!inString) {
             if (char === '{') braceCount++;
             if (char === '}') {
@@ -206,34 +207,40 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
             }
           }
         }
-        
+
         if (braceCount !== 0) {
-          console.error("JSON truncado o malformado. Braces no balanceadas:", braceCount);
-          throw new Error("JSON incompleto o malformado");
+          throw new Error(`JSON incompleto en chunk ${chunk + 1}`);
         }
-        
+
         const jsonStr = content.substring(startIdx, endIdx);
-        console.log("JSON extraído (length):", jsonStr.length);
-        planData = JSON.parse(jsonStr);
+        chunkData = JSON.parse(jsonStr);
       }
-    } catch (parseError) {
-      console.error("Error parseando JSON:", parseError);
-      console.error("Contenido (primeros 1000):", content.substring(0, 1000));
-      console.error("Contenido (últimos 500):", content.substring(Math.max(0, content.length - 500)));
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Error al procesar respuesta de IA. Intenta reducir el número de semanas o días.",
-          debug: content.substring(0, 500)
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
+
+      if (!chunkData.semanas || !Array.isArray(chunkData.semanas)) {
+        throw new Error(`Estructura inválida en chunk ${chunk + 1}`);
+      }
+
+      console.log(`Chunk ${chunk + 1} completado: ${chunkData.semanas.length} semanas`);
+      todasLasSemanas.push(...chunkData.semanas);
     }
+
+    // Construir el plan completo
+    const planCompleto = {
+      titulo: titulo,
+      descripcion: descripcion || `Plan de ${semanasTotal} semanas para ${tipo_prueba}`,
+      tipo_prueba: tipo_prueba,
+      fecha_inicio: fecha_inicio,
+      fecha_fin: fecha_fin,
+      semanas: todasLasSemanas,
+      resumen: `Plan de ${semanasTotal} semanas, ${diasSemanaIA} días/semana, nivel ${nivel_fisico}`
+    };
+
+    console.log(`Plan completo generado: ${todasLasSemanas.length} semanas`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        plan: planData,
+        plan: planCompleto,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -260,4 +267,16 @@ function getTipoPruebaGuidelines(tipo: string): string {
   };
   
   return guidelines[tipo] || guidelines["Otro"];
+}
+
+function getProgresionGuidelines(semanaActual: number, semanasTotal: number, nivel: string): string {
+  const porcentaje = (semanaActual / semanasTotal) * 100;
+  
+  if (porcentaje <= 33) {
+    return `Fase inicial (semana ${semanaActual}). Adaptación y técnica. Intensidad ${nivel === 'principiante' ? '60-65%' : nivel === 'intermedio' ? '65-70%' : '70-75%'}.`;
+  } else if (porcentaje <= 66) {
+    return `Fase intermedia (semana ${semanaActual}). Aumentar carga. Intensidad ${nivel === 'principiante' ? '65-70%' : nivel === 'intermedio' ? '70-80%' : '75-85%'}.`;
+  } else {
+    return `Fase final (semana ${semanaActual}). Consolidación y pico. Intensidad ${nivel === 'principiante' ? '70-75%' : nivel === 'intermedio' ? '75-85%' : '80-90%'}.`;
+  }
 }
