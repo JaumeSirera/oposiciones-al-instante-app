@@ -15,6 +15,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
   const [currentView, setCurrentView] = useState<'config' | 'quiz' | 'mode-selection'>('config');
   const [testConfig, setTestConfig] = useState<TestConfig | null>(null);
   const [selectedMode, setSelectedMode] = useState<'simulacion' | 'examen'>(mode);
+  const [loadingMode, setLoadingMode] = useState<'simulacion' | 'examen' | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -36,6 +37,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
 
   // Función para iniciar test con modo seleccionado
   const iniciarTestConModo = async (modoSeleccionado: 'simulacion' | 'examen') => {
+    setLoadingMode(modoSeleccionado);
     try {
       const procesoId = parseInt(initialParams.proceso!);
       const temasArray = initialParams.temas!.split(',').map(t => decodeURIComponent(t.trim()));
@@ -83,6 +85,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
         title: "Error",
         description: "No se pudo iniciar el test",
       });
+      setLoadingMode(null);
     }
   };
 
@@ -126,8 +129,17 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
           <div className="grid md:grid-cols-2 gap-6">
             <button
               onClick={() => iniciarTestConModo('simulacion')}
-              className="group relative overflow-hidden rounded-xl border-2 border-primary/20 bg-card p-8 text-left transition-all hover:border-primary hover:shadow-lg"
+              disabled={loadingMode !== null}
+              className="group relative overflow-hidden rounded-xl border-2 border-primary/20 bg-card p-8 text-left transition-all hover:border-primary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              {loadingMode === 'simulacion' && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-20">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-sm text-muted-foreground">Cargando...</p>
+                  </div>
+                </div>
+              )}
               <div className="relative z-10">
                 <div className="mb-4 inline-block rounded-lg bg-primary/10 p-3">
                   <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,8 +169,17 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
 
             <button
               onClick={() => iniciarTestConModo('examen')}
-              className="group relative overflow-hidden rounded-xl border-2 border-primary/20 bg-card p-8 text-left transition-all hover:border-primary hover:shadow-lg"
+              disabled={loadingMode !== null}
+              className="group relative overflow-hidden rounded-xl border-2 border-primary/20 bg-card p-8 text-left transition-all hover:border-primary hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              {loadingMode === 'examen' && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-20">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p className="text-sm text-muted-foreground">Cargando...</p>
+                  </div>
+                </div>
+              )}
               <div className="relative z-10">
                 <div className="mb-4 inline-block rounded-lg bg-primary/10 p-3">
                   <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
