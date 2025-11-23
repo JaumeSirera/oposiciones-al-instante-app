@@ -26,6 +26,7 @@ interface ConfigTestProps {
   initialProceso?: string | null;
   initialTemas?: string | null;
   initialSecciones?: string | null;
+  autoStart?: boolean;
 }
 
 export interface TestConfig {
@@ -47,7 +48,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
   isPsicotecnico = false,
   initialProceso,
   initialTemas,
-  initialSecciones
+  initialSecciones,
+  autoStart = false
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -104,6 +106,21 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
       }
     }
   }, [temas, initialTemas]);
+
+  // Auto-iniciar el test si todos los parámetros están configurados
+  useEffect(() => {
+    if (autoStart && 
+        selectedProceso && 
+        selectedSecciones.length > 0 && 
+        selectedTemas.length > 0 &&
+        !loading) {
+      // Pequeño delay para asegurar que todo está cargado
+      const timer = setTimeout(() => {
+        handleStartTest();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoStart, selectedProceso, selectedSecciones, selectedTemas, loading]);
 
   // Cargar secciones cuando se selecciona un proceso
   useEffect(() => {
