@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -15,8 +16,6 @@ import { Loader2, Calendar as CalendarIcon, Sparkles, ArrowLeft } from 'lucide-r
 import { format, addWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
-
-const API_BASE = 'https://oposiciones-test.com/api';
 
 interface PlanGenerado {
   titulo: string;
@@ -75,17 +74,10 @@ export default function GenerarPlanFisicoIA() {
 
     setGenerando(true);
     try {
-      const token = authService.getToken();
       const fechaFin = addWeeks(fechaInicio, semanas);
 
-      const response = await fetch(`${API_BASE}/planes_fisicos.php?action=generar_ia`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id_usuario: user.id,
+      const { data, error } = await supabase.functions.invoke('generar-plan-fisico', {
+        body: {
           titulo: titulo.trim(),
           tipo_prueba: tipo,
           descripcion: descripcion.trim(),
@@ -94,20 +86,20 @@ export default function GenerarPlanFisicoIA() {
           nivel_fisico: nivelFisico,
           fecha_inicio: format(fechaInicio, 'yyyy-MM-dd'),
           fecha_fin: format(fechaFin, 'yyyy-MM-dd'),
-          notificaciones_email: notificacionesEmail,
-          hora_notificacion: notificacionesEmail ? horaNotificacion : null,
-        }),
+        },
       });
 
-      const data = await response.json();
-      if (data.success && data.plan) {
+      if (error) throw error;
+
+      if (data?.success && data?.plan) {
         setPlanGenerado(data.plan);
         toast.success('Plan generado con IA');
       } else {
-        toast.error(data.error || 'Error al generar el plan');
+        toast.error(data?.error || 'Error al generar el plan');
       }
     } catch (error) {
-      toast.error('Error de conexión');
+      console.error('Error generando plan:', error);
+      toast.error('Error al generar el plan con IA');
     } finally {
       setGenerando(false);
     }
@@ -119,27 +111,28 @@ export default function GenerarPlanFisicoIA() {
     setLoading(true);
     try {
       const token = authService.getToken();
-      const response = await fetch(`${API_BASE}/planes_fisicos.php?action=guardar_plan_ia`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      
+      const { data, error } = await supabase.functions.invoke('guardar-plan-fisico', {
+        body: {
           id_usuario: user.id,
           plan: planGenerado,
-        }),
+          notificaciones_email: notificacionesEmail,
+          hora_notificacion: notificacionesEmail ? horaNotificacion : null,
+          php_token: token,
+        },
       });
 
-      const data = await response.json();
-      if (data.success && data.id_plan) {
+      if (error) throw error;
+
+      if (data?.success && data?.id_plan) {
         toast.success('Plan guardado correctamente');
         navigate(`/planes-fisicos/${data.id_plan}`);
       } else {
-        toast.error(data.error || 'Error al guardar el plan');
+        toast.error(data?.error || 'Error al guardar el plan');
       }
     } catch (error) {
-      toast.error('Error de conexión');
+      console.error('Error guardando plan:', error);
+      toast.error('Error al guardar el plan');
     } finally {
       setLoading(false);
     }
