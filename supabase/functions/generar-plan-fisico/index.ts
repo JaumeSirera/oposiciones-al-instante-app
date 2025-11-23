@@ -22,7 +22,10 @@ serve(async (req) => {
       fecha_fin,
     } = await req.json();
 
-    if (!titulo || !tipo_prueba || !semanas || !dias_semana || !fecha_inicio || !fecha_fin) {
+    // Limitar semanas a máximo 6
+    const semanasLimitadas = Math.min(semanas || 6, 6);
+
+    if (!titulo || !tipo_prueba || !semanasLimitadas || !dias_semana || !fecha_inicio || !fecha_fin) {
       return new Response(
         JSON.stringify({ success: false, error: "Faltan parámetros requeridos" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -45,7 +48,7 @@ Genera un plan de entrenamiento físico personalizado con las siguientes caracte
 - Título: ${titulo}
 - Tipo de prueba: ${tipo_prueba}
 - Descripción/Objetivos: ${descripcion || "Sin objetivos específicos"}
-- Duración: ${semanas} semanas
+- Duración: ${semanasLimitadas} semanas
 - Días de entrenamiento por semana: ${dias_semana}
 - Nivel físico: ${nivel_fisico}
 - Fecha inicio: ${fecha_inicio}
