@@ -205,6 +205,7 @@ Responde SOLO con JSON válido.`;
           id_usuario,
           recordatorios,
           tipo_plan: "estudio",
+          hora: hora_notificacion || "09:00",
         }),
       });
       
