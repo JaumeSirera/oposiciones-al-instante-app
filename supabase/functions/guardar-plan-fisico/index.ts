@@ -63,15 +63,18 @@ serve(async (req) => {
 
     const result = await phpResponse.json();
 
-    if (!result.success) {
+    // Algunos endpoints devuelven id_plan, otros id; unificamos aquí
+    const idPlan = result.id_plan || result.id || result.plan_id || null;
+
+    if (!result.success || !idPlan) {
       return new Response(
         JSON.stringify({ success: false, error: result.error || "Error al guardar plan" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
-
+ 
     // Si se solicitaron notificaciones, crear recordatorios
-    if (notificaciones_email && result.id_plan && hora_notificacion) {
+    if (notificaciones_email && idPlan && hora_notificacion) {
       console.log("Creando recordatorios para plan físico...");
       
       const recordatorios = [];
