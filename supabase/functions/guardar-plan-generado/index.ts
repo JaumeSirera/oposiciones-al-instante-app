@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,34 +30,32 @@ serve(async (req) => {
       throw new Error("No se proporcionó token de autenticación");
     }
 
-    // Crear cliente Supabase con el token del usuario
+    // Obtener URL de Supabase
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: {
-        headers: {
-          Authorization: authHeader,
-        },
+    
+    // Guardar plan básico mediante PHP API
+    const planResponse = await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authHeader,
+        "apikey": supabaseKey,
       },
+      body: JSON.stringify({
+        endpoint: "planes_estudio.php",
+        method: "POST",
+        action: "crear",
+        id_usuario,
+        id_proceso,
+        titulo: plan.titulo,
+        descripcion: plan.descripcion,
+        fecha_inicio: plan.fecha_inicio,
+        fecha_fin: plan.fecha_fin,
+      }),
     });
 
-    // Guardar plan básico mediante PHP API
-    const { data: planCreado } = await supabase.functions.invoke(
-      "php-api-proxy",
-      {
-        body: {
-          endpoint: "planes_estudio.php",
-          method: "POST",
-          action: "crear",
-          id_usuario,
-          id_proceso,
-          titulo: plan.titulo,
-          descripcion: plan.descripcion,
-          fecha_inicio: plan.fecha_inicio,
-          fecha_fin: plan.fecha_fin,
-        },
-      }
-    );
+    const planCreado = await planResponse.json();
 
     console.log("Plan creado:", planCreado);
 
@@ -148,14 +145,20 @@ Responde SOLO con JSON válido.`;
         const planDetallado = JSON.parse(content);
 
         // Guardar plan detallado en PHP API
-        await supabase.functions.invoke("php-api-proxy", {
-          body: {
+        await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": authHeader,
+            "apikey": supabaseKey,
+          },
+          body: JSON.stringify({
             endpoint: "guardar_plan_ia.php",
             method: "POST",
             id_plan,
             plan: planDetallado.etapas || [],
             resumen: plan.resumen,
-          },
+          }),
         });
       }
     }
@@ -188,16 +191,24 @@ Responde SOLO con JSON válido.`;
       console.log(`Guardando ${recordatorios.length} recordatorios...`);
 
       // Guardar recordatorios en la base de datos PHP
-      const { data: recordatoriosResult } = await supabase.functions.invoke("php-api-proxy", {
-        body: {
+      const recordatoriosResponse = await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": authHeader,
+          "apikey": supabaseKey,
+        },
+        body: JSON.stringify({
           endpoint: "recordatorios_plan.php",
           method: "POST",
           action: "crear",
           id_plan,
           id_usuario,
           recordatorios,
-        },
+        }),
       });
+      
+      const recordatoriosResult = await recordatoriosResponse.json();
 
       console.log("Resultado guardado recordatorios:", recordatoriosResult);
     }
