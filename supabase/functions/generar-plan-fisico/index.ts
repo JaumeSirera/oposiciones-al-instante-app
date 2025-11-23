@@ -124,7 +124,6 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
             topP: 0.9,
             maxOutputTokens: 4096,
           },
-          },
         }),
       }
     );
