@@ -320,6 +320,28 @@ const Index = () => {
           </CardContent>
         </Card>
 
+        {/* Call to Action - Planes Físicos */}
+        <Card className="bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-xl mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">¡Prepárate físicamente!</h3>
+                <p className="opacity-90 mb-4">Crea un plan de entrenamiento personalizado para tus pruebas físicas</p>
+                <Button
+                  onClick={() => navigate('/generar-plan-fisico-ia')}
+                  variant="secondary"
+                  size="lg"
+                  className="bg-white text-orange-600 hover:bg-gray-100"
+                >
+                  <Heart className="mr-2 h-5 w-5" />
+                  Crear Plan Físico
+                </Button>
+              </div>
+              <Heart className="h-24 w-24 opacity-20" />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
