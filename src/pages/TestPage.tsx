@@ -50,6 +50,12 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
     );
   }
 
+  // Determinar si debe auto-iniciar basado en parámetros URL
+  const shouldAutoStart = Boolean(
+    initialParams.proceso && 
+    (initialParams.temas || initialParams.secciones)
+  );
+
   return (
     <ConfigTest 
       onStartQuiz={handleStartQuiz} 
@@ -59,6 +65,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
       initialProceso={initialParams.proceso}
       initialTemas={initialParams.temas}
       initialSecciones={initialParams.secciones}
+      autoStart={shouldAutoStart}
     />
   );
 };
