@@ -91,7 +91,7 @@ serve(async (req) => {
 
 **IMPORTANTE:**
 - Genera las ${semanasLimitadas} semanas COMPLETAS
-- Cada semana debe tener ${diasSemana} sesiones (distribuidas en días: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo según corresponda)
+- Cada semana debe tener ${dias_semana} sesiones (distribuidas en días: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo según corresponda)
 - Cada sesión: 2 bloques máximo (Calentamiento + Principal)
 - Cada bloque: 1-2 ejercicios
 - Textos concisos (máx 10 palabras)
