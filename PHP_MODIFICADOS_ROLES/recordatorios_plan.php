@@ -13,6 +13,10 @@ require 'db.php';
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+error_log("=== RECORDATORIOS_PLAN.PHP ===");
+error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+error_log("ACTION: " . $action);
+
 try {
     switch ($action) {
         case 'crear':
@@ -40,9 +44,12 @@ try {
             enviarRecordatorioAhora();
             break;
         default:
+            error_log("ERROR: Acción no válida: " . $action);
             throw new Exception('Acción no válida');
     }
 } catch (Exception $e) {
+    error_log("ERROR GLOBAL en recordatorios_plan.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
     echo json_encode([
         'success' => false,
@@ -53,49 +60,104 @@ try {
 function crearRecordatorios() {
     global $conn;
     
-    $input = json_decode(file_get_contents('php://input'), true);
+    error_log("=== INICIANDO crearRecordatorios() ===");
+    
+    $raw_input = file_get_contents('php://input');
+    error_log("RAW INPUT: " . $raw_input);
+    
+    $input = json_decode($raw_input, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("ERROR JSON DECODE: " . json_last_error_msg());
+        throw new Exception('Error al decodificar JSON: ' . json_last_error_msg());
+    }
+    
+    error_log("INPUT DECODED: " . print_r($input, true));
     
     $id_plan = $input['id_plan'] ?? null;
     $id_usuario = $input['id_usuario'] ?? null;
     $recordatorios = $input['recordatorios'] ?? [];
     $tipo_plan = $input['tipo_plan'] ?? 'estudio';
+    $hora = $input['hora'] ?? '09:00';
+    
+    error_log("PARAMETROS EXTRAIDOS:");
+    error_log("  - id_plan: " . ($id_plan ?? 'NULL'));
+    error_log("  - id_usuario: " . ($id_usuario ?? 'NULL'));
+    error_log("  - tipo_plan: " . $tipo_plan);
+    error_log("  - hora: " . $hora);
+    error_log("  - recordatorios count: " . count($recordatorios));
+    error_log("  - recordatorios: " . json_encode($recordatorios));
     
     if (!$id_plan || !$id_usuario || empty($recordatorios)) {
+        error_log("ERROR: Faltan parámetros requeridos");
+        error_log("  - id_plan is empty: " . (empty($id_plan) ? 'SI' : 'NO'));
+        error_log("  - id_usuario is empty: " . (empty($id_usuario) ? 'SI' : 'NO'));
+        error_log("  - recordatorios is empty: " . (empty($recordatorios) ? 'SI' : 'NO'));
         throw new Exception('Faltan parámetros requeridos');
     }
     
+    error_log("Iniciando transacción...");
     $conn->begin_transaction();
     
     try {
         // Eliminar recordatorios anteriores del plan
+        error_log("Eliminando recordatorios anteriores para id_plan=$id_plan, tipo_plan=$tipo_plan");
         $stmt = $conn->prepare("DELETE FROM recordatorios_plan WHERE id_plan = ? AND tipo_plan = ?");
+        if (!$stmt) {
+            error_log("ERROR prepare DELETE: " . $conn->error);
+            throw new Exception("Error preparando DELETE: " . $conn->error);
+        }
         $stmt->bind_param("is", $id_plan, $tipo_plan);
         $stmt->execute();
+        error_log("Recordatorios anteriores eliminados: " . $stmt->affected_rows . " filas");
         
         // Insertar nuevos recordatorios
+        error_log("Preparando INSERT de nuevos recordatorios...");
         $stmt = $conn->prepare("
             INSERT INTO recordatorios_plan 
-            (id_plan, id_usuario, fecha, temas, enviado, tipo_plan) 
-            VALUES (?, ?, ?, ?, 0, ?)
+            (id_plan, id_usuario, fecha, temas, enviado, tipo_plan, hora_notificacion) 
+            VALUES (?, ?, ?, ?, 0, ?, ?)
         ");
         
-        foreach ($recordatorios as $recordatorio) {
+        if (!$stmt) {
+            error_log("ERROR prepare INSERT: " . $conn->error);
+            throw new Exception("Error preparando INSERT: " . $conn->error);
+        }
+        
+        $insertados = 0;
+        foreach ($recordatorios as $index => $recordatorio) {
             $fecha = $recordatorio['fecha'];
             $temas_json = json_encode($recordatorio['temas']);
             
-            $stmt->bind_param("iisss", $id_plan, $id_usuario, $fecha, $temas_json, $tipo_plan);
-            $stmt->execute();
+            error_log("Insertando recordatorio #$index:");
+            error_log("  - fecha: $fecha");
+            error_log("  - temas: " . substr($temas_json, 0, 100));
+            error_log("  - hora_notificacion: $hora");
+            
+            $stmt->bind_param("iissss", $id_plan, $id_usuario, $fecha, $temas_json, $tipo_plan, $hora);
+            
+            if (!$stmt->execute()) {
+                error_log("ERROR ejecutando INSERT #$index: " . $stmt->error);
+                throw new Exception("Error insertando recordatorio #$index: " . $stmt->error);
+            }
+            
+            $insertados++;
+            error_log("Recordatorio #$index insertado correctamente. ID: " . $conn->insert_id);
         }
         
+        error_log("Total recordatorios insertados: $insertados");
+        error_log("Haciendo COMMIT...");
         $conn->commit();
+        error_log("COMMIT exitoso");
         
         echo json_encode([
             'success' => true,
             'message' => 'Recordatorios creados exitosamente',
-            'total' => count($recordatorios)
+            'total' => $insertados
         ]);
         
     } catch (Exception $e) {
+        error_log("ERROR en try de crearRecordatorios, haciendo ROLLBACK: " . $e->getMessage());
         $conn->rollback();
         throw $e;
     }
