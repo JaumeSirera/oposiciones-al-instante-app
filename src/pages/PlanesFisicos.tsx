@@ -62,11 +62,13 @@ export default function PlanesFisicos() {
     if (!user?.id) return;
     setLoading(true);
     try {
+      const token = localStorage.getItem('auth_token');
       const { data, error } = await supabase.functions.invoke('php-api-proxy', {
         body: {
           endpoint: `planes_fisicos.php?action=listar&id_usuario=${user.id}`,
           method: 'GET'
-        }
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       
       if (error) throw error;
@@ -151,6 +153,7 @@ export default function PlanesFisicos() {
 
     setSaving(true);
     try {
+      const token = localStorage.getItem('auth_token');
       const payload = {
         id_usuario: user.id,
         titulo: formData.titulo.trim(),
@@ -169,7 +172,8 @@ export default function PlanesFisicos() {
           endpoint,
           method: editMode ? 'PUT' : 'POST',
           ...payload
-        }
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
       if (error) throw error;
@@ -196,13 +200,15 @@ export default function PlanesFisicos() {
 
     setDeletingId(id);
     try {
+      const token = localStorage.getItem('auth_token');
       const { data, error } = await supabase.functions.invoke('php-api-proxy', {
         body: {
           endpoint: 'planes_fisicos.php?action=eliminar',
           method: 'POST',
           id_plan: id,
           id_usuario: user.id
-        }
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
       if (error) throw error;
