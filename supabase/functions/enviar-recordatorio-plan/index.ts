@@ -30,26 +30,26 @@ serve(async (req) => {
     const resend = new Resend(RESEND_API_KEY);
 
     // Obtener información del plan según el tipo
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     const esPlanFisico = tipo_plan === 'fisico';
-    const endpoint = esPlanFisico 
-      ? `planes_fisicos.php?action=detalle&id_plan=${id_plan}`
-      : `planes_estudio.php?action=detalle&id_plan=${id_plan}`;
+    const endpointUrl = esPlanFisico 
+      ? `https://oposiciones-test.com/api/planes_fisicos.php?action=detalle&id_plan=${id_plan}`
+      : `https://oposiciones-test.com/api/planes_estudio.php?action=detalle&id_plan=${id_plan}`;
 
-    console.log("Consultando plan en:", endpoint);
+    console.log("Consultando plan directamente en:", endpointUrl);
 
-    const { data: planInfo } = await supabase.functions.invoke(
-      "php-api-proxy",
-      {
-        body: {
-          endpoint,
-          method: "GET",
-        },
-      }
-    );
+    const planResponse = await fetch(endpointUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!planResponse.ok) {
+      console.error("Error HTTP al obtener el plan:", planResponse.status, planResponse.statusText);
+      throw new Error(`No se pudo obtener la información del plan (HTTP ${planResponse.status})`);
+    }
+
+    const planInfo = await planResponse.json();
 
     console.log("Plan info:", planInfo);
 
