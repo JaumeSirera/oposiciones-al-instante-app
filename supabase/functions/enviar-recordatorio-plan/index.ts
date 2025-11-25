@@ -55,8 +55,53 @@ serve(async (req) => {
 
     const nombrePlan = planInfo?.plan?.titulo || (esPlanFisico ? "Tu plan físico" : "Tu plan de estudio");
 
+    // Para planes físicos, intentar obtener el contenido real de las semanas generadas
+    let temasReales = temas;
+    let contenidoGenerado = false;
+    
+    if (esPlanFisico && planInfo?.semanas_ia) {
+      console.log("Buscando semanas generadas para la fecha:", fecha);
+      
+      // Calcular qué semana corresponde a la fecha del recordatorio
+      const fechaInicio = new Date(planInfo.plan.fecha_inicio);
+      const fechaRecordatorio = new Date(fecha);
+      const diferenciaDias = Math.floor((fechaRecordatorio.getTime() - fechaInicio.getTime()) / (1000 * 60 * 60 * 24));
+      const numeroSemana = Math.floor(diferenciaDias / 7) + 1;
+      
+      console.log("Número de semana calculado:", numeroSemana);
+      console.log("Semanas disponibles:", planInfo.semanas_ia ? Object.keys(planInfo.semanas_ia) : 'ninguna');
+      
+      // Buscar la semana en las semanas generadas
+      const semanaKey = `semana_${numeroSemana}`;
+      const semanaData = planInfo.semanas_ia?.[semanaKey];
+      
+      if (semanaData) {
+        console.log("Semana encontrada:", semanaKey);
+        contenidoGenerado = true;
+        
+        // Extraer las sesiones de la semana
+        temasReales = [];
+        semanaData.sesiones?.forEach((sesion: any, index: number) => {
+          const bloques = sesion.bloques?.map((bloque: any) => {
+            const ejercicios = bloque.ejercicios?.map((ej: any) => 
+              `${ej.nombre} (${ej.series}x${ej.repeticiones})`
+            ).join(', ');
+            return `${bloque.nombre}: ${ejercicios}`;
+          }).join(' • ');
+          
+          temasReales.push(`Sesión ${index + 1}: ${bloques || sesion.descripcion || 'Ver plan completo'}`);
+        });
+        
+        if (temasReales.length === 0) {
+          temasReales = ['Ver el plan completo para más detalles'];
+        }
+      } else {
+        console.log("Semana no encontrada. Esta semana aún no ha sido generada.");
+      }
+    }
+
     // Crear lista de temas formateada
-    const listaTemasHTML = temas
+    const listaTemasHTML = temasReales
       .map((tema: string, index: number) => `<li>${index + 1}. ${tema}</li>`)
       .join("");
 
@@ -116,7 +161,13 @@ serve(async (req) => {
       <h2 style="color: #667eea; margin-bottom: 10px;">${nombrePlan}</h2>
       
       <p>¡Hola! 👋</p>
-      <p>${esPlanFisico ? 'Este es tu entrenamiento de hoy:' : 'Estos son los temas que debes estudiar hoy:'}</p>
+      ${!contenidoGenerado && esPlanFisico 
+        ? `<p style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+             ⚠️ Esta semana aún no ha sido generada con IA. Las tareas mostradas son sugerencias generales.
+             <br><strong>Accede al plan completo y genera esta semana para ver tu entrenamiento personalizado.</strong>
+           </p>`
+        : `<p>${esPlanFisico ? 'Este es tu entrenamiento de hoy:' : 'Estos son los temas que debes estudiar hoy:'}</p>`
+      }
       
       <div class="tema-list">
         <h3 style="margin-top: 0; color: #374151;">${contenidoTitulo}</h3>
