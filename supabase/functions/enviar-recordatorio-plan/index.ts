@@ -59,23 +59,23 @@ serve(async (req) => {
     let temasReales = temas;
     let contenidoGenerado = false;
     
-    if (esPlanFisico && planInfo?.semanas_ia) {
-      console.log("Buscando semanas generadas para la fecha:", fecha);
-      
-      // Calcular qué semana corresponde a la fecha del recordatorio
-      const fechaInicio = new Date(planInfo.plan.fecha_inicio);
-      const fechaRecordatorio = new Date(fecha);
-      const diferenciaDias = Math.floor((fechaRecordatorio.getTime() - fechaInicio.getTime()) / (1000 * 60 * 60 * 24));
-      const numeroSemana = Math.floor(diferenciaDias / 7) + 1;
-      
-      console.log("Número de semana calculado:", numeroSemana);
-      console.log("Semanas disponibles:", planInfo.semanas_ia ? Object.keys(planInfo.semanas_ia) : 'ninguna');
-      
-      // Buscar la semana en las semanas generadas
-      const semanaKey = `semana_${numeroSemana}`;
-      const semanaData = planInfo.semanas_ia?.[semanaKey];
-      
-      if (semanaData) {
+    if (esPlanFisico) {
+      // Intentar localizar las semanas generadas independientemente de la estructura exacta
+      // Posibles rutas (según PHP):
+      // - planInfo.semanas_ia
+      // - planInfo.plan_ia.plan.semanas_ia
+      // - planInfo.plan_ia.plan.semanas
+      const semanasIA: any =
+        (planInfo as any)?.semanas_ia ||
+        (planInfo as any)?.plan_ia?.plan?.semanas_ia ||
+        (planInfo as any)?.plan_ia?.plan?.semanas ||
+        (planInfo as any)?.plan_ia?.semanas_ia ||
+        (planInfo as any)?.plan_ia?.semanas;
+
+      console.log("Semanas IA detectadas keys:", semanasIA ? Object.keys(semanasIA) : "ninguna");
+
+      if (semanasIA) {
+        console.log("Buscando semanas generadas para la fecha:", fecha);
         console.log("Semana encontrada:", semanaKey);
         contenidoGenerado = true;
         
