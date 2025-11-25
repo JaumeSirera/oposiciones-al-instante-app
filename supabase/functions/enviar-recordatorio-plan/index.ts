@@ -55,19 +55,45 @@ serve(async (req) => {
 
     const nombrePlan = planInfo?.plan?.titulo || (esPlanFisico ? "Tu plan físico" : "Tu plan de estudio");
 
-    // Para planes físicos, usar siempre los temas que ya llegan del recordatorio
-    // El PHP ya se encarga de poner aquí el contenido correcto del día
+    // Para planes físicos, procesar estructura por día de la semana si es necesario
     let temasReales = temas;
     let contenidoGenerado = false;
 
     if (esPlanFisico) {
-      // Si la API de detalle del plan devuelve error de token, no intentamos leer semanas IA
-      if ((planInfo as any)?.success === false && (planInfo as any)?.error === "Token no proporcionado") {
-        console.log("Detalle plan físico requiere token, usamos temas originales del recordatorio");
-        contenidoGenerado = true; // Consideramos contenido válido para evitar el aviso amarillo
+      // Si temas es un objeto con días de la semana, extraer el día correcto
+      if (typeof temas === 'object' && !Array.isArray(temas)) {
+        const fechaRecordatorio = new Date(fecha);
+        const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+        const diaSemana = diasSemana[fechaRecordatorio.getDay()];
+        
+        console.log(`Fecha recordatorio: ${fecha}, día: ${diaSemana}`);
+        console.log(`Estructura temas:`, Object.keys(temas));
+        
+        // Buscar el día en el objeto (case insensitive)
+        const diaKey = Object.keys(temas).find(k => k.toLowerCase() === diaSemana.toLowerCase());
+        
+        if (diaKey && temas[diaKey]) {
+          console.log(`Encontrado contenido para ${diaSemana}`);
+          // Si el contenido del día es un array, usarlo directamente
+          if (Array.isArray(temas[diaKey])) {
+            temasReales = temas[diaKey];
+          } 
+          // Si es un objeto con sesiones, extraerlas
+          else if (temas[diaKey].sesiones && Array.isArray(temas[diaKey].sesiones)) {
+            temasReales = temas[diaKey].sesiones;
+          }
+          // Si es un string, convertirlo a array
+          else if (typeof temas[diaKey] === 'string') {
+            temasReales = [temas[diaKey]];
+          }
+          contenidoGenerado = true;
+        } else {
+          console.log(`No se encontró contenido para ${diaSemana}, usando temas por defecto`);
+          temasReales = [`Consulta tu plan completo para ver el entrenamiento de hoy`];
+          contenidoGenerado = false;
+        }
       } else {
-        // Si en el futuro necesitamos leer semanas_ia se puede añadir aquí,
-        // pero por ahora confiamos en los temas que ya vienen en el recordatorio.
+        // Si ya es un array, usarlo directamente
         contenidoGenerado = true;
       }
     }
