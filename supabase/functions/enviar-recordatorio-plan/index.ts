@@ -76,7 +76,7 @@ serve(async (req) => {
          <li>Realiza tests de práctica para reforzar lo aprendido</li>`;
     
     const urlPlan = esPlanFisico
-      ? `https://oposiciones-test.com/plan-fisico/${id_plan}`
+      ? `https://oposiciones-test.com/planes-fisicos/${id_plan}`
       : `https://oposiciones-test.com/plan-estudio/${id_plan}`;
 
     const emailHTML = `
