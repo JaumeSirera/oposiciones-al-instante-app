@@ -81,7 +81,16 @@ export default function AdministrarRecordatorios() {
     try {
       setLoading(true);
       
+      // Obtener rol del usuario
+      const nivel = localStorage.getItem("nivel") || "";
+      
       const params = new URLSearchParams();
+      
+      // Si no es SA, filtrar por id_usuario
+      if (nivel !== "SA" && user?.id) {
+        params.append("id_usuario", user.id.toString());
+      }
+      
       if (filtroTipoPlan !== "todos") params.append("tipo_plan", filtroTipoPlan);
       if (filtroEnviado !== "todos") params.append("enviado", filtroEnviado === "enviados" ? "1" : "0");
       if (filtroFechaDesde) params.append("fecha_desde", filtroFechaDesde);
@@ -92,12 +101,14 @@ export default function AdministrarRecordatorios() {
         ? `recordatorios_plan.php?${paramsString}`
         : `recordatorios_plan.php`;
 
+      const token = localStorage.getItem("auth_token");
       const { data, error } = await supabase.functions.invoke("php-api-proxy", {
         body: {
           endpoint,
           method: "GET",
           action: "obtener_todos",
         },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
       if (error) throw error;
