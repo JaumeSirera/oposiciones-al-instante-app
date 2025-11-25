@@ -72,9 +72,17 @@ serve(async (req) => {
       }
     }
 
-    // Crear lista de temas formateada
-    const listaTemasHTML = temasReales
-      .map((tema: string, index: number) => `<li>${index + 1}. ${tema}</li>`)
+    // Crear lista de temas formateada (maneja strings u objetos)
+    const normalizarTemas = Array.isArray(temasReales) ? temasReales : [temasReales];
+
+    const listaTemasHTML = normalizarTemas
+      .map((tema: any, index: number) => {
+        if (!tema) return "";
+        if (typeof tema === "string") return `<li>${index + 1}. ${tema}</li>`;
+        const texto =
+          tema.titulo || tema.nombre || tema.descripcion || JSON.stringify(tema);
+        return `<li>${index + 1}. ${texto}</li>`;
+      })
       .join("");
 
     const titulo = esPlanFisico ? "📋 Recordatorio de Entrenamiento" : "📚 Recordatorio de Estudio";
