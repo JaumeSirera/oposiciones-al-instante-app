@@ -81,6 +81,14 @@ serve(async (req) => {
       const temasOriginales = Array.isArray(temas) ? temas : [temas];
 
       try {
+        console.log("[DEBUG] planJson.plan semanas:", planJson.plan.map((s: any) => ({
+          semana: s.semana,
+          titulo: s.titulo,
+          fecha_inicio: s.fecha_inicio,
+          fecha_fin: s.fecha_fin,
+          dias: (s.sesiones || []).map((ses: any) => ses.dia),
+        })));
+
         // Calcular qué día de la semana es el recordatorio
         const fechaRecordatorio = new Date(fecha);
         const diasSemana = [
@@ -108,23 +116,47 @@ serve(async (req) => {
         // Buscar la semana que contiene esta fecha
         const semanas = planJson.plan;
         let sesionDelDia: any = null;
+        let semanaSeleccionada: any = null;
 
         for (const semana of semanas) {
           const fechaInicio = new Date(semana.fecha_inicio);
           const fechaFin = new Date(semana.fecha_fin);
 
+          console.log("[DEBUG] Revisando semana", {
+            semana: semana.semana,
+            titulo: semana.titulo,
+            fecha_inicio: semana.fecha_inicio,
+            fecha_fin: semana.fecha_fin,
+            fechaRecordatorio: fecha,
+          });
+
           if (fechaRecordatorio >= fechaInicio && fechaRecordatorio <= fechaFin) {
             console.log(`Encontrada semana ${semana.semana}: ${semana.titulo}`);
+            semanaSeleccionada = semana;
 
             // Buscar el día en las sesiones de esta semana (permite variaciones de texto)
             sesionDelDia = semana.sesiones?.find((s: any) => {
-              const diaSesion = normalizar(s.dia || "");
-              return (
+              const diaSesionOriginal = s.dia || "";
+              const diaSesion = normalizar(diaSesionOriginal);
+              const match =
                 diaSesion === diaSemanaKey ||
                 diaSesion.startsWith(diaSemanaKey) ||
-                diaSemanaKey.startsWith(diaSesion)
-              );
+                diaSemanaKey.startsWith(diaSesion);
+              if (match) {
+                console.log("[DEBUG] Coincidencia de día encontrada", {
+                  diaSesionOriginal,
+                  diaSesion,
+                  diaSemana,
+                  diaSemanaKey,
+                });
+              }
+              return match;
             });
+
+            if (!sesionDelDia && semana.sesiones?.length) {
+              console.log("[DEBUG] No se encontró sesión exacta para el día. Sesiones disponibles en la semana:",
+                semana.sesiones.map((s: any) => s.dia));
+            }
 
             if (sesionDelDia) {
               console.log(`Encontrada sesión para ${diaSemana}:`, sesionDelDia);
@@ -159,7 +191,9 @@ serve(async (req) => {
           contenidoGenerado = true;
           console.log(`Extraídos ${temasReales.length} ejercicios del día`);
         } else {
-          console.log(`No se encontró sesión para ${diaSemana}, usando temas originales del recordatorio`);
+          console.log(`No se encontró sesión para ${diaSemana}, usando temas originales del recordatorio`, {
+            semanaSeleccionada,
+          });
           temasReales = temasOriginales;
           contenidoGenerado = false;
         }
