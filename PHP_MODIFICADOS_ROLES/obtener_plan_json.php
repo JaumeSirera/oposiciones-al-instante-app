@@ -30,9 +30,9 @@ try {
 
     // Determinar la tabla según el tipo de plan
     if ($tipo_plan === 'fisico') {
-        $sql = "SELECT plan_json FROM planes_fisicos_ia WHERE id = ?";
+        $sql = "SELECT plan_json FROM planes_fisicos_ia WHERE id_plan = ?";
     } else if ($tipo_plan === 'estudio') {
-        $sql = "SELECT plan_json FROM planes_estudio WHERE id = ?";
+        $sql = "SELECT plan_json FROM planes_estudio WHERE id_plan = ?";
     } else {
         echo json_encode([
             'success' => false,
