@@ -29,117 +29,117 @@ serve(async (req) => {
 
     const resend = new Resend(RESEND_API_KEY);
 
-    // Obtener información del plan según el tipo
     const esPlanFisico = tipo_plan === 'fisico';
-    const endpointUrl = esPlanFisico 
-      ? `https://oposiciones-test.com/api/planes_fisicos.php?action=detalle&id_plan=${id_plan}`
-      : `https://oposiciones-test.com/api/planes_estudio.php?action=detalle&id_plan=${id_plan}`;
 
-    console.log("Consultando plan directamente en:", endpointUrl);
+    // Obtener plan_json usando el nuevo endpoint optimizado
+    console.log("Obteniendo plan_json desde obtener_plan_json.php");
 
-    const planResponse = await fetch(endpointUrl, {
-      method: "GET",
+    const planJsonResponse = await fetch('https://oposiciones-test.com/api/obtener_plan_json.php', {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        id_plan: id_plan,
+        tipo_plan: tipo_plan
+      }),
     });
 
-    if (!planResponse.ok) {
-      console.error("Error HTTP al obtener el plan:", planResponse.status, planResponse.statusText);
-      throw new Error(`No se pudo obtener la información del plan (HTTP ${planResponse.status})`);
+    if (!planJsonResponse.ok) {
+      console.error("Error HTTP al obtener plan_json:", planJsonResponse.status, planJsonResponse.statusText);
+      throw new Error(`No se pudo obtener el plan_json (HTTP ${planJsonResponse.status})`);
     }
 
-    const planInfo = await planResponse.json();
+    const planJsonData = await planJsonResponse.json();
 
-    console.log("Plan info:", planInfo);
+    if (!planJsonData.success) {
+      console.error("Error obteniendo plan_json:", planJsonData.error);
+      throw new Error(planJsonData.error || "Error al obtener plan_json");
+    }
 
-    const nombrePlan = planInfo?.plan?.titulo || (esPlanFisico ? "Tu plan físico" : "Tu plan de estudio");
+    console.log("plan_json obtenido exitosamente");
 
-    // Para planes físicos, buscar el contenido real en plan_json de planes_fisicos_ia
+    // Parsear plan_json si viene como string
+    let planJson;
+    try {
+      planJson = typeof planJsonData.plan_json === 'string' 
+        ? JSON.parse(planJsonData.plan_json) 
+        : planJsonData.plan_json;
+    } catch (e) {
+      console.error("Error parseando plan_json:", e);
+      throw new Error("Error al parsear plan_json");
+    }
+
+    // Extraer nombre del plan
+    const nombrePlan = planJson?.titulo || (esPlanFisico ? "Tu plan físico" : "Tu plan de estudio");
+
+    // Para planes físicos, extraer ejercicios del día
     let temasReales = temas;
     let contenidoGenerado = false;
 
-    if (esPlanFisico) {
+    if (esPlanFisico && planJson?.plan) {
       try {
-        // Obtener el plan_json de planes_fisicos_ia
-        const planIAResponse = await fetch(
-          `https://oposiciones-test.com/api/planes_fisicos.php?action=obtener_plan_ia&id_plan=${id_plan}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        // Calcular qué día de la semana es el recordatorio
+        const fechaRecordatorio = new Date(fecha);
+        const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+        const diaSemana = diasSemana[fechaRecordatorio.getDay()];
+        
+        console.log(`Buscando contenido para ${diaSemana} en fecha ${fecha}`);
 
-        if (planIAResponse.ok) {
-          const planIAData = await planIAResponse.json();
-          console.log("Plan IA obtenido:", planIAData);
+        // Buscar la semana que contiene esta fecha
+        const semanas = planJson.plan;
+        let sesionDelDia = null;
 
-          if (planIAData?.plan_json?.plan) {
-            // Calcular qué día de la semana es el recordatorio
-            const fechaRecordatorio = new Date(fecha);
-            const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-            const diaSemana = diasSemana[fechaRecordatorio.getDay()];
+        for (const semana of semanas) {
+          const fechaInicio = new Date(semana.fecha_inicio);
+          const fechaFin = new Date(semana.fecha_fin);
+          
+          if (fechaRecordatorio >= fechaInicio && fechaRecordatorio <= fechaFin) {
+            console.log(`Encontrada semana ${semana.semana}: ${semana.titulo}`);
             
-            console.log(`Buscando contenido para ${diaSemana} en fecha ${fecha}`);
-
-            // Buscar la semana que contiene esta fecha
-            const semanas = planIAData.plan_json.plan;
-            let sesionDelDia = null;
-
-            for (const semana of semanas) {
-              const fechaInicio = new Date(semana.fecha_inicio);
-              const fechaFin = new Date(semana.fecha_fin);
-              
-              if (fechaRecordatorio >= fechaInicio && fechaRecordatorio <= fechaFin) {
-                console.log(`Encontrada semana ${semana.semana}: ${semana.titulo}`);
-                
-                // Buscar el día en las sesiones de esta semana
-                sesionDelDia = semana.sesiones?.find(
-                  (s: any) => s.dia.toLowerCase() === diaSemana.toLowerCase()
-                );
-                
-                if (sesionDelDia) {
-                  console.log(`Encontrada sesión para ${diaSemana}:`, sesionDelDia);
-                  break;
-                }
-              }
-            }
-
-            if (sesionDelDia && sesionDelDia.bloques) {
-              // Extraer ejercicios de todos los bloques
-              temasReales = [];
-              
-              for (const bloque of sesionDelDia.bloques) {
-                if (bloque.ejercicios) {
-                  for (const ejercicio of bloque.ejercicios) {
-                    const nombreEjercicio = ejercicio.nombre || ejercicio.titulo || '';
-                    const seriesReps = ejercicio.series && ejercicio.reps 
-                      ? `${ejercicio.series}x${ejercicio.reps}` 
-                      : '';
-                    const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || '';
-                    
-                    let descripcion = nombreEjercicio;
-                    if (seriesReps) descripcion += ` - ${seriesReps}`;
-                    if (carga) descripcion += ` (${carga})`;
-                    
-                    temasReales.push(descripcion);
-                  }
-                }
-              }
-              
-              contenidoGenerado = true;
-              console.log(`Extraídos ${temasReales.length} ejercicios del día`);
-            } else {
-              console.log(`No se encontró sesión para ${diaSemana}`);
-              temasReales = [`Consulta tu plan completo para ver el entrenamiento de hoy`];
-              contenidoGenerado = false;
+            // Buscar el día en las sesiones de esta semana
+            sesionDelDia = semana.sesiones?.find(
+              (s: any) => s.dia.toLowerCase() === diaSemana.toLowerCase()
+            );
+            
+            if (sesionDelDia) {
+              console.log(`Encontrada sesión para ${diaSemana}:`, sesionDelDia);
+              break;
             }
           }
         }
+
+        if (sesionDelDia && sesionDelDia.bloques) {
+          // Extraer ejercicios de todos los bloques
+          temasReales = [];
+          
+          for (const bloque of sesionDelDia.bloques) {
+            if (bloque.ejercicios) {
+              for (const ejercicio of bloque.ejercicios) {
+                const nombreEjercicio = ejercicio.nombre || ejercicio.titulo || '';
+                const seriesReps = ejercicio.series && ejercicio.reps 
+                  ? `${ejercicio.series}x${ejercicio.reps}` 
+                  : '';
+                const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || '';
+                
+                let descripcion = nombreEjercicio;
+                if (seriesReps) descripcion += ` - ${seriesReps}`;
+                if (carga) descripcion += ` (${carga})`;
+                
+                temasReales.push(descripcion);
+              }
+            }
+          }
+          
+          contenidoGenerado = true;
+          console.log(`Extraídos ${temasReales.length} ejercicios del día`);
+        } else {
+          console.log(`No se encontró sesión para ${diaSemana}`);
+          temasReales = [`Consulta tu plan completo para ver el entrenamiento de hoy`];
+          contenidoGenerado = false;
+        }
       } catch (error) {
-        console.error("Error obteniendo plan_json:", error);
+        console.error("Error extrayendo ejercicios del día:", error);
         temasReales = [`Consulta tu plan completo para ver el entrenamiento de hoy`];
         contenidoGenerado = false;
       }
