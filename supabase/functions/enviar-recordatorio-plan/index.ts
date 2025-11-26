@@ -78,30 +78,54 @@ serve(async (req) => {
     let contenidoGenerado = false;
 
     if (esPlanFisico && planJson?.plan) {
+      const temasOriginales = Array.isArray(temas) ? temas : [temas];
+
       try {
         // Calcular qué día de la semana es el recordatorio
         const fechaRecordatorio = new Date(fecha);
-        const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+        const diasSemana = [
+          "domingo",
+          "lunes",
+          "martes",
+          "miércoles",
+          "jueves",
+          "viernes",
+          "sábado",
+        ];
+
+        const normalizar = (texto: string) =>
+          (texto || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+
         const diaSemana = diasSemana[fechaRecordatorio.getDay()];
-        
+        const diaSemanaKey = normalizar(diaSemana);
+
         console.log(`Buscando contenido para ${diaSemana} en fecha ${fecha}`);
 
         // Buscar la semana que contiene esta fecha
         const semanas = planJson.plan;
-        let sesionDelDia = null;
+        let sesionDelDia: any = null;
 
         for (const semana of semanas) {
           const fechaInicio = new Date(semana.fecha_inicio);
           const fechaFin = new Date(semana.fecha_fin);
-          
+
           if (fechaRecordatorio >= fechaInicio && fechaRecordatorio <= fechaFin) {
             console.log(`Encontrada semana ${semana.semana}: ${semana.titulo}`);
-            
-            // Buscar el día en las sesiones de esta semana
-            sesionDelDia = semana.sesiones?.find(
-              (s: any) => s.dia.toLowerCase() === diaSemana.toLowerCase()
-            );
-            
+
+            // Buscar el día en las sesiones de esta semana (permite variaciones de texto)
+            sesionDelDia = semana.sesiones?.find((s: any) => {
+              const diaSesion = normalizar(s.dia || "");
+              return (
+                diaSesion === diaSemanaKey ||
+                diaSesion.startsWith(diaSemanaKey) ||
+                diaSemanaKey.startsWith(diaSesion)
+              );
+            });
+
             if (sesionDelDia) {
               console.log(`Encontrada sesión para ${diaSemana}:`, sesionDelDia);
               break;
@@ -112,35 +136,36 @@ serve(async (req) => {
         if (sesionDelDia && sesionDelDia.bloques) {
           // Extraer ejercicios de todos los bloques
           temasReales = [];
-          
+
           for (const bloque of sesionDelDia.bloques) {
             if (bloque.ejercicios) {
               for (const ejercicio of bloque.ejercicios) {
-                const nombreEjercicio = ejercicio.nombre || ejercicio.titulo || '';
-                const seriesReps = ejercicio.series && ejercicio.reps 
-                  ? `${ejercicio.series}x${ejercicio.reps}` 
-                  : '';
-                const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || '';
-                
+                const nombreEjercicio = ejercicio.nombre || ejercicio.titulo || "";
+                const seriesReps =
+                  ejercicio.series && ejercicio.reps
+                    ? `${ejercicio.series}x${ejercicio.reps}`
+                    : "";
+                const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || "";
+
                 let descripcion = nombreEjercicio;
                 if (seriesReps) descripcion += ` - ${seriesReps}`;
                 if (carga) descripcion += ` (${carga})`;
-                
+
                 temasReales.push(descripcion);
               }
             }
           }
-          
+
           contenidoGenerado = true;
           console.log(`Extraídos ${temasReales.length} ejercicios del día`);
         } else {
-          console.log(`No se encontró sesión para ${diaSemana}`);
-          temasReales = [`Consulta tu plan completo para ver el entrenamiento de hoy`];
+          console.log(`No se encontró sesión para ${diaSemana}, usando temas originales del recordatorio`);
+          temasReales = temasOriginales;
           contenidoGenerado = false;
         }
       } catch (error) {
         console.error("Error extrayendo ejercicios del día:", error);
-        temasReales = [`Consulta tu plan completo para ver el entrenamiento de hoy`];
+        temasReales = Array.isArray(temas) ? temas : [temas];
         contenidoGenerado = false;
       }
     }
