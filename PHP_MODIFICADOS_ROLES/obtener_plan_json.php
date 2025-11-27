@@ -63,6 +63,24 @@ try {
         exit;
     }
 
+    // Log para debugging
+    $plan_json_length = strlen($plan['plan_json']);
+    error_log("[obtener_plan_json] id_plan: $id_plan, tipo_plan: $tipo_plan, plan_json length: $plan_json_length caracteres");
+    
+    // Parsear para contar semanas
+    $plan_data = json_decode($plan['plan_json'], true);
+    if ($plan_data) {
+        if (isset($plan_data['semanas'])) {
+            $num_semanas = count($plan_data['semanas']);
+            error_log("[obtener_plan_json] Estructura: plan.semanas con $num_semanas semanas");
+        } else if (isset($plan_data['plan'])) {
+            $num_semanas = count($plan_data['plan']);
+            error_log("[obtener_plan_json] Estructura: plan.plan con $num_semanas semanas");
+        } else {
+            error_log("[obtener_plan_json] Estructura desconocida: " . implode(', ', array_keys($plan_data)));
+        }
+    }
+
     echo json_encode([
         'success' => true,
         'plan_json' => $plan['plan_json']
