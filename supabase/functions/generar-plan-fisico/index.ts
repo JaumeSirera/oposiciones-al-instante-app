@@ -91,13 +91,28 @@ serve(async (req) => {
             {
               "tipo": "Calentamiento",
               "ejercicios": [
-                {"nombre": "Movilidad"}
+                {
+                  "nombre": "Movilidad articular",
+                  "series": 1,
+                  "reps": "10 min",
+                  "descanso": "0"
+                }
               ]
             },
             {
               "tipo": "Principal",
               "ejercicios": [
-                {"nombre": "Carrera 20min"}
+                {
+                  "nombre": "Carrera continua",
+                  "series": 1,
+                  "reps": "20 min",
+                  "carga": {
+                    "rx": "RPE 6-7",
+                    "scaled": "RPE 5-6",
+                    "beginner": "RPE 4-5"
+                  },
+                  "descanso": "0"
+                }
               ]
             }
           ]
@@ -111,8 +126,13 @@ serve(async (req) => {
 - Genera EXACTAMENTE ${semanasEnChunk} semanas (${semanaInicio} a ${semanaFin})
 - Cada semana: EXACTAMENTE ${diasSemanaIA} sesiones (Lunes, Martes, Miércoles, etc.)
 - Cada sesión: 2 bloques (Calentamiento + Principal)
-- Cada bloque: 1 ejercicio SOLO con "nombre" (muy breve, máx 4 palabras)
-- NO incluyas "notas", "series", "repeticiones" ni "descanso"
+- CRÍTICO: Cada ejercicio DEBE incluir:
+  * "nombre": Nombre completo del ejercicio (ej: "12 KB Swings 24/16kg" o "Box Jumps 60cm")
+  * "series": Número de series
+  * "reps": Repeticiones o duración (ej: "12", "20 min", "10-12")
+  * "carga": Objeto con rx/scaled/beginner cuando aplique (ej: {"rx": "24kg", "scaled": "16kg"})
+  * "descanso": Tiempo de descanso en segundos (ej: "60", "90")
+- Incluye las repeticiones y cargas en el nombre del ejercicio (ej: "12 KB Swings 24/16kg", "10 Box Jumps 60cm")
 - Calcula fechas correctamente desde ${fechaInicioChunk.toISOString().split('T')[0]}
 - Responde JSON puro sin markdown
 
