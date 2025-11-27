@@ -29,10 +29,11 @@ try {
     $tipo_plan = $data['tipo_plan'];
 
     // Determinar la tabla según el tipo de plan
+    // IMPORTANTE: Si hay duplicados, tomamos el registro más reciente (ORDER BY id DESC)
     if ($tipo_plan === 'fisico') {
-        $sql = "SELECT plan_json FROM planes_fisicos_ia WHERE id_plan = ?";
+        $sql = "SELECT plan_json FROM planes_fisicos_ia WHERE id_plan = ? ORDER BY id DESC LIMIT 1";
     } else if ($tipo_plan === 'estudio') {
-        $sql = "SELECT plan_json FROM planes_estudio WHERE id_plan = ?";
+        $sql = "SELECT plan_json FROM planes_estudio WHERE id_plan = ? ORDER BY id DESC LIMIT 1";
     } else {
         echo json_encode([
             'success' => false,

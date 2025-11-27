@@ -33,11 +33,12 @@ serve(async (req) => {
       );
     }
 
-    // Guardar plan en la base de datos PHP usando el proxy
+    // Primero verificar si ya existe un plan similar (mismos parámetros básicos)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const phpResponse = await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
+    // Verificar si existe un plan con los mismos parámetros
+    const checkResponse = await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -46,19 +47,50 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         endpoint: "planes_fisicos.php",
-        method: "POST",
-        action: "crear",
+        method: "GET",
+        action: "verificar_duplicado",
         id_usuario,
         titulo: plan.titulo,
-        descripcion: plan.descripcion,
         tipo_prueba: plan.tipo_prueba,
         fecha_inicio: plan.fecha_inicio,
-        fecha_fin: plan.fecha_fin,
-        plan_json: JSON.stringify(plan),
-        resumen: plan.resumen,
-        notificaciones_email: notificaciones_email || false,
-        hora_notificacion: hora_notificacion || null,
       }),
+    });
+
+    const checkResult = await checkResponse.json();
+    const planExistente = checkResult?.id_plan;
+
+    console.log("Plan existente encontrado:", planExistente || "ninguno");
+
+    // Si existe, actualizar; si no, crear
+    const action = planExistente ? "actualizar" : "crear";
+    const bodyData: any = {
+      endpoint: "planes_fisicos.php",
+      method: "POST",
+      action,
+      id_usuario,
+      titulo: plan.titulo,
+      descripcion: plan.descripcion,
+      tipo_prueba: plan.tipo_prueba,
+      fecha_inicio: plan.fecha_inicio,
+      fecha_fin: plan.fecha_fin,
+      plan_json: JSON.stringify(plan),
+      resumen: plan.resumen,
+      notificaciones_email: notificaciones_email || false,
+      hora_notificacion: hora_notificacion || null,
+    };
+
+    if (planExistente) {
+      bodyData.id_plan = planExistente;
+    }
+
+    const phpResponse = await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${php_token}`,
+        apikey: supabaseKey,
+      },
+      body: JSON.stringify(bodyData),
     });
 
     const result = await phpResponse.json();
