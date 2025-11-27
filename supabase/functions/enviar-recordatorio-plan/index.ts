@@ -70,6 +70,17 @@ serve(async (req) => {
       throw new Error("Error al parsear plan_json");
     }
 
+    console.log("[DEBUG] plan_json completo length:", JSON.stringify(planJson).length, "caracteres");
+    
+    // Detectar estructura del JSON
+    if (planJson.semanas) {
+      console.log("[DEBUG] Estructura detectada: planJson.semanas con", planJson.semanas.length, "semanas");
+    } else if (planJson.plan) {
+      console.log("[DEBUG] Estructura detectada: planJson.plan con", planJson.plan.length, "semanas");
+    } else {
+      console.log("[DEBUG] Estructura desconocida. Keys disponibles:", Object.keys(planJson));
+    }
+
     // Extraer nombre del plan
     const nombrePlan = planJson?.titulo || (esPlanFisico ? "Tu plan físico" : "Tu plan de estudio");
 
@@ -77,11 +88,14 @@ serve(async (req) => {
     let temasReales = temas;
     let contenidoGenerado = false;
 
-    if (esPlanFisico && planJson?.plan) {
+    // Detectar la estructura y normalizar
+    const semanasArray = planJson?.plan || planJson?.semanas;
+
+    if (esPlanFisico && semanasArray && Array.isArray(semanasArray)) {
       const temasOriginales = Array.isArray(temas) ? temas : [temas];
 
       try {
-        console.log("[DEBUG] planJson.plan semanas:", planJson.plan.map((s: any) => ({
+        console.log("[DEBUG] Semanas disponibles:", semanasArray.map((s: any) => ({
           semana: s.semana,
           titulo: s.titulo,
           fecha_inicio: s.fecha_inicio,
@@ -114,11 +128,10 @@ serve(async (req) => {
         console.log(`Buscando contenido para ${diaSemana} en fecha ${fecha}`);
 
         // Buscar la semana que contiene esta fecha
-        const semanas = planJson.plan;
         let sesionDelDia: any = null;
         let semanaSeleccionada: any = null;
 
-        for (const semana of semanas) {
+        for (const semana of semanasArray) {
           const fechaInicio = new Date(semana.fecha_inicio);
           const fechaFin = new Date(semana.fecha_fin);
 
