@@ -191,26 +191,34 @@ serve(async (req) => {
             
             if (bloque.ejercicios) {
               for (const ejercicio of bloque.ejercicios) {
-                // Usar el nombre completo del ejercicio tal como viene (ya incluye repeticiones, cargas, etc.)
-                let descripcion = ejercicio.nombre || ejercicio.titulo || "";
-                
-                // Si NO viene la info completa en el nombre, construirla con los campos separados
-                if (descripcion && !descripcion.match(/\d+\s*(x|kg|lb|m|min|km)/i)) {
-                  const seriesReps = ejercicio.series && ejercicio.reps
-                    ? ` ${ejercicio.series}x${ejercicio.reps}`
+                // Nombre base del ejercicio
+                let descripcion = ejercicio.nombre || ejercicio.titulo || "Ejercicio";
+
+                // Añadir SIEMPRE la información de series / repeticiones si existe
+                const seriesStr =
+                  ejercicio.series !== undefined && ejercicio.series !== null
+                    ? String(ejercicio.series)
                     : "";
-                  const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || "";
-                  const tempo = ejercicio.tempo ? ` Tempo: ${ejercicio.tempo}` : "";
-                  const descanso = ejercicio.descanso ? ` Descanso: ${ejercicio.descanso}` : "";
-                  const rpe = ejercicio.rpe ? ` RPE: ${ejercicio.rpe}` : "";
-                  
-                  if (seriesReps) descripcion += seriesReps;
-                  if (carga) descripcion += ` (${carga})`;
-                  if (tempo) descripcion += tempo;
-                  if (descanso) descripcion += descanso;
-                  if (rpe) descripcion += rpe;
+                const repsStr =
+                  ejercicio.reps !== undefined && ejercicio.reps !== null
+                    ? String(ejercicio.reps)
+                    : "";
+
+                if (seriesStr || repsStr) {
+                  descripcion += ` - Series: ${seriesStr || "-"} Reps: ${repsStr || "-"}`;
                 }
-                
+
+                // Carga / tempo / descanso / RPE si existen
+                const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || "";
+                const tempo = ejercicio.tempo ? ` Tempo: ${ejercicio.tempo}` : "";
+                const descanso = ejercicio.descanso ? ` Descanso: ${ejercicio.descanso}` : "";
+                const rpe = ejercicio.rpe ? ` RPE: ${ejercicio.rpe}` : "";
+
+                if (carga) descripcion += ` (${carga})`;
+                if (tempo) descripcion += tempo;
+                if (descanso) descripcion += descanso;
+                if (rpe) descripcion += rpe;
+
                 // Añadir notas si existen
                 if (ejercicio.notas) {
                   descripcion += `\n   → ${ejercicio.notas}`;
