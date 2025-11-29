@@ -990,9 +990,9 @@ function pf_prompt_semana($row, $weekN, $startISO, $endISO, $promptExtra='', $se
           "descripcion": "Trabajo metabólico",
           "explicacion_neofita": "Explica el formato y cómo regular el esfuerzo.",
           "ejercicios": [
-            { "nombre": "200 m Run", "explicacion_neofita": "Corre suave; si cansa mucho, camina parte." },
-            { "nombre": "12 KB Swings 24/16kg", "explicacion_neofita": "Usa peso ligero y prioriza la técnica." },
-            { "nombre": "10 Push Ups", "explicacion_neofita": "Si es difícil, apoya rodillas o haz en banco." }
+            { "nombre": "200 m Run", "series": 1, "reps": "200m", "explicacion_neofita": "Corre suave; si cansa mucho, camina parte." },
+            { "nombre": "KB Swings 24/16kg", "series": 1, "reps": "12", "explicacion_neofita": "Usa peso ligero y prioriza la técnica." },
+            { "nombre": "Push Ups", "series": 1, "reps": "10", "explicacion_neofita": "Si es difícil, apoya rodillas o haz en banco." }
           ],
           "escalado": {
             "rx": "24/16kg, push-ups estrictas",
@@ -1004,8 +1004,8 @@ function pf_prompt_semana($row, $weekN, $startISO, $endISO, $promptExtra='', $se
       ],
       "finisher": {
         "opcionales": [
-          { "nombre": "Core Hollow Rocks", "reps": "3x20" },
-          { "nombre": "Mobility cadera", "reps": "5-8'" }
+          { "nombre": "Core Hollow Rocks", "series": 3, "reps": "20" },
+          { "nombre": "Mobility cadera", "series": 1, "reps": "5-8'" }
         ]
       }
     }
@@ -1024,6 +1024,10 @@ TXT;
 
     $prompt = <<<PROMPT
 Genera SOLO JSON válido para una semana de entrenamiento estilo WOD (Lunes a Sábado) con niveles RX/Scaled/Beginner y/o RPE.
+
+CRÍTICO: TODOS los ejercicios DEBEN incluir SIEMPRE los campos "series" y "reps" con valores numéricos o strings explícitos. 
+Ejemplo: { "nombre": "Push Ups", "series": 3, "reps": "10-12" }
+NUNCA omitas series/reps. Si es un ejercicio de distancia, usa "reps": "200m". Si es tiempo, usa "reps": "60s".
 
 Contexto:
 - Objetivo/Prueba: {$tipo}
