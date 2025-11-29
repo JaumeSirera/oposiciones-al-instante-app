@@ -183,18 +183,38 @@ serve(async (req) => {
           temasReales = [];
 
           for (const bloque of sesionDelDia.bloques) {
+            // Añadir el tipo de bloque como encabezado
+            const tipoBloque = bloque.tipo || "Bloque";
+            const descripcionBloque = bloque.descripcion || bloque.explicacion_neofita || "";
+            
+            temasReales.push(`\n**${tipoBloque}**${descripcionBloque ? ` - ${descripcionBloque}` : ''}`);
+            
             if (bloque.ejercicios) {
               for (const ejercicio of bloque.ejercicios) {
-                const nombreEjercicio = ejercicio.nombre || ejercicio.titulo || "";
-                const seriesReps =
-                  ejercicio.series && ejercicio.reps
-                    ? `${ejercicio.series}x${ejercicio.reps}`
+                // Usar el nombre completo del ejercicio tal como viene (ya incluye repeticiones, cargas, etc.)
+                let descripcion = ejercicio.nombre || ejercicio.titulo || "";
+                
+                // Si NO viene la info completa en el nombre, construirla con los campos separados
+                if (descripcion && !descripcion.match(/\d+\s*(x|kg|lb|m|min|km)/i)) {
+                  const seriesReps = ejercicio.series && ejercicio.reps
+                    ? ` ${ejercicio.series}x${ejercicio.reps}`
                     : "";
-                const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || "";
-
-                let descripcion = nombreEjercicio;
-                if (seriesReps) descripcion += ` - ${seriesReps}`;
-                if (carga) descripcion += ` (${carga})`;
+                  const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || "";
+                  const tempo = ejercicio.tempo ? ` Tempo: ${ejercicio.tempo}` : "";
+                  const descanso = ejercicio.descanso ? ` Descanso: ${ejercicio.descanso}` : "";
+                  const rpe = ejercicio.rpe ? ` RPE: ${ejercicio.rpe}` : "";
+                  
+                  if (seriesReps) descripcion += seriesReps;
+                  if (carga) descripcion += ` (${carga})`;
+                  if (tempo) descripcion += tempo;
+                  if (descanso) descripcion += descanso;
+                  if (rpe) descripcion += rpe;
+                }
+                
+                // Añadir notas si existen
+                if (ejercicio.notas) {
+                  descripcion += `\n   → ${ejercicio.notas}`;
+                }
 
                 temasReales.push(descripcion);
               }
@@ -202,7 +222,7 @@ serve(async (req) => {
           }
 
           contenidoGenerado = true;
-          console.log(`Extraídos ${temasReales.length} ejercicios del día`);
+          console.log(`Extraídos ${temasReales.length} elementos (bloques + ejercicios) del día`);
         } else {
           console.log(`No se encontró sesión para ${diaSemana}, usando temas originales del recordatorio`, {
             semanaSeleccionada,
