@@ -900,34 +900,61 @@ function pf_fetch_exercise_image_binary($ejNombre, $bloqueTipo, $tipoPrueba) {
 }
 /* ====== (IA TEXTO) ====== */
 function pf_call_openai($prompt, $apiKey) {
-    $url = 'https://api.openai.com/v1/chat/completions';
+    // Ahora usamos Google Gemini en lugar de OpenAI
+    $url = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' . urlencode($apiKey);
+
     $payload = [
-        "model" => "gpt-4o-mini",
-        "temperature" => 1.0,
-        "top_p" => 0.95,
-        "presence_penalty" => 0.6,
-        "frequency_penalty" => 0.2,
-        "response_format" => ["type" => "json_object"],
-        "messages" => [
-            ["role" => "system", "content" => "Eres un planificador de entrenamiento. Devuelve SOLO JSON válido según el esquema solicitado, sin texto extra."],
-            ["role" => "user", "content" => $prompt]
+        "contents" => [
+            [
+                "role" => "user",
+                "parts" => [
+                    ["text" => $prompt]
+                ]
+            ]
+        ],
+        "generationConfig" => [
+            "responseMimeType" => "application/json"
         ]
     ];
-    $ch=curl_init($url);
-    curl_setopt($ch,CURLOPT_HTTPHEADER,['Content-Type: application/json','Authorization: Bearer '.$apiKey]);
-    curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-    curl_setopt($ch,CURLOPT_POST,true);
-    curl_setopt($ch,CURLOPT_POSTFIELDS,json_encode($payload));
-    curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,10);
-    curl_setopt($ch,CURLOPT_TIMEOUT,60);
-    $res=curl_exec($ch); if($res===false){ error_log("OpenAI error: ".curl_error($ch)); curl_close($ch); return null; }
-    $http=curl_getinfo($ch,CURLINFO_HTTP_CODE); curl_close($ch);
-    if($http<200||$http>=300){ error_log("OpenAI HTTP $http: $res"); return null; }
-    $dec=json_decode($res,true);
-    if(isset($dec['error'])){ error_log("OpenAI API error: ".json_encode($dec['error'])); return null; }
-    $content=$dec['choices'][0]['message']['content']??null; if(!$content) return null;
-    $json=json_decode($content,true);
-    if(json_last_error()!==JSON_ERROR_NONE){ error_log("OpenAI JSON parse error: ".json_last_error_msg()); return null; }
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+
+    $res = curl_exec($ch);
+    if ($res === false) {
+        error_log("Gemini error: " . curl_error($ch));
+        curl_close($ch);
+        return null;
+    }
+
+    $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($http < 200 || $http >= 300) {
+        error_log("Gemini HTTP $http: $res");
+        return null;
+    }
+
+    $dec = json_decode($res, true);
+    if (isset($dec['error'])) {
+        error_log("Gemini API error: " . json_encode($dec['error']));
+        return null;
+    }
+
+    $text = $dec['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    if (!$text) return null;
+
+    $json = json_decode($text, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("Gemini JSON parse error: " . json_last_error_msg());
+        return null;
+    }
+
     return $json;
 }
 
@@ -1412,8 +1439,8 @@ if ($method === 'POST' && $action === 'generar_semana') {
 
     [$startISO, $endISO] = pf_week_dates($row, $weekN);
 
-    global $OPENAI_API_KEY;
-    $apiKey = $OPENAI_API_KEY ?: (getenv('OPENAI_API_KEY') ?: '');
+    global $GOOGLE_API_KEY;
+    $apiKey = $GOOGLE_API_KEY ?: (getenv('GOOGLE_API_KEY') ?: '');
 
     $seed = substr(sha1($pid.'-'.$weekN.'-'.microtime(true)), 0, 8);
 
