@@ -1456,8 +1456,20 @@ if ($method === 'POST' && $action === 'generar_semana') {
 
     [$startISO, $endISO] = pf_week_dates($row, $weekN);
 
+    // Obtener API key de varias fuentes posibles (variable global, constantes, entorno)
     global $GOOGLE_API_KEY;
-    $apiKey = $GOOGLE_API_KEY ?: (getenv('GOOGLE_API_KEY') ?: '');
+    $apiKey = '';
+    if (!empty($GOOGLE_API_KEY)) {
+        $apiKey = $GOOGLE_API_KEY;
+    } elseif (defined('GOOGLE_API_KEY')) {
+        $apiKey = GOOGLE_API_KEY;
+    } elseif (defined('OPENAI_API_KEY')) { // por si en config.php sigue este nombre
+        $apiKey = OPENAI_API_KEY;
+    } else {
+        $apiKey = getenv('GOOGLE_API_KEY') ?: '';
+    }
+
+    error_log("[PF] generar_semana => apiKey_len=" . strlen($apiKey) . " fast=" . ($fast ? '1' : '0'));
 
     $seed = substr(sha1($pid.'-'.$weekN.'-'.microtime(true)), 0, 8);
 
