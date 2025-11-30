@@ -1442,8 +1442,11 @@ if ($method === 'POST' && ($action === 'generar' || $action === 'generar_plan_ia
 if ($method === 'POST' && $action === 'generar_semana') {
     $pid = intval($data['id_plan'] ?? 0);
     $weekN = intval($data['semana'] ?? 0);
-    $fast  = isset($data['fast']) ? (bool)$data['fast'] : true;
+    // Por defecto NO modo rápido, para forzar IA salvo que se pida explícitamente fast=true
+    $fast  = isset($data['fast']) ? (bool)$data['fast'] : false;
     $promptExtra = trim($data['prompt'] ?? '');
+
+    error_log("[PF] generar_semana => inicio pid={$pid} semana={$weekN} fast=" . ($fast ? '1' : '0'));
 
     if (!$pid || $weekN <= 0) { echo json_encode(['success'=>false,'error'=>'Faltan datos (id_plan y semana)']); exit; }
 
