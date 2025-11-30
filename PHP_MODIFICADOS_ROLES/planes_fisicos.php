@@ -1025,9 +1025,20 @@ TXT;
     $prompt = <<<PROMPT
 Genera SOLO JSON válido para una semana de entrenamiento estilo WOD (Lunes a Sábado) con niveles RX/Scaled/Beginner y/o RPE.
 
-CRÍTICO: TODOS los ejercicios DEBEN incluir SIEMPRE los campos "series" y "reps" con valores numéricos o strings explícitos. 
-Ejemplo: { "nombre": "Push Ups", "series": 3, "reps": "10-12" }
-NUNCA omitas series/reps. Si es un ejercicio de distancia, usa "reps": "200m". Si es tiempo, usa "reps": "60s".
+⚠️ REQUISITO OBLIGATORIO CRÍTICO ⚠️
+TODOS Y CADA UNO de los ejercicios en TODOS los días (Lunes, Martes, Miércoles, Jueves, Viernes, Sábado) DEBEN incluir SIEMPRE:
+- "series": número (ejemplo: 3, 5, 1)
+- "reps": string con repeticiones (ejemplo: "10", "8-12", "200m", "60s", "max")
+
+Ejemplos OBLIGATORIOS para cada tipo de ejercicio:
+{ "nombre": "Push Ups", "series": 3, "reps": "10-12" }
+{ "nombre": "Box Jumps", "series": 3, "reps": "12" }
+{ "nombre": "KB Swings 24/16kg", "series": 1, "reps": "24" }
+{ "nombre": "Run", "series": 1, "reps": "200m" }
+{ "nombre": "Burpees", "series": 1, "reps": "15" }
+{ "nombre": "Row", "series": 1, "reps": "250m" }
+
+NUNCA omitas series/reps. Esto aplica a CADA ejercicio de CADA día sin excepción.
 
 Contexto:
 - Objetivo/Prueba: {$tipo}
@@ -1040,15 +1051,18 @@ Contexto:
 Estructura exacta:
 {$schema}
 
-Reglas:
-- En CADA BLOQUE y en CADA EJERCICIO añade "explicacion_neofita".
-- Añade "glosario" semanal con 3-6 términos.
-- Volúmenes realistas; evitar fallo prematuro.
-- Nada fuera del JSON.
+Reglas OBLIGATORIAS:
+1. TODOS los ejercicios DEBEN tener "series" (número) y "reps" (string) en TODOS los días
+2. En CADA BLOQUE y en CADA EJERCICIO añade "explicacion_neofita"
+3. Añade "glosario" semanal con 3-6 términos
+4. Volúmenes realistas; evitar fallo prematuro
+5. Nada fuera del JSON
 
 {$diversidad}
 
 {$promptExtra}
+
+RECORDATORIO FINAL: Verifica que CADA ejercicio de CADA día (Lunes a Sábado) tenga "series" y "reps" antes de enviar el JSON.
 PROMPT;
 
     return $prompt;
