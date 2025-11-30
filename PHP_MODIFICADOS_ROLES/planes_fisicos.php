@@ -972,15 +972,6 @@ function pf_call_openai($prompt, $apiKey) {
     return $json;
 }
 
-    $json = json_decode($text, true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        error_log("Gemini JSON parse error: " . json_last_error_msg());
-        return null;
-    }
-
-    return $json;
-}
-
 /** === Prompt de semana === **/
 function pf_prompt_semana($row, $weekN, $startISO, $endISO, $promptExtra='', $seed='') {
     $tipo   = $row['tipo_prueba'] ?? 'fuerza y acondicionamiento';
