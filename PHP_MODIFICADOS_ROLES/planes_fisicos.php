@@ -901,6 +901,13 @@ function pf_fetch_exercise_image_binary($ejNombre, $bloqueTipo, $tipoPrueba) {
 /* ====== (IA TEXTO) ====== */
 function pf_call_openai($prompt, $apiKey) {
     // Ahora usamos Google Gemini en lugar de OpenAI
+    if (!$apiKey) {
+        error_log("[PF][Gemini] Sin API key configurada");
+        return null;
+    }
+
+    error_log("[PF][Gemini] Prompt (primeros 400 caracteres): " . substr($prompt, 0, 400));
+
     $url = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' . urlencode($apiKey);
 
     $payload = [
@@ -927,7 +934,7 @@ function pf_call_openai($prompt, $apiKey) {
 
     $res = curl_exec($ch);
     if ($res === false) {
-        error_log("Gemini error: " . curl_error($ch));
+        error_log("[PF][Gemini] cURL error: " . curl_error($ch));
         curl_close($ch);
         return null;
     }
@@ -935,19 +942,35 @@ function pf_call_openai($prompt, $apiKey) {
     $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
+    error_log("[PF][Gemini] HTTP $http, raw (primeros 800 chars): " . substr($res, 0, 800));
+
     if ($http < 200 || $http >= 300) {
-        error_log("Gemini HTTP $http: $res");
+        error_log("[PF][Gemini] HTTP error body: " . $res);
         return null;
     }
 
     $dec = json_decode($res, true);
     if (isset($dec['error'])) {
-        error_log("Gemini API error: " . json_encode($dec['error']));
+        error_log("[PF][Gemini] API error: " . json_encode($dec['error']));
         return null;
     }
 
     $text = $dec['candidates'][0]['content']['parts'][0]['text'] ?? null;
-    if (!$text) return null;
+    if (!$text) {
+        error_log("[PF][Gemini] Sin texto en candidates[0].content.parts[0].text");
+        return null;
+    }
+
+    error_log("[PF][Gemini] Texto devuelto (primeros 400 chars): " . substr($text, 0, 400));
+
+    $json = json_decode($text, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("[PF][Gemini] JSON parse error: " . json_last_error_msg());
+        return null;
+    }
+
+    return $json;
+}
 
     $json = json_decode($text, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
@@ -1449,7 +1472,15 @@ if ($method === 'POST' && $action === 'generar_semana') {
         $diversidadExtra = pf_build_diversity_extra($conn, $pid, $weekN);
         $prompt = pf_prompt_semana($row, $weekN, $startISO, $endISO, trim($promptExtra . "\n\n" . $diversidadExtra), $seed);
 
+        error_log("[PF] generar_semana => llamando IA week=$weekN fast=".($fast?'1':'0')." seed=$seed");
+
         $resIA = pf_call_openai($prompt, $apiKey);
+        if (!$resIA) {
+            error_log("[PF] generar_semana => resIA NULL (fallo IA) week=$weekN");
+        } else {
+            error_log("[PF] generar_semana => resIA OK keys=".implode(',', array_keys($resIA)));
+        }
+
         if ($resIA && (isset($resIA['sesiones']) || isset($resIA['plan']))) {
             if (isset($resIA['sesiones'])) {
                 $week = [
