@@ -897,6 +897,8 @@ function pf_fetch_exercise_image_binary($ejNombre, $bloqueTipo, $tipoPrueba) {
     $b64 = pf_placeholder_b64();
     $bin = base64_decode($b64);
     return ['bin'=>$bin, 'ext'=>'png', 'credit'=>'placeholder', 'source'=>'placeholder', 'page'=>null];
+}
+
 /* ====== (IA TEXTO - OpenAI GPT como fallback) ====== */
 function pf_call_openai_gpt($prompt, $apiKey) {
     if (!$apiKey) {
