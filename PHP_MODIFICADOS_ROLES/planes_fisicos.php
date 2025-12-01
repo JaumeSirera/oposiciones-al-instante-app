@@ -908,7 +908,7 @@ function pf_call_openai($prompt, $apiKey) {
 
     error_log("[PF][Gemini] Prompt (primeros 400 caracteres): " . substr($prompt, 0, 400));
 
-    $url = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=' . urlencode($apiKey);
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' . urlencode($apiKey);
 
     $payload = [
         "contents" => [
