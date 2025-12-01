@@ -918,10 +918,8 @@ function pf_call_openai($prompt, $apiKey) {
                     ["text" => $prompt]
                 ]
             ]
-        ],
-        "generationConfig" => [
-            "responseMimeType" => "application/json"
         ]
+        // generationConfig eliminado - responseMimeType no es soportado en esta versión de la API
     ];
 
     $ch = curl_init($url);
