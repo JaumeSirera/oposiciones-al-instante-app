@@ -897,12 +897,97 @@ function pf_fetch_exercise_image_binary($ejNombre, $bloqueTipo, $tipoPrueba) {
     $b64 = pf_placeholder_b64();
     $bin = base64_decode($b64);
     return ['bin'=>$bin, 'ext'=>'png', 'credit'=>'placeholder', 'source'=>'placeholder', 'page'=>null];
-}
-/* ====== (IA TEXTO) ====== */
-function pf_call_openai($prompt, $apiKey) {
-    // Ahora usamos Google Gemini en lugar de OpenAI
+/* ====== (IA TEXTO - OpenAI GPT como fallback) ====== */
+function pf_call_openai_gpt($prompt, $apiKey) {
     if (!$apiKey) {
-        error_log("[PF][Gemini] Sin API key configurada");
+        error_log("[PF][OpenAI] Sin API key configurada");
+        return null;
+    }
+
+    error_log("[PF][OpenAI] Llamando a GPT...");
+
+    $url = 'https://api.openai.com/v1/chat/completions';
+
+    $payload = [
+        "model" => "gpt-4o-mini",
+        "messages" => [
+            [
+                "role" => "system",
+                "content" => "Eres un experto en entrenamiento físico. Debes responder SOLO con JSON válido, sin texto adicional."
+            ],
+            [
+                "role" => "user",
+                "content" => $prompt
+            ]
+        ],
+        "temperature" => 0.7,
+        "max_tokens" => 4000
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $apiKey
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+
+    $res = curl_exec($ch);
+    if ($res === false) {
+        error_log("[PF][OpenAI] cURL error: " . curl_error($ch));
+        curl_close($ch);
+        return null;
+    }
+
+    $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    error_log("[PF][OpenAI] HTTP $http");
+
+    if ($http < 200 || $http >= 300) {
+        error_log("[PF][OpenAI] HTTP error body: " . substr($res, 0, 500));
+        return null;
+    }
+
+    $dec = json_decode($res, true);
+    if (isset($dec['error'])) {
+        error_log("[PF][OpenAI] API error: " . json_encode($dec['error']));
+        return null;
+    }
+
+    $text = $dec['choices'][0]['message']['content'] ?? null;
+    if (!$text) {
+        error_log("[PF][OpenAI] Sin texto en choices[0].message.content");
+        return null;
+    }
+
+    error_log("[PF][OpenAI] Texto devuelto (primeros 400 chars): " . substr($text, 0, 400));
+
+    // Limpiar markdown si viene envuelto en ```json
+    $text = preg_replace('/^```json\s*/i', '', $text);
+    $text = preg_replace('/\s*```\s*$/i', '', $text);
+
+    $json = json_decode($text, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("[PF][OpenAI] JSON parse error: " . json_last_error_msg());
+        return null;
+    }
+
+    return $json;
+}
+
+/* ====== (IA TEXTO - Gemini con fallback a OpenAI) ====== */
+function pf_call_openai($prompt, $apiKey, $openaiKey = null) {
+    // Intentar primero con Gemini
+    // Intentar primero con Gemini
+    if (!$apiKey) {
+        error_log("[PF][Gemini] Sin API key configurada, intentando OpenAI...");
+        if ($openaiKey) {
+            return pf_call_openai_gpt($prompt, $openaiKey);
+        }
         return null;
     }
 
@@ -934,6 +1019,11 @@ function pf_call_openai($prompt, $apiKey) {
     if ($res === false) {
         error_log("[PF][Gemini] cURL error: " . curl_error($ch));
         curl_close($ch);
+        // Fallback a OpenAI
+        if ($openaiKey) {
+            error_log("[PF] Cambiando a OpenAI por error de Gemini");
+            return pf_call_openai_gpt($prompt, $openaiKey);
+        }
         return null;
     }
 
@@ -942,20 +1032,43 @@ function pf_call_openai($prompt, $apiKey) {
 
     error_log("[PF][Gemini] HTTP $http, raw (primeros 800 chars): " . substr($res, 0, 800));
 
+    // Si es error 429 (cuota excedida), intentar con OpenAI
+    if ($http === 429) {
+        error_log("[PF][Gemini] Cuota excedida (429), cambiando a OpenAI...");
+        if ($openaiKey) {
+            return pf_call_openai_gpt($prompt, $openaiKey);
+        }
+    }
+
     if ($http < 200 || $http >= 300) {
         error_log("[PF][Gemini] HTTP error body: " . $res);
+        // Intentar OpenAI como fallback para cualquier error
+        if ($openaiKey) {
+            error_log("[PF] Cambiando a OpenAI por error HTTP de Gemini");
+            return pf_call_openai_gpt($prompt, $openaiKey);
+        }
         return null;
     }
 
     $dec = json_decode($res, true);
     if (isset($dec['error'])) {
         error_log("[PF][Gemini] API error: " . json_encode($dec['error']));
+        // Intentar OpenAI como fallback
+        if ($openaiKey) {
+            error_log("[PF] Cambiando a OpenAI por error de API de Gemini");
+            return pf_call_openai_gpt($prompt, $openaiKey);
+        }
         return null;
     }
 
     $text = $dec['candidates'][0]['content']['parts'][0]['text'] ?? null;
     if (!$text) {
         error_log("[PF][Gemini] Sin texto en candidates[0].content.parts[0].text");
+        // Intentar OpenAI como fallback
+        if ($openaiKey) {
+            error_log("[PF] Cambiando a OpenAI porque Gemini no devolvió texto");
+            return pf_call_openai_gpt($prompt, $openaiKey);
+        }
         return null;
     }
 
@@ -1461,24 +1574,33 @@ if ($method === 'POST' && $action === 'generar_semana') {
         $apiKey = $GOOGLE_API_KEY;
     } elseif (defined('GOOGLE_API_KEY')) {
         $apiKey = GOOGLE_API_KEY;
-    } elseif (defined('OPENAI_API_KEY')) { // por si en config.php sigue este nombre
-        $apiKey = OPENAI_API_KEY;
     } else {
         $apiKey = getenv('GOOGLE_API_KEY') ?: '';
     }
 
-    error_log("[PF] generar_semana => apiKey_len=" . strlen($apiKey) . " fast=" . ($fast ? '1' : '0'));
+    // Obtener también la clave de OpenAI como fallback
+    global $OPENAI_API_KEY;
+    $openaiKey = '';
+    if (!empty($OPENAI_API_KEY)) {
+        $openaiKey = $OPENAI_API_KEY;
+    } elseif (defined('OPENAI_API_KEY')) {
+        $openaiKey = OPENAI_API_KEY;
+    } else {
+        $openaiKey = getenv('OPENAI_API_KEY') ?: '';
+    }
+
+    error_log("[PF] generar_semana => apiKey_len=" . strlen($apiKey) . " openaiKey_len=" . strlen($openaiKey) . " fast=" . ($fast ? '1' : '0'));
 
     $seed = substr(sha1($pid.'-'.$weekN.'-'.microtime(true)), 0, 8);
 
     $week = null; $usedIA = false;
-    if (!$fast && $apiKey) {
+    if (!$fast && ($apiKey || $openaiKey)) {
         $diversidadExtra = pf_build_diversity_extra($conn, $pid, $weekN);
         $prompt = pf_prompt_semana($row, $weekN, $startISO, $endISO, trim($promptExtra . "\n\n" . $diversidadExtra), $seed);
 
         error_log("[PF] generar_semana => llamando IA week=$weekN fast=".($fast?'1':'0')." seed=$seed");
 
-        $resIA = pf_call_openai($prompt, $apiKey);
+        $resIA = pf_call_openai($prompt, $apiKey, $openaiKey);
         if (!$resIA) {
             error_log("[PF] generar_semana => resIA NULL (fallo IA) week=$weekN");
         } else {
