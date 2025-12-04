@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Trophy, Clock, TrendingUp, Heart, ExternalLink, Calendar, Loader2 } from 'lucide-react';
@@ -37,6 +38,7 @@ const CCAA_LIST = [
 const Index = () => {
   const { user, isSuperAdmin, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [userStats, setUserStats] = useState({
     totalQuestions: 0,
@@ -254,10 +256,10 @@ const Index = () => {
             <img src={logo} alt="Oposiciones Test" className="h-16 w-16" />
           </div>
           <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-3">
-            ¡Bienvenido, {user?.username}!
+            {t('home.welcomeUser', { username: user?.username })}
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Tu progreso en preparación de oposiciones
+            {t('home.progressSubtitle')}
           </p>
         </div>
 
@@ -267,7 +269,7 @@ const Index = () => {
             <CardContent className="pt-6 text-center">
               <BookOpen className="w-8 h-8 text-blue-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-gray-800">{userStats.totalQuestions}</div>
-              <div className="text-sm text-gray-600">Preguntas Realizadas</div>
+              <div className="text-sm text-gray-600">{t('home.questionsAsked')}</div>
             </CardContent>
           </Card>
           
@@ -275,7 +277,7 @@ const Index = () => {
             <CardContent className="pt-6 text-center">
               <Trophy className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-gray-800">{userStats.correctAnswers}</div>
-              <div className="text-sm text-gray-600">Respuestas Correctas</div>
+              <div className="text-sm text-gray-600">{t('home.correctAnswers')}</div>
             </CardContent>
           </Card>
           
@@ -285,7 +287,7 @@ const Index = () => {
               <div className="text-2xl font-bold text-gray-800">
                 {userStats.averageTime > 0 ? userStats.averageTime.toFixed(2) : '-'}
               </div>
-              <div className="text-sm text-gray-600">Nota Media</div>
+              <div className="text-sm text-gray-600">{t('home.averageScore')}</div>
             </CardContent>
           </Card>
           
@@ -293,7 +295,7 @@ const Index = () => {
             <CardContent className="pt-6 text-center">
               <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-gray-800">{userStats.streakCount}</div>
-              <div className="text-sm text-gray-600">Tests Realizados</div>
+              <div className="text-sm text-gray-600">{t('home.testsCompleted')}</div>
             </CardContent>
           </Card>
         </div>
@@ -303,8 +305,8 @@ const Index = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2">¿Listo para empezar?</h3>
-                <p className="opacity-90 mb-4">Crea un plan de estudio personalizado para tu oposición</p>
+                <h3 className="text-2xl font-bold mb-2">{t('home.readyToStart')}</h3>
+                <p className="opacity-90 mb-4">{t('home.createStudyPlanDesc')}</p>
                 <Button
                   onClick={() => setShowModalPlan(true)}
                   variant="secondary"
@@ -312,7 +314,7 @@ const Index = () => {
                   className="bg-white text-purple-600 hover:bg-gray-100"
                 >
                   <Calendar className="mr-2 h-5 w-5" />
-                  Crear Plan de Estudio
+                  {t('home.createStudyPlan')}
                 </Button>
               </div>
               <BookOpen className="h-24 w-24 opacity-20" />
@@ -325,8 +327,8 @@ const Index = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2">¡Prepárate físicamente!</h3>
-                <p className="opacity-90 mb-4">Crea un plan de entrenamiento personalizado para tus pruebas físicas</p>
+                <h3 className="text-2xl font-bold mb-2">{t('home.getPhysicallyReady')}</h3>
+                <p className="opacity-90 mb-4">{t('home.createPhysicalPlanDesc')}</p>
                 <Button
                   onClick={() => navigate('/generar-plan-fisico-ia')}
                   variant="secondary"
@@ -334,7 +336,7 @@ const Index = () => {
                   className="bg-white text-orange-600 hover:bg-gray-100"
                 >
                   <Heart className="mr-2 h-5 w-5" />
-                  Crear Plan Físico
+                  {t('home.createPhysicalPlan')}
                 </Button>
               </div>
               <Heart className="h-24 w-24 opacity-20" />
@@ -349,7 +351,7 @@ const Index = () => {
             {/* Últimos Procesos */}
             <Card className="bg-white shadow-md border-blue-100">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="text-blue-900">Tus últimos procesos</CardTitle>
+                <CardTitle className="text-blue-900">{t('home.yourLastProcesses')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {procesos.length > 0 ? (
@@ -379,14 +381,14 @@ const Index = () => {
                             {p.fecha_inicio} - {p.fecha_fin}
                           </p>
                           <p className="text-xs text-blue-600 mt-1 font-medium">
-                            Último test: {p.ultima_fecha?.substring(0, 16).replace('T', ' ')}
+                            {t('home.lastTest')}: {p.ultima_fecha?.substring(0, 16).replace('T', ' ')}
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-sm">No tienes procesos recientes.</p>
+                  <p className="text-gray-600 text-sm">{t('home.noRecentProcesses')}</p>
                 )}
               </CardContent>
             </Card>
@@ -394,7 +396,7 @@ const Index = () => {
             {/* Noticias de Oposiciones */}
             <Card className="bg-white shadow-md border-green-100">
               <CardHeader className="bg-gradient-to-r from-green-50 to-white">
-                <CardTitle className="text-green-900">Noticias de Oposiciones</CardTitle>
+                <CardTitle className="text-green-900">{t('home.oppositionNews')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {noticias.length > 0 ? (

@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   BookOpen, 
   Clock, 
@@ -31,54 +32,55 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 
-const menuItems = [
-  {
-    group: "Principal",
-    items: [
-      { title: "Inicio", url: "/", icon: Home },
-    ]
-  },
-  {
-    group: "Tests",
-    items: [
-      { title: "Iniciar Test", url: "/test", icon: BookOpen },
-      { title: "Simulacro Cronometrado", url: "/simulacro", icon: Clock },
-      { title: "Test Psicotécnico", url: "/test-psicotecnico", icon: Brain },
-      { title: "Simulacro Psicotécnico", url: "/simulacro-psicotecnico", icon: Zap },
-      { title: "Test de Personalidad", url: "/test-personalidad", icon: User },
-    ]
-  },
-  {
-    group: "Mi Progreso",
-    items: [
-      { title: "Estadísticas", url: "/estadisticas", icon: TrendingUp },
-      { title: "Historial", url: "/historial", icon: History },
-      { title: "Ranking", url: "/ranking", icon: Award },
-    ]
-  },
-  {
-    group: "Herramientas IA",
-    items: [
-      { title: "Generar Preguntas", url: "/crear-test", icon: Wand2 },
-      { title: "Generar Psicotécnicos", url: "/crear-psicotecnicos", icon: Sparkles },
-      { title: "Crear Resumen", url: "/crear-resumen", icon: PlusCircle },
-      { title: "Planes de Estudio", url: "/planes-estudio", icon: Calendar, notForUsuario: true },
-      { title: "Planes Físicos", url: "/planes-fisicos", icon: Dumbbell, notForUsuario: true },
-      { title: "Recordatorios", url: "/administrar-recordatorios", icon: Bell, requiresAdmin: true },
-    ]
-  },
-  {
-    group: "Recursos",
-    items: [
-      { title: "Resúmenes", url: "/resumenes", icon: FileText },
-    ]
-  }
-];
-
 export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
   const { isSuperAdmin, isAdmin } = useAuth();
+  const { t } = useTranslation();
+
+  const menuItems = [
+    {
+      group: t('sidebar.principal'),
+      items: [
+        { title: t('nav.home'), url: "/", icon: Home },
+      ]
+    },
+    {
+      group: t('sidebar.tests'),
+      items: [
+        { title: t('sidebar.startTest'), url: "/test", icon: BookOpen },
+        { title: t('sidebar.timedSimulation'), url: "/simulacro", icon: Clock },
+        { title: t('sidebar.psychoTest'), url: "/test-psicotecnico", icon: Brain },
+        { title: t('sidebar.psychoSimulation'), url: "/simulacro-psicotecnico", icon: Zap },
+        { title: t('sidebar.personalityTest'), url: "/test-personalidad", icon: User },
+      ]
+    },
+    {
+      group: t('sidebar.myProgress'),
+      items: [
+        { title: t('nav.statistics'), url: "/estadisticas", icon: TrendingUp },
+        { title: t('nav.history'), url: "/historial", icon: History },
+        { title: t('nav.ranking'), url: "/ranking", icon: Award },
+      ]
+    },
+    {
+      group: t('sidebar.aiTools'),
+      items: [
+        { title: t('sidebar.generateQuestions'), url: "/crear-test", icon: Wand2 },
+        { title: t('sidebar.generatePsycho'), url: "/crear-psicotecnicos", icon: Sparkles },
+        { title: t('sidebar.createSummary'), url: "/crear-resumen", icon: PlusCircle },
+        { title: t('nav.studyPlans'), url: "/planes-estudio", icon: Calendar, notForUsuario: true },
+        { title: t('nav.physicalPlans'), url: "/planes-fisicos", icon: Dumbbell, notForUsuario: true },
+        { title: t('nav.reminders'), url: "/administrar-recordatorios", icon: Bell, requiresAdmin: true },
+      ]
+    },
+    {
+      group: t('sidebar.resources'),
+      items: [
+        { title: t('nav.summaries'), url: "/resumenes", icon: FileText },
+      ]
+    }
+  ];
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -89,7 +91,7 @@ export function AppSidebar() {
 
   // Filtrar secciones según el nivel del usuario
   const filteredMenuItems = menuItems.map(section => {
-    if (section.group === "Herramientas IA") {
+    if (section.group === t('sidebar.aiTools')) {
       // SA puede ver todo
       if (isSuperAdmin) return section;
       
@@ -139,7 +141,7 @@ export function AppSidebar() {
                 {section.items.map((item) => {
                   const active = isActive(item.url);
                   return (
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild isActive={active}>
                         <NavLink to={item.url} end={item.url === "/"}>
                           <item.icon className="h-4 w-4" />
