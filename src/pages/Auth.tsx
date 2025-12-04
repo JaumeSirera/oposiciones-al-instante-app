@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ import { BookOpen, Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { authService } from '@/services/authService';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -184,6 +186,11 @@ const Auth: React.FC = () => {
         <meta name="robots" content="noindex,nofollow" />
         <link rel="canonical" href={canonical} />
       </Helmet>
+
+      {/* Language selector */}
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
 
       <div className="w-full max-w-md">
         {/* Logo */}
