@@ -1,0 +1,156 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "send": "Envoyer",
+    "yes": "Oui",
+    "no": "Non",
+    "error": "Erreur",
+    "success": "Succès"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "register": "S'inscrire",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "loginSuccess": "Connexion réussie",
+    "logoutSuccess": "Déconnexion réussie",
+    "registerSuccess": "Inscription terminée",
+    "invalidCredentials": "Identifiants invalides"
+  },
+  "nav": {
+    "home": "Accueil",
+    "tests": "Tests",
+    "studyPlans": "Plans d'étude",
+    "physicalPlans": "Plans physiques",
+    "summaries": "Résumés",
+    "statistics": "Statistiques",
+    "ranking": "Classement",
+    "history": "Historique",
+    "profile": "Mon Profil",
+    "reminders": "Rappels",
+    "virtualProfessor": "Professeur Virtuel",
+    "aiAgent": "Agent IA",
+    "donation": "Donation",
+    "privacyPolicy": "Politique de confidentialité"
+  },
+  "home": {
+    "welcome": "Bienvenue",
+    "startTest": "Commencer le test",
+    "createTest": "Créer un test",
+    "viewStats": "Voir les statistiques",
+    "viewRanking": "Voir le classement",
+    "viewHistory": "Voir l'historique",
+    "createStudyPlan": "Créer un plan d'étude",
+    "createPhysicalPlan": "Créer un plan physique",
+    "createSummary": "Créer un résumé",
+    "practiceMode": "Test d'entraînement",
+    "examMode": "Mode Examen"
+  },
+  "tests": {
+    "title": "Tests",
+    "category": "Catégorie",
+    "questions": "Questions",
+    "time": "Temps",
+    "score": "Score",
+    "correct": "Correctes",
+    "incorrect": "Incorrectes",
+    "unanswered": "Sans réponse",
+    "finish": "Terminer le test",
+    "results": "Résultats",
+    "tryAgain": "Réessayer",
+    "nextQuestion": "Question suivante",
+    "prevQuestion": "Question précédente",
+    "submitAnswer": "Soumettre la réponse",
+    "questionOf": "Question {{current}} sur {{total}}"
+  },
+  "plans": {
+    "study": {
+      "title": "Plans d'étude",
+      "create": "Créer un plan d'étude",
+      "generateAI": "Générer avec l'IA",
+      "manual": "Création manuelle",
+      "duration": "Durée",
+      "weeks": "semaines",
+      "topics": "Sujets",
+      "progress": "Progression",
+      "startDate": "Date de début",
+      "endDate": "Date de fin"
+    },
+    "physical": {
+      "title": "Plans physiques",
+      "create": "Créer un plan physique",
+      "generateAI": "Générer avec l'IA",
+      "exercises": "Exercices",
+      "sets": "Séries",
+      "reps": "Répétitions",
+      "rest": "Repos",
+      "day": "Jour",
+      "week": "Semaine"
+    }
+  },
+  "summaries": {
+    "title": "Résumés",
+    "create": "Créer un résumé",
+    "generateAI": "Générer avec l'IA",
+    "topic": "Sujet",
+    "content": "Contenu"
+  },
+  "statistics": {
+    "title": "Statistiques",
+    "totalTests": "Tests totaux",
+    "totalQuestions": "Questions totales",
+    "correctRate": "Taux de réussite",
+    "averageScore": "Score moyen",
+    "streak": "Série"
+  },
+  "ranking": {
+    "title": "Classement",
+    "position": "Position",
+    "user": "Utilisateur",
+    "score": "Score",
+    "tests": "Tests"
+  },
+  "reminders": {
+    "title": "Rappels",
+    "create": "Créer un rappel",
+    "date": "Date",
+    "time": "Heure",
+    "message": "Message",
+    "sendNow": "Envoyer maintenant",
+    "pending": "En attente",
+    "sent": "Envoyés"
+  },
+  "profile": {
+    "title": "Mon Profil",
+    "name": "Nom",
+    "email": "Email",
+    "changePassword": "Changer le mot de passe",
+    "settings": "Paramètres"
+  },
+  "language": {
+    "select": "Langue",
+    "es": "Español",
+    "en": "English",
+    "fr": "Français",
+    "pt": "Português",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+}

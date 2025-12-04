@@ -1,0 +1,156 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "send": "Send",
+    "yes": "Yes",
+    "no": "No",
+    "error": "Error",
+    "success": "Success"
+  },
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out",
+    "register": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot your password?",
+    "resetPassword": "Reset password",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginSuccess": "Successfully logged in",
+    "logoutSuccess": "Successfully logged out",
+    "registerSuccess": "Registration completed",
+    "invalidCredentials": "Invalid credentials"
+  },
+  "nav": {
+    "home": "Home",
+    "tests": "Tests",
+    "studyPlans": "Study Plans",
+    "physicalPlans": "Physical Plans",
+    "summaries": "Summaries",
+    "statistics": "Statistics",
+    "ranking": "Ranking",
+    "history": "History",
+    "profile": "My Profile",
+    "reminders": "Reminders",
+    "virtualProfessor": "Virtual Professor",
+    "aiAgent": "AI Agent",
+    "donation": "Donation",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "home": {
+    "welcome": "Welcome",
+    "startTest": "Start Test",
+    "createTest": "Create Test",
+    "viewStats": "View Statistics",
+    "viewRanking": "View Ranking",
+    "viewHistory": "View History",
+    "createStudyPlan": "Create Study Plan",
+    "createPhysicalPlan": "Create Physical Plan",
+    "createSummary": "Create Summary",
+    "practiceMode": "Practice Test",
+    "examMode": "Exam Mode"
+  },
+  "tests": {
+    "title": "Tests",
+    "category": "Category",
+    "questions": "Questions",
+    "time": "Time",
+    "score": "Score",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "unanswered": "Unanswered",
+    "finish": "Finish Test",
+    "results": "Results",
+    "tryAgain": "Try again",
+    "nextQuestion": "Next question",
+    "prevQuestion": "Previous question",
+    "submitAnswer": "Submit answer",
+    "questionOf": "Question {{current}} of {{total}}"
+  },
+  "plans": {
+    "study": {
+      "title": "Study Plans",
+      "create": "Create Study Plan",
+      "generateAI": "Generate with AI",
+      "manual": "Manual Creation",
+      "duration": "Duration",
+      "weeks": "weeks",
+      "topics": "Topics",
+      "progress": "Progress",
+      "startDate": "Start date",
+      "endDate": "End date"
+    },
+    "physical": {
+      "title": "Physical Plans",
+      "create": "Create Physical Plan",
+      "generateAI": "Generate with AI",
+      "exercises": "Exercises",
+      "sets": "Sets",
+      "reps": "Reps",
+      "rest": "Rest",
+      "day": "Day",
+      "week": "Week"
+    }
+  },
+  "summaries": {
+    "title": "Summaries",
+    "create": "Create Summary",
+    "generateAI": "Generate with AI",
+    "topic": "Topic",
+    "content": "Content"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "totalTests": "Total Tests",
+    "totalQuestions": "Total Questions",
+    "correctRate": "Correct Rate",
+    "averageScore": "Average Score",
+    "streak": "Streak"
+  },
+  "ranking": {
+    "title": "Ranking",
+    "position": "Position",
+    "user": "User",
+    "score": "Score",
+    "tests": "Tests"
+  },
+  "reminders": {
+    "title": "Reminders",
+    "create": "Create Reminder",
+    "date": "Date",
+    "time": "Time",
+    "message": "Message",
+    "sendNow": "Send Now",
+    "pending": "Pending",
+    "sent": "Sent"
+  },
+  "profile": {
+    "title": "My Profile",
+    "name": "Name",
+    "email": "Email",
+    "changePassword": "Change password",
+    "settings": "Settings"
+  },
+  "language": {
+    "select": "Language",
+    "es": "Español",
+    "en": "English",
+    "fr": "Français",
+    "pt": "Português",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+}

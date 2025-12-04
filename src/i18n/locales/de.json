@@ -1,0 +1,156 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Vorherige",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "send": "Senden",
+    "yes": "Ja",
+    "no": "Nein",
+    "error": "Fehler",
+    "success": "Erfolg"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "register": "Registrieren",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "forgotPassword": "Passwort vergessen?",
+    "resetPassword": "Passwort zurücksetzen",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "loginSuccess": "Erfolgreich angemeldet",
+    "logoutSuccess": "Erfolgreich abgemeldet",
+    "registerSuccess": "Registrierung abgeschlossen",
+    "invalidCredentials": "Ungültige Anmeldedaten"
+  },
+  "nav": {
+    "home": "Startseite",
+    "tests": "Tests",
+    "studyPlans": "Lernpläne",
+    "physicalPlans": "Fitnesspläne",
+    "summaries": "Zusammenfassungen",
+    "statistics": "Statistiken",
+    "ranking": "Rangliste",
+    "history": "Verlauf",
+    "profile": "Mein Profil",
+    "reminders": "Erinnerungen",
+    "virtualProfessor": "Virtueller Professor",
+    "aiAgent": "KI-Agent",
+    "donation": "Spende",
+    "privacyPolicy": "Datenschutzrichtlinie"
+  },
+  "home": {
+    "welcome": "Willkommen",
+    "startTest": "Test starten",
+    "createTest": "Test erstellen",
+    "viewStats": "Statistiken anzeigen",
+    "viewRanking": "Rangliste anzeigen",
+    "viewHistory": "Verlauf anzeigen",
+    "createStudyPlan": "Lernplan erstellen",
+    "createPhysicalPlan": "Fitnessplan erstellen",
+    "createSummary": "Zusammenfassung erstellen",
+    "practiceMode": "Übungstest",
+    "examMode": "Prüfungsmodus"
+  },
+  "tests": {
+    "title": "Tests",
+    "category": "Kategorie",
+    "questions": "Fragen",
+    "time": "Zeit",
+    "score": "Punktzahl",
+    "correct": "Richtig",
+    "incorrect": "Falsch",
+    "unanswered": "Unbeantwortet",
+    "finish": "Test beenden",
+    "results": "Ergebnisse",
+    "tryAgain": "Erneut versuchen",
+    "nextQuestion": "Nächste Frage",
+    "prevQuestion": "Vorherige Frage",
+    "submitAnswer": "Antwort absenden",
+    "questionOf": "Frage {{current}} von {{total}}"
+  },
+  "plans": {
+    "study": {
+      "title": "Lernpläne",
+      "create": "Lernplan erstellen",
+      "generateAI": "Mit KI generieren",
+      "manual": "Manuelle Erstellung",
+      "duration": "Dauer",
+      "weeks": "Wochen",
+      "topics": "Themen",
+      "progress": "Fortschritt",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum"
+    },
+    "physical": {
+      "title": "Fitnesspläne",
+      "create": "Fitnessplan erstellen",
+      "generateAI": "Mit KI generieren",
+      "exercises": "Übungen",
+      "sets": "Sätze",
+      "reps": "Wiederholungen",
+      "rest": "Pause",
+      "day": "Tag",
+      "week": "Woche"
+    }
+  },
+  "summaries": {
+    "title": "Zusammenfassungen",
+    "create": "Zusammenfassung erstellen",
+    "generateAI": "Mit KI generieren",
+    "topic": "Thema",
+    "content": "Inhalt"
+  },
+  "statistics": {
+    "title": "Statistiken",
+    "totalTests": "Gesamte Tests",
+    "totalQuestions": "Gesamte Fragen",
+    "correctRate": "Erfolgsquote",
+    "averageScore": "Durchschnittliche Punktzahl",
+    "streak": "Serie"
+  },
+  "ranking": {
+    "title": "Rangliste",
+    "position": "Position",
+    "user": "Benutzer",
+    "score": "Punktzahl",
+    "tests": "Tests"
+  },
+  "reminders": {
+    "title": "Erinnerungen",
+    "create": "Erinnerung erstellen",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "message": "Nachricht",
+    "sendNow": "Jetzt senden",
+    "pending": "Ausstehend",
+    "sent": "Gesendet"
+  },
+  "profile": {
+    "title": "Mein Profil",
+    "name": "Name",
+    "email": "E-Mail",
+    "changePassword": "Passwort ändern",
+    "settings": "Einstellungen"
+  },
+  "language": {
+    "select": "Sprache",
+    "es": "Español",
+    "en": "English",
+    "fr": "Français",
+    "pt": "Português",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+}

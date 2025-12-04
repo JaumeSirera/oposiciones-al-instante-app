@@ -1,0 +1,156 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "send": "Enviar",
+    "yes": "Sim",
+    "no": "Não",
+    "error": "Erro",
+    "success": "Sucesso"
+  },
+  "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "register": "Cadastrar",
+    "email": "Email",
+    "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "forgotPassword": "Esqueceu sua senha?",
+    "resetPassword": "Redefinir senha",
+    "noAccount": "Não tem conta?",
+    "hasAccount": "Já tem conta?",
+    "loginSuccess": "Login realizado com sucesso",
+    "logoutSuccess": "Logout realizado com sucesso",
+    "registerSuccess": "Cadastro concluído",
+    "invalidCredentials": "Credenciais inválidas"
+  },
+  "nav": {
+    "home": "Início",
+    "tests": "Testes",
+    "studyPlans": "Planos de Estudo",
+    "physicalPlans": "Planos Físicos",
+    "summaries": "Resumos",
+    "statistics": "Estatísticas",
+    "ranking": "Ranking",
+    "history": "Histórico",
+    "profile": "Meu Perfil",
+    "reminders": "Lembretes",
+    "virtualProfessor": "Professor Virtual",
+    "aiAgent": "Agente IA",
+    "donation": "Doação",
+    "privacyPolicy": "Política de Privacidade"
+  },
+  "home": {
+    "welcome": "Bem-vindo",
+    "startTest": "Iniciar Teste",
+    "createTest": "Criar Teste",
+    "viewStats": "Ver Estatísticas",
+    "viewRanking": "Ver Ranking",
+    "viewHistory": "Ver Histórico",
+    "createStudyPlan": "Criar Plano de Estudo",
+    "createPhysicalPlan": "Criar Plano Físico",
+    "createSummary": "Criar Resumo",
+    "practiceMode": "Teste Prático",
+    "examMode": "Modo Exame"
+  },
+  "tests": {
+    "title": "Testes",
+    "category": "Categoria",
+    "questions": "Perguntas",
+    "time": "Tempo",
+    "score": "Pontuação",
+    "correct": "Corretas",
+    "incorrect": "Incorretas",
+    "unanswered": "Sem resposta",
+    "finish": "Finalizar Teste",
+    "results": "Resultados",
+    "tryAgain": "Tentar novamente",
+    "nextQuestion": "Próxima pergunta",
+    "prevQuestion": "Pergunta anterior",
+    "submitAnswer": "Enviar resposta",
+    "questionOf": "Pergunta {{current}} de {{total}}"
+  },
+  "plans": {
+    "study": {
+      "title": "Planos de Estudo",
+      "create": "Criar Plano de Estudo",
+      "generateAI": "Gerar com IA",
+      "manual": "Criação Manual",
+      "duration": "Duração",
+      "weeks": "semanas",
+      "topics": "Tópicos",
+      "progress": "Progresso",
+      "startDate": "Data de início",
+      "endDate": "Data de fim"
+    },
+    "physical": {
+      "title": "Planos Físicos",
+      "create": "Criar Plano Físico",
+      "generateAI": "Gerar com IA",
+      "exercises": "Exercícios",
+      "sets": "Séries",
+      "reps": "Repetições",
+      "rest": "Descanso",
+      "day": "Dia",
+      "week": "Semana"
+    }
+  },
+  "summaries": {
+    "title": "Resumos",
+    "create": "Criar Resumo",
+    "generateAI": "Gerar com IA",
+    "topic": "Tópico",
+    "content": "Conteúdo"
+  },
+  "statistics": {
+    "title": "Estatísticas",
+    "totalTests": "Testes Totais",
+    "totalQuestions": "Perguntas Totais",
+    "correctRate": "Taxa de Acertos",
+    "averageScore": "Pontuação Média",
+    "streak": "Sequência"
+  },
+  "ranking": {
+    "title": "Ranking",
+    "position": "Posição",
+    "user": "Usuário",
+    "score": "Pontuação",
+    "tests": "Testes"
+  },
+  "reminders": {
+    "title": "Lembretes",
+    "create": "Criar Lembrete",
+    "date": "Data",
+    "time": "Hora",
+    "message": "Mensagem",
+    "sendNow": "Enviar Agora",
+    "pending": "Pendentes",
+    "sent": "Enviados"
+  },
+  "profile": {
+    "title": "Meu Perfil",
+    "name": "Nome",
+    "email": "Email",
+    "changePassword": "Alterar senha",
+    "settings": "Configurações"
+  },
+  "language": {
+    "select": "Idioma",
+    "es": "Español",
+    "en": "English",
+    "fr": "Français",
+    "pt": "Português",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+}

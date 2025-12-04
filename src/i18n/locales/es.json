@@ -1,0 +1,156 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "send": "Enviar",
+    "yes": "Sí",
+    "no": "No",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "register": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "loginSuccess": "Sesión iniciada correctamente",
+    "logoutSuccess": "Sesión cerrada correctamente",
+    "registerSuccess": "Registro completado",
+    "invalidCredentials": "Credenciales inválidas"
+  },
+  "nav": {
+    "home": "Inicio",
+    "tests": "Tests",
+    "studyPlans": "Planes de Estudio",
+    "physicalPlans": "Planes Físicos",
+    "summaries": "Resúmenes",
+    "statistics": "Estadísticas",
+    "ranking": "Ranking",
+    "history": "Historial",
+    "profile": "Mi Perfil",
+    "reminders": "Recordatorios",
+    "virtualProfessor": "Profesor Virtual",
+    "aiAgent": "Agente IA",
+    "donation": "Donación",
+    "privacyPolicy": "Políticas de Privacidad"
+  },
+  "home": {
+    "welcome": "Bienvenido",
+    "startTest": "Iniciar Test",
+    "createTest": "Crear Test",
+    "viewStats": "Ver Estadísticas",
+    "viewRanking": "Ver Ranking",
+    "viewHistory": "Ver Historial",
+    "createStudyPlan": "Crear Plan de Estudio",
+    "createPhysicalPlan": "Crear Plan Físico",
+    "createSummary": "Crear Resumen",
+    "practiceMode": "Test de Práctica",
+    "examMode": "Modo Examen"
+  },
+  "tests": {
+    "title": "Tests",
+    "category": "Categoría",
+    "questions": "Preguntas",
+    "time": "Tiempo",
+    "score": "Puntuación",
+    "correct": "Correctas",
+    "incorrect": "Incorrectas",
+    "unanswered": "Sin responder",
+    "finish": "Finalizar Test",
+    "results": "Resultados",
+    "tryAgain": "Intentar de nuevo",
+    "nextQuestion": "Siguiente pregunta",
+    "prevQuestion": "Pregunta anterior",
+    "submitAnswer": "Enviar respuesta",
+    "questionOf": "Pregunta {{current}} de {{total}}"
+  },
+  "plans": {
+    "study": {
+      "title": "Planes de Estudio",
+      "create": "Crear Plan de Estudio",
+      "generateAI": "Generar con IA",
+      "manual": "Creación Manual",
+      "duration": "Duración",
+      "weeks": "semanas",
+      "topics": "Temas",
+      "progress": "Progreso",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin"
+    },
+    "physical": {
+      "title": "Planes Físicos",
+      "create": "Crear Plan Físico",
+      "generateAI": "Generar con IA",
+      "exercises": "Ejercicios",
+      "sets": "Series",
+      "reps": "Repeticiones",
+      "rest": "Descanso",
+      "day": "Día",
+      "week": "Semana"
+    }
+  },
+  "summaries": {
+    "title": "Resúmenes",
+    "create": "Crear Resumen",
+    "generateAI": "Generar con IA",
+    "topic": "Tema",
+    "content": "Contenido"
+  },
+  "statistics": {
+    "title": "Estadísticas",
+    "totalTests": "Tests Totales",
+    "totalQuestions": "Preguntas Totales",
+    "correctRate": "Tasa de Aciertos",
+    "averageScore": "Nota Media",
+    "streak": "Racha"
+  },
+  "ranking": {
+    "title": "Ranking",
+    "position": "Posición",
+    "user": "Usuario",
+    "score": "Puntuación",
+    "tests": "Tests"
+  },
+  "reminders": {
+    "title": "Recordatorios",
+    "create": "Crear Recordatorio",
+    "date": "Fecha",
+    "time": "Hora",
+    "message": "Mensaje",
+    "sendNow": "Enviar Ahora",
+    "pending": "Pendientes",
+    "sent": "Enviados"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "changePassword": "Cambiar contraseña",
+    "settings": "Configuración"
+  },
+  "language": {
+    "select": "Idioma",
+    "es": "Español",
+    "en": "English",
+    "fr": "Français",
+    "pt": "Português",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+}
