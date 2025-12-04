@@ -6,6 +6,7 @@ import { BookOpen, Brain, TrendingUp, Users, Target, Award, Heart, Menu, X } fro
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 const Landing = () => {
   const { isAuthenticated } = useAuth();
@@ -117,6 +118,7 @@ const Landing = () => {
 
             {/* Acciones */}
             <div className="flex items-center gap-3">
+              <LanguageSelector />
               <Link to="/donacion-publica" onClick={closeMenu}>
                 <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
                   <Heart className="w-4 h-4 mr-2" />
