@@ -1,0 +1,156 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "close": "关闭",
+    "confirm": "确认",
+    "search": "搜索",
+    "filter": "筛选",
+    "send": "发送",
+    "yes": "是",
+    "no": "否",
+    "error": "错误",
+    "success": "成功"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "退出",
+    "register": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "forgotPassword": "忘记密码？",
+    "resetPassword": "重置密码",
+    "noAccount": "没有账户？",
+    "hasAccount": "已有账户？",
+    "loginSuccess": "登录成功",
+    "logoutSuccess": "退出成功",
+    "registerSuccess": "注册完成",
+    "invalidCredentials": "无效的凭据"
+  },
+  "nav": {
+    "home": "首页",
+    "tests": "测试",
+    "studyPlans": "学习计划",
+    "physicalPlans": "健身计划",
+    "summaries": "摘要",
+    "statistics": "统计",
+    "ranking": "排行榜",
+    "history": "历史记录",
+    "profile": "我的资料",
+    "reminders": "提醒",
+    "virtualProfessor": "虚拟教授",
+    "aiAgent": "AI助手",
+    "donation": "捐赠",
+    "privacyPolicy": "隐私政策"
+  },
+  "home": {
+    "welcome": "欢迎",
+    "startTest": "开始测试",
+    "createTest": "创建测试",
+    "viewStats": "查看统计",
+    "viewRanking": "查看排行榜",
+    "viewHistory": "查看历史",
+    "createStudyPlan": "创建学习计划",
+    "createPhysicalPlan": "创建健身计划",
+    "createSummary": "创建摘要",
+    "practiceMode": "练习模式",
+    "examMode": "考试模式"
+  },
+  "tests": {
+    "title": "测试",
+    "category": "类别",
+    "questions": "问题",
+    "time": "时间",
+    "score": "得分",
+    "correct": "正确",
+    "incorrect": "错误",
+    "unanswered": "未回答",
+    "finish": "完成测试",
+    "results": "结果",
+    "tryAgain": "重试",
+    "nextQuestion": "下一题",
+    "prevQuestion": "上一题",
+    "submitAnswer": "提交答案",
+    "questionOf": "第 {{current}} 题，共 {{total}} 题"
+  },
+  "plans": {
+    "study": {
+      "title": "学习计划",
+      "create": "创建学习计划",
+      "generateAI": "AI生成",
+      "manual": "手动创建",
+      "duration": "时长",
+      "weeks": "周",
+      "topics": "主题",
+      "progress": "进度",
+      "startDate": "开始日期",
+      "endDate": "结束日期"
+    },
+    "physical": {
+      "title": "健身计划",
+      "create": "创建健身计划",
+      "generateAI": "AI生成",
+      "exercises": "练习",
+      "sets": "组数",
+      "reps": "次数",
+      "rest": "休息",
+      "day": "天",
+      "week": "周"
+    }
+  },
+  "summaries": {
+    "title": "摘要",
+    "create": "创建摘要",
+    "generateAI": "AI生成",
+    "topic": "主题",
+    "content": "内容"
+  },
+  "statistics": {
+    "title": "统计",
+    "totalTests": "总测试数",
+    "totalQuestions": "总问题数",
+    "correctRate": "正确率",
+    "averageScore": "平均分",
+    "streak": "连续"
+  },
+  "ranking": {
+    "title": "排行榜",
+    "position": "排名",
+    "user": "用户",
+    "score": "得分",
+    "tests": "测试"
+  },
+  "reminders": {
+    "title": "提醒",
+    "create": "创建提醒",
+    "date": "日期",
+    "time": "时间",
+    "message": "消息",
+    "sendNow": "立即发送",
+    "pending": "待发送",
+    "sent": "已发送"
+  },
+  "profile": {
+    "title": "我的资料",
+    "name": "姓名",
+    "email": "邮箱",
+    "changePassword": "修改密码",
+    "settings": "设置"
+  },
+  "language": {
+    "select": "语言",
+    "es": "Español",
+    "en": "English",
+    "fr": "Français",
+    "pt": "Português",
+    "de": "Deutsch",
+    "zh": "中文"
+  }
+}
