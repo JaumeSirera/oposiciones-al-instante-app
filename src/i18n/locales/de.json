@@ -1,4 +1,133 @@
 {
+  "landing": {
+    "title": "KI-Agent für Prüfungen | Tests und Zusammenfassungen",
+    "metaDescription": "Oposiciones-Tests: KI-Agent für Prüfungen. Erstellen Sie Studienpläne, Tests und Simulationen, Zusammenfassungen und virtuellen Professor 24/7. Kostenlos starten.",
+    "menu": {
+      "aiAgent": "KI-Agent",
+      "studyPlans": "Studienpläne",
+      "summaries": "KI-Zusammenfassungen",
+      "psychotechnics": "Psychotechnik",
+      "physicalPrep": "Körperliche Vorbereitung",
+      "virtualProfessor": "Virtueller Professor",
+      "supportProject": "Projekt unterstützen",
+      "studentAccess": "Schülerzugang",
+      "privacyPolicy": "Datenschutzrichtlinie"
+    },
+    "hero": {
+      "titlePart1": "Ihr ",
+      "titleHighlight": "KI-Agent",
+      "titlePart2": " zum Bestehen der Prüfung",
+      "subtitle": "Prüfungstests, zeitgesteuerte Simulationen, Themenzusammenfassungen, virtueller Professor 24/7 und personalisierte Studienpläne. Alles auf einer Plattform.",
+      "startFree": "Kostenlos mit KI starten",
+      "howItWorks": "Wie funktioniert es?",
+      "bullet1Title": "Prüfungstests:",
+      "bullet1Text": "nach Schwierigkeit und Fächern, mit sofortiger Korrektur.",
+      "bullet2Title": "KI-Zusammenfassungen:",
+      "bullet2Text": "Schemata und Karteikarten zum schnelleren Merken.",
+      "bullet3Title": "Echte Simulationen:",
+      "bullet3Text": "Timer, Ranking und detaillierte Statistiken."
+    },
+    "features": {
+      "title": "Ein auf Prüfungen spezialisierter KI-Agent",
+      "subtitle": "Planung, Erklärung und kontinuierliches Üben zur Verbesserung Ihres Durchschnitts.",
+      "studyPlans": {
+        "title": "KI-Studienpläne",
+        "description": "Ziele, Kalender und verteilte Wiederholung. Priorisieren Sie Schwieriges und passen Sie nach Ihren Ergebnissen an."
+      },
+      "virtualProfessor": {
+        "title": "Virtueller Professor 24/7",
+        "description": "Schritt-für-Schritt-Erklärungen und Zweifelbeseitigung, wann immer Sie es brauchen."
+      },
+      "tests": {
+        "title": "Tests und Simulationen",
+        "description": "Erstellen Sie Tests und üben Sie mit echten Prüfungszeiten."
+      },
+      "summaries": {
+        "title": "Automatische Zusammenfassungen",
+        "description": "Wandeln Sie den Lehrplan in Zusammenfassungen, Schemata und Speicherkarten um."
+      },
+      "psychoPhysical": {
+        "title": "Psychotechnik und körperliche Vorbereitung",
+        "description": "Trainieren Sie Rechnen, Gedächtnis und Räumliches; erstellen Sie einen Körperplan, wenn Ihre Prüfung es erfordert."
+      },
+      "stats": {
+        "title": "Statistiken und Bulletins",
+        "description": "Messen Sie Ihren Fortschritt, Ranking und sehen Sie die neuesten Aufrufe nach Region."
+      }
+    },
+    "cta": {
+      "title": "Starten Sie heute mit Ihrem KI-Agenten",
+      "subtitle": "Definieren Sie Ihr Ziel, generieren Sie Ihren Plan und üben Sie Tests bis zum Bestehen.",
+      "button": "Kostenloses Konto erstellen"
+    },
+    "footer": {
+      "copyright": "© 2025 Oposiciones-Tests. Alle Rechte vorbehalten."
+    }
+  },
+  "authPage": {
+    "title": "Schülerzugang | Oposiciones-Tests",
+    "subtitle": "Bereiten Sie sich erfolgreich auf Ihre Prüfungen vor",
+    "accessAccount": "Zugriff auf Ihr Konto",
+    "accessDescription": "Melden Sie sich an oder erstellen Sie ein neues Konto, um zu beginnen",
+    "loginTab": "Anmelden",
+    "registerTab": "Registrieren",
+    "email": "E-Mail",
+    "emailPlaceholder": "ihre@email.com",
+    "password": "Passwort",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Angemeldet bleiben",
+    "forgotPassword": "Passwort vergessen?",
+    "loginButton": "Anmelden",
+    "loggingIn": "Anmeldung läuft...",
+    "username": "Benutzername",
+    "usernamePlaceholder": "IhrName",
+    "confirmPassword": "Passwort bestätigen",
+    "registerButton": "Konto erstellen",
+    "creatingAccount": "Konto wird erstellt...",
+    "recoverTitle": "Passwort wiederherstellen",
+    "recoverDescription": "Geben Sie Ihre E-Mail ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts",
+    "sendRecoveryLink": "Wiederherstellungslink senden",
+    "sending": "Wird gesendet...",
+    "errors": {
+      "fillAllFields": "Bitte füllen Sie alle Felder aus",
+      "passwordsNoMatch": "Passwörter stimmen nicht überein",
+      "passwordMinLength": "Das Passwort muss mindestens 6 Zeichen haben",
+      "invalidEmail": "Bitte geben Sie eine gültige E-Mail ein",
+      "invalidCredentials": "Ungültige Anmeldedaten",
+      "couldNotCreateAccount": "Konto konnte nicht erstellt werden",
+      "enterEmail": "Bitte geben Sie Ihre E-Mail ein",
+      "couldNotSendRecovery": "Wiederherstellungs-E-Mail konnte nicht gesendet werden"
+    },
+    "success": {
+      "welcome": "Willkommen!",
+      "loginSuccess": "Sie haben sich erfolgreich angemeldet",
+      "registerSuccess": "Registrierung erfolgreich!",
+      "accountCreated": "Ihr Konto wurde erfolgreich erstellt",
+      "emailSent": "E-Mail gesendet",
+      "checkEmail": "Überprüfen Sie Ihre E-Mail, um Ihr Passwort zurückzusetzen"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "Passwort zurücksetzen | Oposiciones-Tests",
+    "subtitle": "Passwort zurücksetzen",
+    "newPassword": "Neues Passwort",
+    "newPasswordLabel": "Neues Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "resetButton": "Passwort zurücksetzen",
+    "resetting": "Wird zurückgesetzt...",
+    "errors": {
+      "invalidLink": "Der Wiederherstellungslink ist ungültig",
+      "fillAllFields": "Bitte füllen Sie alle Felder aus",
+      "passwordsNoMatch": "Passwörter stimmen nicht überein",
+      "passwordMinLength": "Das Passwort muss mindestens 6 Zeichen haben",
+      "invalidToken": "Ungültiges Token oder E-Mail",
+      "couldNotReset": "Passwort konnte nicht zurückgesetzt werden"
+    },
+    "success": {
+      "passwordUpdated": "Passwort aktualisiert!",
+      "passwordResetSuccess": "Ihr Passwort wurde erfolgreich zurückgesetzt"
+    }
+  },
   "common": {
     "loading": "Laden...",
     "save": "Speichern",

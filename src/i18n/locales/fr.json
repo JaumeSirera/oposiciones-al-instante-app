@@ -1,4 +1,133 @@
 {
+  "landing": {
+    "title": "Agent IA pour Concours | Tests et Résumés",
+    "metaDescription": "Oposiciones-Tests: Agent IA pour Concours. Créez des plans d'étude, des tests et simulations, des résumés et un professeur virtuel 24/7. Commencez gratuitement.",
+    "menu": {
+      "aiAgent": "Agent IA",
+      "studyPlans": "Plans d'Étude",
+      "summaries": "Résumés IA",
+      "psychotechnics": "Psychotechniques",
+      "physicalPrep": "Prépa Physique",
+      "virtualProfessor": "Professeur Virtuel",
+      "supportProject": "Soutenir le Projet",
+      "studentAccess": "Accès Étudiants",
+      "privacyPolicy": "Politique de Confidentialité"
+    },
+    "hero": {
+      "titlePart1": "Votre ",
+      "titleHighlight": "Agent IA",
+      "titlePart2": " pour réussir le concours",
+      "subtitle": "Tests de concours, simulations chronométrées, résumés de cours, professeur virtuel 24/7 et plans d'étude personnalisés. Tout sur une seule plateforme.",
+      "startFree": "Commencer gratuitement avec l'IA",
+      "howItWorks": "Comment ça marche?",
+      "bullet1Title": "Tests de concours:",
+      "bullet1Text": "par difficulté et matières, avec correction instantanée.",
+      "bullet2Title": "Résumés IA:",
+      "bullet2Text": "schémas et fiches pour mémoriser plus vite.",
+      "bullet3Title": "Simulations réelles:",
+      "bullet3Text": "chronomètre, classement et statistiques détaillées."
+    },
+    "features": {
+      "title": "Un Agent IA spécialisé dans les Concours",
+      "subtitle": "Planification, explication et pratique continue pour améliorer votre moyenne.",
+      "studyPlans": {
+        "title": "Plans d'étude avec IA",
+        "description": "Objectifs, calendrier et répétition espacée. Priorisez le difficile et ajustez selon vos résultats."
+      },
+      "virtualProfessor": {
+        "title": "Professeur virtuel 24/7",
+        "description": "Explications étape par étape et résolution de doutes quand vous en avez besoin."
+      },
+      "tests": {
+        "title": "Tests et simulations",
+        "description": "Créez des tests et pratiquez avec des temps réels d'examen."
+      },
+      "summaries": {
+        "title": "Résumés automatiques",
+        "description": "Convertissez le programme en résumés, schémas et cartes mémoire."
+      },
+      "psychoPhysical": {
+        "title": "Psychotechniques et prépa physique",
+        "description": "Entraînez calcul, mémoire et spatial; générez un plan physique si votre concours l'exige."
+      },
+      "stats": {
+        "title": "Statistiques et bulletins",
+        "description": "Mesurez vos progrès, classement et consultez les derniers appels par région."
+      }
+    },
+    "cta": {
+      "title": "Commencez aujourd'hui avec votre Agent IA",
+      "subtitle": "Définissez votre objectif, générez votre plan et pratiquez jusqu'à la réussite.",
+      "button": "Créer un compte gratuit"
+    },
+    "footer": {
+      "copyright": "© 2025 Oposiciones-Tests. Tous droits réservés."
+    }
+  },
+  "authPage": {
+    "title": "Accès Étudiants | Oposiciones-Tests",
+    "subtitle": "Préparez vos concours avec succès",
+    "accessAccount": "Accédez à votre compte",
+    "accessDescription": "Connectez-vous ou créez un nouveau compte pour commencer",
+    "loginTab": "Connexion",
+    "registerTab": "S'inscrire",
+    "email": "Email",
+    "emailPlaceholder": "votre@email.com",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oublié?",
+    "loginButton": "Se connecter",
+    "loggingIn": "Connexion en cours...",
+    "username": "Nom d'utilisateur",
+    "usernamePlaceholder": "VotreNom",
+    "confirmPassword": "Confirmer le mot de passe",
+    "registerButton": "Créer un compte",
+    "creatingAccount": "Création du compte...",
+    "recoverTitle": "Récupérer le mot de passe",
+    "recoverDescription": "Entrez votre email et nous vous enverrons un lien pour réinitialiser votre mot de passe",
+    "sendRecoveryLink": "Envoyer le lien de récupération",
+    "sending": "Envoi en cours...",
+    "errors": {
+      "fillAllFields": "Veuillez remplir tous les champs",
+      "passwordsNoMatch": "Les mots de passe ne correspondent pas",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+      "invalidEmail": "Veuillez entrer un email valide",
+      "invalidCredentials": "Identifiants invalides",
+      "couldNotCreateAccount": "Impossible de créer le compte",
+      "enterEmail": "Veuillez entrer votre email",
+      "couldNotSendRecovery": "Impossible d'envoyer l'email de récupération"
+    },
+    "success": {
+      "welcome": "Bienvenue!",
+      "loginSuccess": "Vous vous êtes connecté avec succès",
+      "registerSuccess": "Inscription réussie!",
+      "accountCreated": "Votre compte a été créé avec succès",
+      "emailSent": "Email envoyé",
+      "checkEmail": "Vérifiez votre email pour réinitialiser votre mot de passe"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "Réinitialiser le mot de passe | Oposiciones-Tests",
+    "subtitle": "Réinitialiser le mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "resetButton": "Réinitialiser le mot de passe",
+    "resetting": "Réinitialisation...",
+    "errors": {
+      "invalidLink": "Le lien de récupération n'est pas valide",
+      "fillAllFields": "Veuillez remplir tous les champs",
+      "passwordsNoMatch": "Les mots de passe ne correspondent pas",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+      "invalidToken": "Token ou email invalide",
+      "couldNotReset": "Impossible de réinitialiser le mot de passe"
+    },
+    "success": {
+      "passwordUpdated": "Mot de passe mis à jour!",
+      "passwordResetSuccess": "Votre mot de passe a été réinitialisé avec succès"
+    }
+  },
   "common": {
     "loading": "Chargement...",
     "save": "Enregistrer",
