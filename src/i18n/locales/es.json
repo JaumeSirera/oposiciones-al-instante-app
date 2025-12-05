@@ -1,4 +1,133 @@
 {
+  "landing": {
+    "title": "Agente IA para Oposiciones | Tests para Oposiciones y Resúmenes",
+    "metaDescription": "Oposiciones-Tests: Agente IA para Oposiciones. Crea planes de estudio, tests para oposiciones y simulacros, resúmenes de temario y profesor virtual 24/7. Empieza gratis.",
+    "menu": {
+      "aiAgent": "Agente IA",
+      "studyPlans": "Planes de Estudio",
+      "summaries": "Resúmenes IA",
+      "psychotechnics": "Psicotécnicos",
+      "physicalPrep": "Preparación Física",
+      "virtualProfessor": "Profesor Virtual",
+      "supportProject": "Apoyar Proyecto",
+      "studentAccess": "Acceso Alumnos",
+      "privacyPolicy": "Política de Privacidad"
+    },
+    "hero": {
+      "titlePart1": "Tu ",
+      "titleHighlight": "Agente IA",
+      "titlePart2": " para aprobar la oposición",
+      "subtitle": "Tests para oposiciones, simulacros cronometrados, resúmenes de temario, profesor virtual 24/7 y planes de estudio personalizados. Todo en una sola plataforma.",
+      "startFree": "Empezar gratis con IA",
+      "howItWorks": "¿Cómo funciona?",
+      "bullet1Title": "Tests de oposiciones:",
+      "bullet1Text": "por dificultad y asignaturas, con corrección al instante.",
+      "bullet2Title": "Resúmenes con IA:",
+      "bullet2Text": "esquemas y tarjetas para memorizar más rápido.",
+      "bullet3Title": "Simulacros reales:",
+      "bullet3Text": "cronómetro, ranking y estadísticas detalladas."
+    },
+    "features": {
+      "title": "Un Agente IA especializado en Oposiciones",
+      "subtitle": "Planificación, explicación y práctica continua para subir tu nota media.",
+      "studyPlans": {
+        "title": "Planes de estudio con IA",
+        "description": "Objetivos, calendario y repaso espaciado. Prioriza lo difícil y ajusta según tus resultados."
+      },
+      "virtualProfessor": {
+        "title": "Profesor virtual 24/7",
+        "description": "Explicaciones paso a paso y resolución de dudas cuando lo necesites."
+      },
+      "tests": {
+        "title": "Tests y simulacros",
+        "description": "Crea tests para oposiciones y practica con tiempos reales de examen."
+      },
+      "summaries": {
+        "title": "Resúmenes automáticos",
+        "description": "Convierte el temario en resúmenes, esquemas y tarjetas de memoria."
+      },
+      "psychoPhysical": {
+        "title": "Psicotécnicos y preparación física",
+        "description": "Entrena cálculo, memoria y espacial; genera plan físico si tu oposición lo exige."
+      },
+      "stats": {
+        "title": "Estadísticas y boletines",
+        "description": "Mide tu progreso, ranking y consulta últimas convocatorias por CCAA."
+      }
+    },
+    "cta": {
+      "title": "Empieza hoy con tu Agente IA",
+      "subtitle": "Define tu objetivo, genera tu plan y practica tests para oposiciones hasta el aprobado.",
+      "button": "Crear cuenta gratuita"
+    },
+    "footer": {
+      "copyright": "© 2025 Oposiciones-Tests. Todos los derechos reservados."
+    }
+  },
+  "authPage": {
+    "title": "Acceso Alumnos | Oposiciones-Tests",
+    "subtitle": "Prepara tus oposiciones con éxito",
+    "accessAccount": "Accede a tu cuenta",
+    "accessDescription": "Inicia sesión o crea una cuenta nueva para comenzar",
+    "loginTab": "Iniciar Sesión",
+    "registerTab": "Registrarse",
+    "email": "Email",
+    "emailPlaceholder": "tu@email.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Recordarme",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "loginButton": "Iniciar Sesión",
+    "loggingIn": "Iniciando sesión...",
+    "username": "Nombre de usuario",
+    "usernamePlaceholder": "TuNombre",
+    "confirmPassword": "Confirmar Contraseña",
+    "registerButton": "Crear Cuenta",
+    "creatingAccount": "Creando cuenta...",
+    "recoverTitle": "Recuperar contraseña",
+    "recoverDescription": "Introduce tu email y te enviaremos un enlace para restablecer tu contraseña",
+    "sendRecoveryLink": "Enviar enlace de recuperación",
+    "sending": "Enviando...",
+    "errors": {
+      "fillAllFields": "Por favor, completa todos los campos",
+      "passwordsNoMatch": "Las contraseñas no coinciden",
+      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+      "invalidEmail": "Por favor, introduce un email válido",
+      "invalidCredentials": "Credenciales incorrectas",
+      "couldNotCreateAccount": "No se pudo crear la cuenta",
+      "enterEmail": "Por favor, introduce tu email",
+      "couldNotSendRecovery": "No se pudo enviar el email de recuperación"
+    },
+    "success": {
+      "welcome": "¡Bienvenido!",
+      "loginSuccess": "Has iniciado sesión correctamente",
+      "registerSuccess": "¡Registro exitoso!",
+      "accountCreated": "Tu cuenta ha sido creada correctamente",
+      "emailSent": "Email enviado",
+      "checkEmail": "Revisa tu correo para restablecer tu contraseña"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "Restablecer Contraseña | Oposiciones-Tests",
+    "subtitle": "Restablecer contraseña",
+    "newPassword": "Nueva contraseña",
+    "newPasswordLabel": "Nueva Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "resetButton": "Restablecer Contraseña",
+    "resetting": "Restableciendo...",
+    "errors": {
+      "invalidLink": "El enlace de recuperación no es válido",
+      "fillAllFields": "Por favor, completa todos los campos",
+      "passwordsNoMatch": "Las contraseñas no coinciden",
+      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+      "invalidToken": "Token o email no válidos",
+      "couldNotReset": "No se pudo restablecer la contraseña"
+    },
+    "success": {
+      "passwordUpdated": "¡Contraseña actualizada!",
+      "passwordResetSuccess": "Tu contraseña ha sido restablecida correctamente"
+    }
+  },
   "common": {
     "loading": "Cargando...",
     "save": "Guardar",

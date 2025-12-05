@@ -1,4 +1,133 @@
 {
+  "landing": {
+    "title": "AI Agent for Civil Service Exams | Tests and Summaries",
+    "metaDescription": "Oposiciones-Tests: AI Agent for Civil Service Exams. Create study plans, tests and simulations, topic summaries and 24/7 virtual professor. Start for free.",
+    "menu": {
+      "aiAgent": "AI Agent",
+      "studyPlans": "Study Plans",
+      "summaries": "AI Summaries",
+      "psychotechnics": "Psychotechnics",
+      "physicalPrep": "Physical Prep",
+      "virtualProfessor": "Virtual Professor",
+      "supportProject": "Support Project",
+      "studentAccess": "Student Access",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "hero": {
+      "titlePart1": "Your ",
+      "titleHighlight": "AI Agent",
+      "titlePart2": " to pass the exam",
+      "subtitle": "Civil service exam tests, timed simulations, topic summaries, 24/7 virtual professor and personalized study plans. All in one platform.",
+      "startFree": "Start free with AI",
+      "howItWorks": "How does it work?",
+      "bullet1Title": "Exam tests:",
+      "bullet1Text": "by difficulty and subjects, with instant correction.",
+      "bullet2Title": "AI Summaries:",
+      "bullet2Text": "outlines and flashcards to memorize faster.",
+      "bullet3Title": "Real simulations:",
+      "bullet3Text": "timer, ranking and detailed statistics."
+    },
+    "features": {
+      "title": "An AI Agent specialized in Civil Service Exams",
+      "subtitle": "Planning, explanation and continuous practice to improve your average score.",
+      "studyPlans": {
+        "title": "AI Study Plans",
+        "description": "Goals, calendar and spaced repetition. Prioritize difficult topics and adjust based on your results."
+      },
+      "virtualProfessor": {
+        "title": "24/7 Virtual Professor",
+        "description": "Step-by-step explanations and doubt resolution whenever you need it."
+      },
+      "tests": {
+        "title": "Tests and Simulations",
+        "description": "Create exam tests and practice with real exam times."
+      },
+      "summaries": {
+        "title": "Automatic Summaries",
+        "description": "Convert the syllabus into summaries, outlines and memory cards."
+      },
+      "psychoPhysical": {
+        "title": "Psychotechnics and Physical Prep",
+        "description": "Train calculation, memory and spatial skills; generate a physical plan if your exam requires it."
+      },
+      "stats": {
+        "title": "Statistics and Bulletins",
+        "description": "Measure your progress, ranking and check latest calls by region."
+      }
+    },
+    "cta": {
+      "title": "Start today with your AI Agent",
+      "subtitle": "Define your goal, generate your plan and practice exam tests until you pass.",
+      "button": "Create free account"
+    },
+    "footer": {
+      "copyright": "© 2025 Oposiciones-Tests. All rights reserved."
+    }
+  },
+  "authPage": {
+    "title": "Student Access | Oposiciones-Tests",
+    "subtitle": "Prepare for your exams successfully",
+    "accessAccount": "Access your account",
+    "accessDescription": "Log in or create a new account to get started",
+    "loginTab": "Log In",
+    "registerTab": "Sign Up",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot your password?",
+    "loginButton": "Log In",
+    "loggingIn": "Logging in...",
+    "username": "Username",
+    "usernamePlaceholder": "YourName",
+    "confirmPassword": "Confirm Password",
+    "registerButton": "Create Account",
+    "creatingAccount": "Creating account...",
+    "recoverTitle": "Recover password",
+    "recoverDescription": "Enter your email and we will send you a link to reset your password",
+    "sendRecoveryLink": "Send recovery link",
+    "sending": "Sending...",
+    "errors": {
+      "fillAllFields": "Please fill in all fields",
+      "passwordsNoMatch": "Passwords do not match",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "invalidEmail": "Please enter a valid email",
+      "invalidCredentials": "Invalid credentials",
+      "couldNotCreateAccount": "Could not create account",
+      "enterEmail": "Please enter your email",
+      "couldNotSendRecovery": "Could not send recovery email"
+    },
+    "success": {
+      "welcome": "Welcome!",
+      "loginSuccess": "You have logged in successfully",
+      "registerSuccess": "Registration successful!",
+      "accountCreated": "Your account has been created successfully",
+      "emailSent": "Email sent",
+      "checkEmail": "Check your email to reset your password"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "Reset Password | Oposiciones-Tests",
+    "subtitle": "Reset password",
+    "newPassword": "New password",
+    "newPasswordLabel": "New Password",
+    "confirmPassword": "Confirm Password",
+    "resetButton": "Reset Password",
+    "resetting": "Resetting...",
+    "errors": {
+      "invalidLink": "The recovery link is not valid",
+      "fillAllFields": "Please fill in all fields",
+      "passwordsNoMatch": "Passwords do not match",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "invalidToken": "Invalid token or email",
+      "couldNotReset": "Could not reset password"
+    },
+    "success": {
+      "passwordUpdated": "Password updated!",
+      "passwordResetSuccess": "Your password has been reset successfully"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",

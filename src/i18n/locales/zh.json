@@ -1,4 +1,133 @@
 {
+  "landing": {
+    "title": "考试AI助手 | 测试和摘要",
+    "metaDescription": "Oposiciones-Tests：考试AI助手。创建学习计划、测试和模拟、摘要和24/7虚拟教授。免费开始。",
+    "menu": {
+      "aiAgent": "AI助手",
+      "studyPlans": "学习计划",
+      "summaries": "AI摘要",
+      "psychotechnics": "心理测试",
+      "physicalPrep": "体能准备",
+      "virtualProfessor": "虚拟教授",
+      "supportProject": "支持项目",
+      "studentAccess": "学生入口",
+      "privacyPolicy": "隐私政策"
+    },
+    "hero": {
+      "titlePart1": "您的",
+      "titleHighlight": "AI助手",
+      "titlePart2": "助您通过考试",
+      "subtitle": "考试测试、计时模拟、主题摘要、24/7虚拟教授和个性化学习计划。一个平台，全部搞定。",
+      "startFree": "免费开始使用AI",
+      "howItWorks": "如何运作？",
+      "bullet1Title": "考试测试：",
+      "bullet1Text": "按难度和科目分类，即时批改。",
+      "bullet2Title": "AI摘要：",
+      "bullet2Text": "大纲和记忆卡，更快记忆。",
+      "bullet3Title": "真实模拟：",
+      "bullet3Text": "计时器、排名和详细统计。"
+    },
+    "features": {
+      "title": "专注于考试的AI助手",
+      "subtitle": "规划、讲解和持续练习，提高您的平均分。",
+      "studyPlans": {
+        "title": "AI学习计划",
+        "description": "目标、日历和间隔重复。优先处理难点，根据结果调整。"
+      },
+      "virtualProfessor": {
+        "title": "24/7虚拟教授",
+        "description": "随时提供逐步讲解和疑难解答。"
+      },
+      "tests": {
+        "title": "测试和模拟",
+        "description": "创建测试，按真实考试时间练习。"
+      },
+      "summaries": {
+        "title": "自动摘要",
+        "description": "将大纲转换为摘要、框架和记忆卡。"
+      },
+      "psychoPhysical": {
+        "title": "心理测试和体能准备",
+        "description": "训练计算、记忆和空间能力；如果考试需要，生成体能计划。"
+      },
+      "stats": {
+        "title": "统计和公告",
+        "description": "衡量进度、排名，查看各地区最新通知。"
+      }
+    },
+    "cta": {
+      "title": "今天就开始使用您的AI助手",
+      "subtitle": "定义目标，生成计划，练习测试直到通过。",
+      "button": "创建免费账户"
+    },
+    "footer": {
+      "copyright": "© 2025 Oposiciones-Tests. 保留所有权利。"
+    }
+  },
+  "authPage": {
+    "title": "学生入口 | Oposiciones-Tests",
+    "subtitle": "成功准备您的考试",
+    "accessAccount": "访问您的账户",
+    "accessDescription": "登录或创建新账户开始",
+    "loginTab": "登录",
+    "registerTab": "注册",
+    "email": "邮箱",
+    "emailPlaceholder": "your@email.com",
+    "password": "密码",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "记住我",
+    "forgotPassword": "忘记密码？",
+    "loginButton": "登录",
+    "loggingIn": "登录中...",
+    "username": "用户名",
+    "usernamePlaceholder": "您的名字",
+    "confirmPassword": "确认密码",
+    "registerButton": "创建账户",
+    "creatingAccount": "创建账户中...",
+    "recoverTitle": "恢复密码",
+    "recoverDescription": "输入您的邮箱，我们将发送重置密码的链接",
+    "sendRecoveryLink": "发送恢复链接",
+    "sending": "发送中...",
+    "errors": {
+      "fillAllFields": "请填写所有字段",
+      "passwordsNoMatch": "密码不匹配",
+      "passwordMinLength": "密码必须至少6个字符",
+      "invalidEmail": "请输入有效的邮箱",
+      "invalidCredentials": "无效的凭据",
+      "couldNotCreateAccount": "无法创建账户",
+      "enterEmail": "请输入您的邮箱",
+      "couldNotSendRecovery": "无法发送恢复邮件"
+    },
+    "success": {
+      "welcome": "欢迎！",
+      "loginSuccess": "登录成功",
+      "registerSuccess": "注册成功！",
+      "accountCreated": "您的账户已成功创建",
+      "emailSent": "邮件已发送",
+      "checkEmail": "请查收邮件以重置密码"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "重置密码 | Oposiciones-Tests",
+    "subtitle": "重置密码",
+    "newPassword": "新密码",
+    "newPasswordLabel": "新密码",
+    "confirmPassword": "确认密码",
+    "resetButton": "重置密码",
+    "resetting": "重置中...",
+    "errors": {
+      "invalidLink": "恢复链接无效",
+      "fillAllFields": "请填写所有字段",
+      "passwordsNoMatch": "密码不匹配",
+      "passwordMinLength": "密码必须至少6个字符",
+      "invalidToken": "无效的令牌或邮箱",
+      "couldNotReset": "无法重置密码"
+    },
+    "success": {
+      "passwordUpdated": "密码已更新！",
+      "passwordResetSuccess": "您的密码已成功重置"
+    }
+  },
   "common": {
     "loading": "加载中...",
     "save": "保存",
