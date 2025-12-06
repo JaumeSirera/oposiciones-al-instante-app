@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ConfigTest, { type TestConfig } from '@/components/ConfigTest';
 import QuizInterface from '@/components/QuizInterface';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +13,7 @@ interface TestPageProps {
 }
 
 const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
+  const { t } = useTranslation();
   const [currentView, setCurrentView] = useState<'config' | 'quiz' | 'mode-selection'>('config');
   const [testConfig, setTestConfig] = useState<TestConfig | null>(null);
   const [selectedMode, setSelectedMode] = useState<'simulacion' | 'examen'>(mode);
@@ -75,15 +77,15 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
       setCurrentView('quiz');
       
       toast({
-        title: "Test iniciado",
-        description: `Comenzando ${modoSeleccionado === 'examen' ? 'examen' : 'test'} con ${temasArray.length} tema(s)`,
+        title: t('test.testStarted'),
+        description: t('test.startingWithTopics', { mode: modoSeleccionado === 'examen' ? t('test.examMode') : t('test.practiceMode'), count: temasArray.length }),
       });
     } catch (error) {
       console.error('Error al iniciar test:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudo iniciar el test",
+        title: t('common.error'),
+        description: t('test.errorStarting'),
       });
       setLoadingMode(null);
     }
@@ -93,16 +95,16 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
     setTestConfig(config);
     setCurrentView('quiz');
     toast({
-      title: "¡Test iniciado!",
-      description: `Comenzando test con ${config.numPreguntas} preguntas`,
+      title: t('test.testStarted'),
+      description: t('test.startingWithQuestions', { count: config.numPreguntas }),
     });
   };
 
   const handleQuizComplete = (results: any) => {
     navigate('/');
     toast({
-      title: "¡Quiz completado!",
-      description: `Has respondido ${results.correctAnswers}/${results.totalQuestions} preguntas correctamente`,
+      title: t('test.quizCompleted'),
+      description: t('test.correctAnswers', { correct: results.correctAnswers, total: results.totalQuestions }),
     });
   };
 
@@ -122,8 +124,8 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Elige el modo de práctica</h1>
-            <p className="text-muted-foreground">Selecciona cómo quieres realizar este test</p>
+            <h1 className="text-3xl font-bold mb-2">{t('test.choosePracticeMode')}</h1>
+            <p className="text-muted-foreground">{t('test.selectHowToTakeTest')}</p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -136,7 +138,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
                 <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-20">
                   <div className="flex flex-col items-center gap-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p className="text-sm text-muted-foreground">Cargando...</p>
+                    <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
                   </div>
                 </div>
               )}
@@ -146,22 +148,22 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Test de Práctica</h3>
+                <h3 className="text-xl font-bold mb-2">{t('test.practiceTest')}</h3>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Modo relajado para estudiar y aprender. Puedes ver las respuestas correctas después de cada pregunta.
+                  {t('test.practiceDescription')}
                 </p>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <span className="text-primary">✓</span>
-                    <span>Sin límite de tiempo estricto</span>
+                    <span>{t('test.noStrictTimeLimit')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-primary">✓</span>
-                    <span>Feedback inmediato</span>
+                    <span>{t('test.immediateFeedback')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-primary">✓</span>
-                    <span>Ideal para aprender</span>
+                    <span>{t('test.idealForLearning')}</span>
                   </li>
                 </ul>
               </div>
@@ -176,7 +178,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
                 <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-20">
                   <div className="flex flex-col items-center gap-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p className="text-sm text-muted-foreground">Cargando...</p>
+                    <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
                   </div>
                 </div>
               )}
@@ -186,22 +188,22 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Modo Examen</h3>
+                <h3 className="text-xl font-bold mb-2">{t('test.examMode')}</h3>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Simula condiciones reales de examen. Cronómetro activo y sin ver respuestas hasta el final.
+                  {t('test.examDescription')}
                 </p>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <span className="text-primary">✓</span>
-                    <span>Cronómetro activo</span>
+                    <span>{t('test.activeTimer')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-primary">✓</span>
-                    <span>Resultados al final</span>
+                    <span>{t('test.resultsAtEnd')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-primary">✓</span>
-                    <span>Condiciones reales</span>
+                    <span>{t('test.realConditions')}</span>
                   </li>
                 </ul>
               </div>
@@ -213,7 +215,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
               onClick={() => navigate(-1)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              ← Volver
+              ← {t('common.back')}
             </button>
           </div>
         </div>
