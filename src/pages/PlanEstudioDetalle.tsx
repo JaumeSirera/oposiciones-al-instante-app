@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { planesService, PlanDetalle } from "@/services/planesService";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface SemanaPlan {
 }
 
 export default function PlanEstudioDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -54,7 +56,7 @@ export default function PlanEstudioDetalle() {
       const data = await planesService.obtenerDetallePlan(parseInt(id));
       setDetalle(data);
     } catch (error) {
-      toast.error("Error al cargar el plan");
+      toast.error(t('studyPlans.errorLoadingPlan'));
     } finally {
       setLoading(false);
     }
@@ -78,13 +80,13 @@ export default function PlanEstudioDetalle() {
     try {
       const result = await planesService.marcarTarea(idTarea, completada);
       if (result.success) {
-        toast.success(completada ? "Tarea completada" : "Tarea marcada como pendiente");
+        toast.success(completada ? t('studyPlans.taskCompleted') : t('studyPlans.taskPending'));
         cargarDetalle();
       } else {
-        toast.error("Error al actualizar tarea");
+        toast.error(t('studyPlans.errorUpdatingTask'));
       }
     } catch (error) {
-      toast.error("Error al actualizar tarea");
+      toast.error(t('studyPlans.errorUpdatingTask'));
     }
   };
 
@@ -173,7 +175,7 @@ export default function PlanEstudioDetalle() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">Cargando plan...</p>
+          <p className="text-muted-foreground">{t('studyPlans.loadingPlan')}</p>
         </div>
       </div>
     );
@@ -184,9 +186,9 @@ export default function PlanEstudioDetalle() {
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">Plan no encontrado</p>
+            <p className="text-muted-foreground">{t('studyPlans.planNotFound')}</p>
             <Button onClick={() => navigate("/planes-estudio")} className="mt-4">
-              Volver a Planes
+              {t('studyPlans.backToPlans')}
             </Button>
           </CardContent>
         </Card>
@@ -204,7 +206,7 @@ export default function PlanEstudioDetalle() {
         className="mb-4"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver
+        {t('common.back')}
       </Button>
 
       <div className="space-y-6">
@@ -214,7 +216,7 @@ export default function PlanEstudioDetalle() {
               <div className="flex-1">
                 <CardTitle className="text-3xl mb-2">{plan.titulo}</CardTitle>
                 <CardDescription className="text-base mt-2">
-                  {plan.descripcion || "Sin descripción"}
+                  {plan.descripcion || t('studyPlans.noDescription')}
                 </CardDescription>
               </div>
               <Badge className="text-sm px-4 py-1.5 shrink-0">{plan.estado}</Badge>
@@ -225,7 +227,7 @@ export default function PlanEstudioDetalle() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground mb-1">Fecha Inicio</p>
+                  <p className="text-sm font-semibold text-muted-foreground mb-1">{t('studyPlans.startDate')}</p>
                   <p className="text-lg font-medium">
                     {new Date(plan.fecha_inicio).toLocaleDateString('es-ES', {
                       day: '2-digit',
@@ -239,7 +241,7 @@ export default function PlanEstudioDetalle() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground mb-1">Fecha Fin</p>
+                  <p className="text-sm font-semibold text-muted-foreground mb-1">{t('studyPlans.endDate')}</p>
                   <p className="text-lg font-medium">
                     {new Date(plan.fecha_fin).toLocaleDateString('es-ES', {
                       day: '2-digit',
@@ -253,7 +255,7 @@ export default function PlanEstudioDetalle() {
               <div className="flex items-start gap-3">
                 <Target className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground mb-1">Progreso Total</p>
+                  <p className="text-sm font-semibold text-muted-foreground mb-1">{t('studyPlans.totalProgress')}</p>
                   <p className="text-lg font-medium">
                     {parseFloat(plan.progreso || '0').toFixed(0)}%
                   </p>
@@ -278,20 +280,20 @@ export default function PlanEstudioDetalle() {
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="plan-ia">
                 <Brain className="mr-2 h-4 w-4" />
-                Plan IA por Semanas
+                {t('studyPlans.aiWeeklyPlan')}
               </TabsTrigger>
               <TabsTrigger value="etapas">
                 <BookOpen className="mr-2 h-4 w-4" />
-                Etapas Manuales
+                {t('studyPlans.manualStages')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="plan-ia">
               <Card>
                 <CardHeader>
-                  <CardTitle>Plan Semanal Generado por IA</CardTitle>
+                  <CardTitle>{t('studyPlans.aiGeneratedPlan')}</CardTitle>
                   <CardDescription>
-                    Sigue el plan día a día y realiza tests de cada semana
+                    {t('studyPlans.followPlanDayByDay')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -301,7 +303,7 @@ export default function PlanEstudioDetalle() {
                         <AccordionTrigger>
                           <div className="flex items-center justify-between w-full pr-4">
                             <div className="text-left flex-1">
-                              <p className="font-semibold text-base">Semana {semana.semana}</p>
+                              <p className="font-semibold text-base">{t('studyPlans.week')} {semana.semana}</p>
                               <p className="text-sm text-muted-foreground mt-0.5">
                                 {new Date(semana.fecha_inicio).toLocaleDateString('es-ES', {
                                   day: '2-digit',
@@ -321,7 +323,7 @@ export default function PlanEstudioDetalle() {
                             {/* Temas de la semana */}
                             {semana.temas_semana && Array.isArray(semana.temas_semana) && semana.temas_semana.length > 0 && (
                               <div>
-                                <h4 className="font-semibold text-sm mb-3">Temas de esta semana:</h4>
+                                <h4 className="font-semibold text-sm mb-3">{t('studyPlans.weekTopics')}</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                   {semana.temas_semana.slice(0, 12).map((tema, idx) => (
                                     <Badge 
@@ -344,7 +346,7 @@ export default function PlanEstudioDetalle() {
                                   className="mt-4"
                                 >
                                   <PlayCircle className="mr-2 h-4 w-4" />
-                                  Iniciar Test de esta Semana
+                                  {t('studyPlans.startWeekTest')}
                                 </Button>
                               </div>
                             )}
@@ -352,7 +354,7 @@ export default function PlanEstudioDetalle() {
                             {/* Objetivos */}
                             {semana.objetivos && Array.isArray(semana.objetivos) && semana.objetivos.length > 0 && (
                               <div>
-                                <h4 className="font-semibold text-sm mb-3">Objetivos:</h4>
+                                <h4 className="font-semibold text-sm mb-3">{t('studyPlans.objectives')}</h4>
                                 <ul className="space-y-2">
                                   {semana.objetivos.map((objetivo, idx) => (
                                     <li key={idx} className="flex items-start gap-2 text-sm">
@@ -367,13 +369,13 @@ export default function PlanEstudioDetalle() {
                             {/* Actividades diarias */}
                             {semana.actividades && Array.isArray(semana.actividades) && semana.actividades.length > 0 && (
                               <div>
-                                <h4 className="font-semibold text-sm mb-3">Actividades diarias:</h4>
+                                <h4 className="font-semibold text-sm mb-3">{t('studyPlans.dailyActivities')}</h4>
                                 <div className="space-y-3">
                                   {semana.actividades.map((actividad, idx) => (
                                     <div key={idx} className="p-4 bg-muted/50 border border-border rounded-lg">
                                       <div className="flex justify-between items-start mb-2">
                                         <p className="font-medium text-sm">
-                                          Día {actividad.dia} - {new Date(actividad.fecha).toLocaleDateString('es-ES', {
+                                          {t('studyPlans.day')} {actividad.dia} - {new Date(actividad.fecha).toLocaleDateString('es-ES', {
                                             day: '2-digit',
                                             month: '2-digit',
                                             year: 'numeric'
@@ -384,7 +386,7 @@ export default function PlanEstudioDetalle() {
                                         </Badge>
                                       </div>
                                       <p className="text-sm mb-1">
-                                        <span className="font-medium">Tema:</span> {actividad.tema}
+                                        <span className="font-medium">{t('studyPlans.topic')}:</span> {actividad.tema}
                                       </p>
                                       <p className="text-sm text-muted-foreground">
                                         {actividad.actividad}
@@ -397,7 +399,7 @@ export default function PlanEstudioDetalle() {
 
                             {semana.notas && (
                               <div className="p-3 bg-muted rounded-lg">
-                                <h4 className="font-medium mb-2">Notas:</h4>
+                                <h4 className="font-medium mb-2">{t('studyPlans.notes')}</h4>
                                 <p className="text-sm text-muted-foreground">{semana.notas}</p>
                               </div>
                             )}
@@ -412,20 +414,20 @@ export default function PlanEstudioDetalle() {
 
             <TabsContent value="etapas">
               {etapas.length === 0 ? (
-                <Card>
+              <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">
-                      Este plan no tiene etapas manuales configuradas
+                      {t('studyPlans.noManualStages')}
                     </p>
                   </CardContent>
                 </Card>
               ) : (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Etapas del Plan</CardTitle>
+                    <CardTitle>{t('studyPlans.planStages')}</CardTitle>
                     <CardDescription>
-                      Tareas manuales generadas automáticamente
+                      {t('studyPlans.autoGeneratedTasks')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

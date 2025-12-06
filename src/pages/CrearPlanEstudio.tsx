@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { planesService } from "@/services/planesService";
@@ -16,6 +17,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function CrearPlanEstudio() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -68,7 +70,7 @@ export default function CrearPlanEstudio() {
       const data = await testService.getProcesos(user?.id);
       setProcesos(data);
     } catch (error) {
-      toast.error("Error al cargar procesos");
+      toast.error(t('studyPlans.errorLoadingProcesses'));
     }
   };
 
@@ -81,10 +83,10 @@ export default function CrearPlanEstudio() {
       if (data.success) {
         setSecciones(data.secciones || []);
       } else {
-        toast.error("Error al cargar secciones");
+        toast.error(t('studyPlans.errorLoadingSections'));
       }
     } catch (error) {
-      toast.error("Error al cargar secciones");
+      toast.error(t('studyPlans.errorLoadingSections'));
     } finally {
       setLoading(false);
     }
@@ -108,7 +110,7 @@ export default function CrearPlanEstudio() {
       setTemas(uniqueTemas);
       setSelectedTemas([]);
     } catch (error) {
-      toast.error("Error al cargar temas");
+      toast.error(t('studyPlans.errorLoadingTopics'));
     } finally {
       setLoading(false);
     }
@@ -136,7 +138,7 @@ export default function CrearPlanEstudio() {
 
   const generarDescripcion = async () => {
     if (!formData.titulo || formData.titulo.trim().length < 5) {
-      toast.error("Escribe un título más descriptivo");
+      toast.error(t('studyPlans.writeLongerTitle'));
       return;
     }
 
@@ -145,7 +147,7 @@ export default function CrearPlanEstudio() {
       const proceso = procesos.find((p) => p.id === selectedProceso);
       const temasList = selectedTemas.length > 0 
         ? selectedTemas.slice(0, 5).join(", ") + (selectedTemas.length > 5 ? "..." : "")
-        : "temas generales";
+        : t('studyPlans.generalTopics');
 
       const { data, error } = await supabase.functions.invoke("generar-descripcion-plan", {
         body: {
@@ -161,13 +163,13 @@ export default function CrearPlanEstudio() {
 
       if (data?.descripcion) {
         setFormData((prev) => ({ ...prev, descripcion: data.descripcion }));
-        toast.success("Descripción generada con IA");
+        toast.success(t('studyPlans.descriptionGenerated'));
       } else {
-        toast.error("No se pudo generar la descripción");
+        toast.error(t('studyPlans.couldNotGenerateDescription'));
       }
     } catch (error) {
       console.error("Error generando descripción:", error);
-      toast.error("Error al generar descripción");
+      toast.error(t('studyPlans.errorGeneratingDescription'));
     } finally {
       setGenerandoDescripcion(false);
     }
@@ -194,13 +196,13 @@ export default function CrearPlanEstudio() {
       if (error) throw error;
       
       if (data?.success) {
-        toast.success("Plan generado con IA exitosamente");
+        toast.success(t('studyPlans.planGeneratedSuccess'));
       } else {
-        toast.warning("Plan creado pero sin generación IA");
+        toast.warning(t('studyPlans.planCreatedNoAI'));
       }
     } catch (error) {
       console.error("Error generando plan IA:", error);
-      toast.error("Error al generar plan con IA");
+      toast.error(t('studyPlans.errorGeneratingAIPlan'));
     } finally {
       setGenerandoIA(false);
     }
@@ -210,17 +212,17 @@ export default function CrearPlanEstudio() {
     e.preventDefault();
 
     if (!user?.id) {
-      toast.error("Usuario no autenticado");
+      toast.error(t('studyPlans.userNotAuthenticated'));
       return;
     }
 
     if (!formData.titulo || !selectedProceso || !formData.fecha_fin) {
-      toast.error("Completa todos los campos requeridos");
+      toast.error(t('studyPlans.completeRequiredFields'));
       return;
     }
 
     if (selectedTemas.length === 0) {
-      toast.error("Selecciona al menos un tema para el plan");
+      toast.error(t('studyPlans.selectAtLeastOneTopic'));
       return;
     }
 
@@ -236,17 +238,17 @@ export default function CrearPlanEstudio() {
       });
 
       if (result.success && result.id_plan) {
-        toast.success("Plan creado exitosamente");
+        toast.success(t('studyPlans.planCreatedSuccess'));
         
         // Generar plan con IA
         await generarPlanConIA(result.id_plan);
         
         navigate(`/plan-estudio/${result.id_plan}`);
       } else {
-        toast.error(result.error || "Error al crear el plan");
+        toast.error(result.error || t('studyPlans.errorCreatingPlan'));
       }
     } catch (error) {
-      toast.error("Error al crear el plan");
+      toast.error(t('studyPlans.errorCreatingPlan'));
     } finally {
       setLoading(false);
     }
@@ -260,35 +262,35 @@ export default function CrearPlanEstudio() {
         className="mb-4"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Volver
+        {t('common.back')}
       </Button>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Crear Plan de Estudio
+            {t('studyPlans.createStudyPlan')}
           </CardTitle>
           <CardDescription>
-            Selecciona los temas que quieres estudiar y genera un plan personalizado con IA
+            {t('studyPlans.createDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="titulo">Título del Plan *</Label>
+              <Label htmlFor="titulo">{t('studyPlans.planTitle')} *</Label>
               <Input
                 id="titulo"
                 value={formData.titulo}
                 onChange={(e) => handleChange("titulo", e.target.value)}
-                placeholder="Ej: Plan intensivo Policía Local 2025"
+                placeholder={t('studyPlans.planTitlePlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="descripcion">Descripción</Label>
+                <Label htmlFor="descripcion">{t('studyPlans.description')}</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -297,21 +299,21 @@ export default function CrearPlanEstudio() {
                   disabled={generandoDescripcion || !formData.titulo}
                 >
                   <Sparkles className="mr-2 h-3 w-3" />
-                  {generandoDescripcion ? "Generando..." : "Generar con IA"}
+                  {generandoDescripcion ? t('studyPlans.generating') : t('studyPlans.generateWithAI')}
                 </Button>
               </div>
               <Textarea
                 id="descripcion"
                 value={formData.descripcion}
                 onChange={(e) => handleChange("descripcion", e.target.value)}
-                placeholder="Describe tus objetivos y características del plan, o genera una descripción automática con IA"
+                placeholder={t('studyPlans.descriptionPlaceholder')}
                 rows={3}
               />
             </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fecha_inicio">Fecha Inicio *</Label>
+                  <Label htmlFor="fecha_inicio">{t('studyPlans.startDate')} *</Label>
                   <Input
                     id="fecha_inicio"
                     type="date"
@@ -321,7 +323,7 @@ export default function CrearPlanEstudio() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="fecha_fin">Fecha Fin *</Label>
+                  <Label htmlFor="fecha_fin">{t('studyPlans.endDate')} *</Label>
                   <Input
                     id="fecha_fin"
                     type="date"
@@ -337,21 +339,21 @@ export default function CrearPlanEstudio() {
 
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Selección de Contenidos</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('studyPlans.contentSelection')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Elige el proceso y los temas que quieres incluir en tu plan
+                  {t('studyPlans.selectProcessAndTopics')}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="proceso">Proceso / Oposición *</Label>
+                <Label htmlFor="proceso">{t('studyPlans.processOpposition')} *</Label>
                 <Select
                   value={selectedProceso?.toString()}
                   onValueChange={(value) => setSelectedProceso(parseInt(value))}
                   disabled={loading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un proceso" />
+                    <SelectValue placeholder={t('studyPlans.selectProcess')} />
                   </SelectTrigger>
                   <SelectContent>
                     {procesos.map((proceso) => (
@@ -367,9 +369,9 @@ export default function CrearPlanEstudio() {
                 <>
                   <Separator />
                   <div className="space-y-2">
-                    <Label>Secciones</Label>
+                    <Label>{t('studyPlans.sections')}</Label>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Selecciona las secciones que quieres estudiar
+                      {t('studyPlans.selectSections')}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {secciones.map((seccion) => (
@@ -391,12 +393,12 @@ export default function CrearPlanEstudio() {
                 <>
                   <Separator />
                   <div className="space-y-2">
-                    <Label>Temas *</Label>
+                    <Label>{t('studyPlans.topics')} *</Label>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Selecciona los temas específicos que quieres incluir en el plan
+                      {t('studyPlans.selectTopics')}
                     </p>
                     {temas.length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic">Cargando temas...</p>
+                      <p className="text-sm text-muted-foreground italic">{t('studyPlans.loadingTopics')}</p>
                     ) : (
                       <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto p-2 border rounded-md">
                         {temas.map((tema) => (
@@ -413,7 +415,7 @@ export default function CrearPlanEstudio() {
                     )}
                     {selectedTemas.length > 0 && (
                       <p className="text-sm text-muted-foreground mt-2">
-                        {selectedTemas.length} tema(s) seleccionado(s)
+                        {t('studyPlans.topicsSelected', { count: selectedTemas.length })}
                       </p>
                     )}
                   </div>
@@ -428,14 +430,14 @@ export default function CrearPlanEstudio() {
                 onClick={() => navigate("/planes-estudio")}
                 disabled={loading || generandoIA}
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button 
                 type="submit" 
                 disabled={loading || generandoIA || selectedTemas.length === 0} 
                 className="flex-1"
               >
-                {loading ? "Creando..." : generandoIA ? "Generando con IA..." : "Crear Plan"}
+                {loading ? t('studyPlans.creating') : generandoIA ? t('studyPlans.generatingWithAI') : t('studyPlans.createPlan')}
               </Button>
             </div>
           </form>
