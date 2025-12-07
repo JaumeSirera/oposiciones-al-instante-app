@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ interface PlanFisico {
 }
 
 export default function PlanesFisicos() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [planes, setPlanes] = useState<PlanFisico[]>([]);
@@ -76,11 +78,11 @@ export default function PlanesFisicos() {
       if (data.success) {
         setPlanes(data.planes || []);
       } else {
-        toast.error(data.error || 'Error al cargar los planes físicos');
+        toast.error(data.error || t('physicalPlans.errorLoading'));
       }
     } catch (error) {
       console.error('Error al cargar planes físicos:', error);
-      toast.error('Error de conexión al cargar planes');
+      toast.error(t('physicalPlans.connectionError'));
     } finally {
       setLoading(false);
     }
@@ -95,16 +97,16 @@ export default function PlanesFisicos() {
     };
 
     if (!formData.titulo.trim()) {
-      newErrors.titulo = 'El título es obligatorio';
+      newErrors.titulo = t('physicalPlans.form.titleRequired');
     }
     if (!formData.tipo_prueba.trim()) {
-      newErrors.tipo_prueba = 'El tipo de prueba es obligatorio';
+      newErrors.tipo_prueba = t('physicalPlans.form.testTypeRequired');
     }
     if (!formData.fecha_inicio) {
-      newErrors.fecha_inicio = 'Selecciona la fecha de inicio';
+      newErrors.fecha_inicio = t('physicalPlans.form.startDateRequired');
     }
     if (!formData.fecha_fin) {
-      newErrors.fecha_fin = 'Selecciona la fecha de fin';
+      newErrors.fecha_fin = t('physicalPlans.form.endDateRequired');
     }
 
     setErrors(newErrors);
@@ -179,23 +181,23 @@ export default function PlanesFisicos() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success(editMode ? 'Plan actualizado' : 'Plan creado');
+        toast.success(editMode ? t('physicalPlans.planUpdated') : t('physicalPlans.planCreated'));
         setModalOpen(false);
         resetForm();
         fetchPlanes();
       } else {
-        toast.error(data.error || 'Error al guardar el plan');
+        toast.error(data.error || t('physicalPlans.errorSaving'));
       }
     } catch (error) {
       console.error('Error al guardar plan físico:', error);
-      toast.error('Error de conexión');
+      toast.error(t('physicalPlans.connectionError'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('¿Seguro que quieres eliminar este plan?')) return;
+    if (!window.confirm(t('physicalPlans.deletePlanConfirm'))) return;
     if (!user?.id) return;
 
     setDeletingId(id);
@@ -214,14 +216,14 @@ export default function PlanesFisicos() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success('Plan eliminado');
+        toast.success(t('physicalPlans.planDeleted'));
         fetchPlanes();
       } else {
-        toast.error(data.error || 'Error al eliminar el plan');
+        toast.error(data.error || t('physicalPlans.errorDeleting'));
       }
     } catch (error) {
       console.error('Error al eliminar plan físico:', error);
-      toast.error('Error de conexión');
+      toast.error(t('physicalPlans.connectionError'));
     } finally {
       setDeletingId(null);
     }
@@ -242,20 +244,20 @@ export default function PlanesFisicos() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Planes Físicos</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('physicalPlans.title')}</h1>
         <p className="text-muted-foreground">
-          La IA crea un planning semanal de ejercicios físicos personalizado para ti.
+          {t('physicalPlans.subtitle')}
         </p>
       </div>
 
       <div className="flex gap-3 mb-6">
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo plan físico
+          {t('physicalPlans.newPlan')}
         </Button>
         <Button variant="outline" onClick={() => navigate('/generar-plan-fisico-ia')}>
           <Sparkles className="h-4 w-4 mr-2" />
-          Generar con IA
+          {t('physicalPlans.generateWithAI')}
         </Button>
       </div>
 
@@ -263,7 +265,7 @@ export default function PlanesFisicos() {
         <Card>
           <CardContent className="py-12 text-center">
             <Dumbbell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">No hay planes físicos creados.</p>
+            <p className="text-muted-foreground">{t('physicalPlans.noPlans')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -278,7 +280,7 @@ export default function PlanesFisicos() {
                 <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-20 rounded-lg">
                   <div className="flex flex-col items-center gap-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p className="text-sm text-muted-foreground">Eliminando...</p>
+                    <p className="text-sm text-muted-foreground">{t('physicalPlans.deleting')}</p>
                   </div>
                 </div>
               )}
@@ -327,7 +329,7 @@ export default function PlanesFisicos() {
                 <div className="space-y-2">
                   <Progress value={plan.ia_avance_ratio * 100} className="h-2" />
                   <p className="text-xs text-muted-foreground">
-                    {Math.round(plan.ia_avance_ratio * 100)}% completado
+                    {Math.round(plan.ia_avance_ratio * 100)}% {t('physicalPlans.completed')}
                   </p>
                 </div>
               </CardContent>
@@ -340,13 +342,13 @@ export default function PlanesFisicos() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editMode ? 'Editar plan físico' : 'Crear nuevo plan físico'}
+              {editMode ? t('physicalPlans.editPlan') : t('physicalPlans.createPlan')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="titulo">Título *</Label>
+              <Label htmlFor="titulo">{t('physicalPlans.form.title')} *</Label>
               <Input
                 id="titulo"
                 value={formData.titulo}
@@ -362,10 +364,10 @@ export default function PlanesFisicos() {
             </div>
 
             <div>
-              <Label htmlFor="tipo">Tipo de prueba *</Label>
+              <Label htmlFor="tipo">{t('physicalPlans.form.testType')} *</Label>
               <Input
                 id="tipo"
-                placeholder="Ej: Bombero, Policía, Militar..."
+                placeholder={t('physicalPlans.form.testTypePlaceholder')}
                 value={formData.tipo_prueba}
                 onChange={(e) => {
                   setFormData({ ...formData, tipo_prueba: e.target.value });
@@ -379,7 +381,7 @@ export default function PlanesFisicos() {
             </div>
 
             <div>
-              <Label htmlFor="descripcion">Descripción</Label>
+              <Label htmlFor="descripcion">{t('physicalPlans.form.description')}</Label>
               <Textarea
                 id="descripcion"
                 value={formData.descripcion}
@@ -392,7 +394,7 @@ export default function PlanesFisicos() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Fecha de inicio *</Label>
+                <Label>{t('physicalPlans.form.startDate')} *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -404,7 +406,7 @@ export default function PlanesFisicos() {
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.fecha_inicio
                         ? format(formData.fecha_inicio, 'dd/MM/yyyy', { locale: es })
-                        : 'Seleccionar'}
+                        : t('physicalPlans.form.select')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -425,7 +427,7 @@ export default function PlanesFisicos() {
               </div>
 
               <div>
-                <Label>Fecha de fin *</Label>
+                <Label>{t('physicalPlans.form.endDate')} *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -437,7 +439,7 @@ export default function PlanesFisicos() {
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.fecha_fin
                         ? format(formData.fecha_fin, 'dd/MM/yyyy', { locale: es })
-                        : 'Seleccionar'}
+                        : t('physicalPlans.form.select')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -464,10 +466,10 @@ export default function PlanesFisicos() {
                 onClick={() => setModalOpen(false)}
                 disabled={saving}
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : editMode ? 'Guardar cambios' : 'Crear plan'}
+                {saving ? t('physicalPlans.form.saving') : editMode ? t('physicalPlans.form.saveChanges') : t('studyPlans.createPlan')}
               </Button>
             </div>
           </div>
