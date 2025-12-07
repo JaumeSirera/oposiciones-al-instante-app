@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
 import { supabase } from '@/lib/supabaseClient';
@@ -49,6 +50,7 @@ const tiposPrueba = [
 ];
 
 export default function GenerarPlanFisicoIA() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -68,7 +70,7 @@ export default function GenerarPlanFisicoIA() {
 
   const generarPlanConIA = async () => {
     if (!user?.id || !titulo.trim() || !tipo) {
-      toast.error('Completa todos los campos obligatorios');
+      toast.error(t('physicalPlans.generate.completeRequired'));
       return;
     }
 
@@ -93,13 +95,13 @@ export default function GenerarPlanFisicoIA() {
 
       if (data?.success && data?.plan) {
         setPlanGenerado(data.plan);
-        toast.success('Plan generado con IA');
+        toast.success(t('physicalPlans.generate.planGenerated'));
       } else {
-        toast.error(data?.error || 'Error al generar el plan');
+        toast.error(data?.error || t('physicalPlans.generate.errorGenerating'));
       }
     } catch (error) {
       console.error('Error generando plan:', error);
-      toast.error('Error al generar el plan con IA');
+      toast.error(t('physicalPlans.generate.errorGenerating'));
     } finally {
       setGenerando(false);
     }
@@ -125,14 +127,14 @@ export default function GenerarPlanFisicoIA() {
       if (error) throw error;
 
       if (data?.success && data?.id_plan) {
-        toast.success('Plan guardado correctamente');
+        toast.success(t('physicalPlans.generate.planSaved'));
         navigate(`/planes-fisicos/${data.id_plan}`);
       } else {
-        toast.error(data?.error || 'Error al guardar el plan');
+        toast.error(data?.error || t('physicalPlans.generate.errorSaving'));
       }
     } catch (error) {
       console.error('Error guardando plan:', error);
-      toast.error('Error al guardar el plan');
+      toast.error(t('physicalPlans.generate.errorSaving'));
     } finally {
       setLoading(false);
     }

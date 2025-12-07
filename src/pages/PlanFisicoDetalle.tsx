@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,6 +59,7 @@ interface Semana {
 }
 
 export default function PlanFisicoDetalle() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
