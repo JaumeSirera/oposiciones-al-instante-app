@@ -88,160 +88,170 @@ serve(async (req) => {
     let temasReales = temas;
     let contenidoGenerado = false;
 
-    // Detectar la estructura y normalizar
-    const semanasArray = planJson?.plan || planJson?.semanas;
+    // Verificar si debemos usar los temas del recordatorio directamente (planes de estudio)
+    const usarTemasRecordatorio = planJson?.usar_temas_recordatorio === true;
 
-    if (esPlanFisico && semanasArray && Array.isArray(semanasArray)) {
-      const temasOriginales = Array.isArray(temas) ? temas : [temas];
+    if (usarTemasRecordatorio) {
+      // Para planes de estudio, usar los temas que vienen directamente del recordatorio
+      console.log("[DEBUG] Usando temas del recordatorio directamente (plan de estudio)");
+      temasReales = Array.isArray(temas) ? temas : [temas];
+      contenidoGenerado = true; // Los temas ya vienen preparados
+    } else {
+      // Detectar la estructura y normalizar (para planes físicos)
+      const semanasArray = planJson?.plan || planJson?.semanas;
 
-      try {
-        console.log("[DEBUG] Semanas disponibles:", semanasArray.map((s: any) => ({
-          semana: s.semana,
-          titulo: s.titulo,
-          fecha_inicio: s.fecha_inicio,
-          fecha_fin: s.fecha_fin,
-          dias: (s.sesiones || []).map((ses: any) => ses.dia),
-        })));
+      if (esPlanFisico && semanasArray && Array.isArray(semanasArray)) {
+        const temasOriginales = Array.isArray(temas) ? temas : [temas];
 
-        // Calcular qué día de la semana es el recordatorio
-        const fechaRecordatorio = new Date(fecha);
-        const diasSemana = [
-          "domingo",
-          "lunes",
-          "martes",
-          "miércoles",
-          "jueves",
-          "viernes",
-          "sábado",
-        ];
+        try {
+          console.log("[DEBUG] Semanas disponibles:", semanasArray.map((s: any) => ({
+            semana: s.semana,
+            titulo: s.titulo,
+            fecha_inicio: s.fecha_inicio,
+            fecha_fin: s.fecha_fin,
+            dias: (s.sesiones || []).map((ses: any) => ses.dia),
+          })));
 
-        const normalizar = (texto: string) =>
-          (texto || "")
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .trim();
+          // Calcular qué día de la semana es el recordatorio
+          const fechaRecordatorio = new Date(fecha);
+          const diasSemana = [
+            "domingo",
+            "lunes",
+            "martes",
+            "miércoles",
+            "jueves",
+            "viernes",
+            "sábado",
+          ];
 
-        const diaSemana = diasSemana[fechaRecordatorio.getDay()];
-        const diaSemanaKey = normalizar(diaSemana);
+          const normalizar = (texto: string) =>
+            (texto || "")
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .trim();
 
-        console.log(`Buscando contenido para ${diaSemana} en fecha ${fecha}`);
+          const diaSemana = diasSemana[fechaRecordatorio.getDay()];
+          const diaSemanaKey = normalizar(diaSemana);
 
-        // Buscar la semana que contiene esta fecha
-        let sesionDelDia: any = null;
-        let semanaSeleccionada: any = null;
+          console.log(`Buscando contenido para ${diaSemana} en fecha ${fecha}`);
 
-        for (const semana of semanasArray) {
-          const fechaInicio = new Date(semana.fecha_inicio);
-          const fechaFin = new Date(semana.fecha_fin);
+          // Buscar la semana que contiene esta fecha
+          let sesionDelDia: any = null;
+          let semanaSeleccionada: any = null;
 
-          console.log("[DEBUG] Revisando semana", {
-            semana: semana.semana,
-            titulo: semana.titulo,
-            fecha_inicio: semana.fecha_inicio,
-            fecha_fin: semana.fecha_fin,
-            fechaRecordatorio: fecha,
-          });
+          for (const semana of semanasArray) {
+            const fechaInicio = new Date(semana.fecha_inicio);
+            const fechaFin = new Date(semana.fecha_fin);
 
-          if (fechaRecordatorio >= fechaInicio && fechaRecordatorio <= fechaFin) {
-            console.log(`Encontrada semana ${semana.semana}: ${semana.titulo}`);
-            semanaSeleccionada = semana;
-
-            // Buscar el día en las sesiones de esta semana (permite variaciones de texto)
-            sesionDelDia = semana.sesiones?.find((s: any) => {
-              const diaSesionOriginal = s.dia || "";
-              const diaSesion = normalizar(diaSesionOriginal);
-              const match =
-                diaSesion === diaSemanaKey ||
-                diaSesion.startsWith(diaSemanaKey) ||
-                diaSemanaKey.startsWith(diaSesion);
-              if (match) {
-                console.log("[DEBUG] Coincidencia de día encontrada", {
-                  diaSesionOriginal,
-                  diaSesion,
-                  diaSemana,
-                  diaSemanaKey,
-                });
-              }
-              return match;
+            console.log("[DEBUG] Revisando semana", {
+              semana: semana.semana,
+              titulo: semana.titulo,
+              fecha_inicio: semana.fecha_inicio,
+              fecha_fin: semana.fecha_fin,
+              fechaRecordatorio: fecha,
             });
 
-            if (!sesionDelDia && semana.sesiones?.length) {
-              console.log("[DEBUG] No se encontró sesión exacta para el día. Sesiones disponibles en la semana:",
-                semana.sesiones.map((s: any) => s.dia));
-            }
+            if (fechaRecordatorio >= fechaInicio && fechaRecordatorio <= fechaFin) {
+              console.log(`Encontrada semana ${semana.semana}: ${semana.titulo}`);
+              semanaSeleccionada = semana;
 
-            if (sesionDelDia) {
-              console.log(`Encontrada sesión para ${diaSemana}:`, sesionDelDia);
-              break;
-            }
-          }
-        }
-
-        if (sesionDelDia && sesionDelDia.bloques) {
-          // Extraer ejercicios de todos los bloques
-          temasReales = [];
-
-          for (const bloque of sesionDelDia.bloques) {
-            // Añadir el tipo de bloque como encabezado
-            const tipoBloque = bloque.tipo || "Bloque";
-            const descripcionBloque = bloque.descripcion || bloque.explicacion_neofita || "";
-            
-            temasReales.push(`\n**${tipoBloque}**${descripcionBloque ? ` - ${descripcionBloque}` : ''}`);
-            
-            if (bloque.ejercicios) {
-              for (const ejercicio of bloque.ejercicios) {
-                // Nombre base del ejercicio
-                let descripcion = ejercicio.nombre || ejercicio.titulo || "Ejercicio";
-
-                // Añadir SIEMPRE la información de series / repeticiones si existe
-                const seriesStr =
-                  ejercicio.series !== undefined && ejercicio.series !== null
-                    ? String(ejercicio.series)
-                    : "";
-                const repsStr =
-                  ejercicio.reps !== undefined && ejercicio.reps !== null
-                    ? String(ejercicio.reps)
-                    : "";
-
-                if (seriesStr || repsStr) {
-                  descripcion += ` - Series: ${seriesStr || "-"} Reps: ${repsStr || "-"}`;
+              // Buscar el día en las sesiones de esta semana (permite variaciones de texto)
+              sesionDelDia = semana.sesiones?.find((s: any) => {
+                const diaSesionOriginal = s.dia || "";
+                const diaSesion = normalizar(diaSesionOriginal);
+                const match =
+                  diaSesion === diaSemanaKey ||
+                  diaSesion.startsWith(diaSemanaKey) ||
+                  diaSemanaKey.startsWith(diaSesion);
+                if (match) {
+                  console.log("[DEBUG] Coincidencia de día encontrada", {
+                    diaSesionOriginal,
+                    diaSesion,
+                    diaSemana,
+                    diaSemanaKey,
+                  });
                 }
+                return match;
+              });
 
-                // Carga / tempo / descanso / RPE si existen
-                const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || "";
-                const tempo = ejercicio.tempo ? ` Tempo: ${ejercicio.tempo}` : "";
-                const descanso = ejercicio.descanso ? ` Descanso: ${ejercicio.descanso}` : "";
-                const rpe = ejercicio.rpe ? ` RPE: ${ejercicio.rpe}` : "";
+              if (!sesionDelDia && semana.sesiones?.length) {
+                console.log("[DEBUG] No se encontró sesión exacta para el día. Sesiones disponibles en la semana:",
+                  semana.sesiones.map((s: any) => s.dia));
+              }
 
-                if (carga) descripcion += ` (${carga})`;
-                if (tempo) descripcion += tempo;
-                if (descanso) descripcion += descanso;
-                if (rpe) descripcion += rpe;
-
-                // Añadir notas si existen
-                if (ejercicio.notas) {
-                  descripcion += `\n   → ${ejercicio.notas}`;
-                }
-
-                temasReales.push(descripcion);
+              if (sesionDelDia) {
+                console.log(`Encontrada sesión para ${diaSemana}:`, sesionDelDia);
+                break;
               }
             }
           }
 
-          contenidoGenerado = true;
-          console.log(`Extraídos ${temasReales.length} elementos (bloques + ejercicios) del día`);
-        } else {
-          console.log(`No se encontró sesión para ${diaSemana}, usando temas originales del recordatorio`, {
-            semanaSeleccionada,
-          });
-          temasReales = temasOriginales;
+          if (sesionDelDia && sesionDelDia.bloques) {
+            // Extraer ejercicios de todos los bloques
+            temasReales = [];
+
+            for (const bloque of sesionDelDia.bloques) {
+              // Añadir el tipo de bloque como encabezado
+              const tipoBloque = bloque.tipo || "Bloque";
+              const descripcionBloque = bloque.descripcion || bloque.explicacion_neofita || "";
+              
+              temasReales.push(`\n**${tipoBloque}**${descripcionBloque ? ` - ${descripcionBloque}` : ''}`);
+              
+              if (bloque.ejercicios) {
+                for (const ejercicio of bloque.ejercicios) {
+                  // Nombre base del ejercicio
+                  let descripcion = ejercicio.nombre || ejercicio.titulo || "Ejercicio";
+
+                  // Añadir SIEMPRE la información de series / repeticiones si existe
+                  const seriesStr =
+                    ejercicio.series !== undefined && ejercicio.series !== null
+                      ? String(ejercicio.series)
+                      : "";
+                  const repsStr =
+                    ejercicio.reps !== undefined && ejercicio.reps !== null
+                      ? String(ejercicio.reps)
+                      : "";
+
+                  if (seriesStr || repsStr) {
+                    descripcion += ` - Series: ${seriesStr || "-"} Reps: ${repsStr || "-"}`;
+                  }
+
+                  // Carga / tempo / descanso / RPE si existen
+                  const carga = ejercicio.carga?.rx || ejercicio.carga?.scaled || "";
+                  const tempo = ejercicio.tempo ? ` Tempo: ${ejercicio.tempo}` : "";
+                  const descanso = ejercicio.descanso ? ` Descanso: ${ejercicio.descanso}` : "";
+                  const rpe = ejercicio.rpe ? ` RPE: ${ejercicio.rpe}` : "";
+
+                  if (carga) descripcion += ` (${carga})`;
+                  if (tempo) descripcion += tempo;
+                  if (descanso) descripcion += descanso;
+                  if (rpe) descripcion += rpe;
+
+                  // Añadir notas si existen
+                  if (ejercicio.notas) {
+                    descripcion += `\n   → ${ejercicio.notas}`;
+                  }
+
+                  temasReales.push(descripcion);
+                }
+              }
+            }
+
+            contenidoGenerado = true;
+            console.log(`Extraídos ${temasReales.length} elementos (bloques + ejercicios) del día`);
+          } else {
+            console.log(`No se encontró sesión para ${diaSemana}, usando temas originales del recordatorio`, {
+              semanaSeleccionada,
+            });
+            temasReales = temasOriginales;
+            contenidoGenerado = false;
+          }
+        } catch (error) {
+          console.error("Error extrayendo ejercicios del día:", error);
+          temasReales = Array.isArray(temas) ? temas : [temas];
           contenidoGenerado = false;
         }
-      } catch (error) {
-        console.error("Error extrayendo ejercicios del día:", error);
-        temasReales = Array.isArray(temas) ? temas : [temas];
-        contenidoGenerado = false;
       }
     }
 
