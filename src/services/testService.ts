@@ -235,7 +235,7 @@ class TestService {
 
   async getComentarios(id_pregunta: number): Promise<any[]> {
     try {
-      const data = await this.callAPI(`?endpoint=comentarios.php&id_pregunta=${id_pregunta}`);
+      const data = await this.callAPI(`comentarios.php?id_pregunta=${id_pregunta}`);
       return data.comentarios || [];
     } catch (error) {
       console.error('Error al obtener comentarios:', error);
@@ -275,7 +275,7 @@ class TestService {
 
   async deleteComentario(id: number, rol: string): Promise<{ success: boolean }> {
     try {
-      return await this.callAPI('?endpoint=comentarios.php', {
+      return await this.callAPI('comentarios.php', {
         method: 'POST',
         body: JSON.stringify({ action: 'delete', id, rol }),
       });
@@ -328,7 +328,7 @@ class TestService {
         preguntas_falladas: typeof data.preguntas_falladas === 'object' ? data.preguntas_falladas : JSON.parse(data.preguntas_falladas),
       };
 
-      return await this.callAPI('?endpoint=guardar_tests_realizados.php', {
+      return await this.callAPI('guardar_tests_realizados.php', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
