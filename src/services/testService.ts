@@ -251,9 +251,9 @@ class TestService {
     comentario: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      return await this.callAPI('?endpoint=comentarios.php', {
+      return await this.callAPI('comentarios.php', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ action: 'add', ...data }),
       });
     } catch (error) {
       console.error('Error al añadir comentario:', error);
