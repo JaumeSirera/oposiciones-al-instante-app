@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Profile = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -34,8 +36,8 @@ const Profile = () => {
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
-        title: "Error",
-        description: "Por favor completa todos los campos",
+        title: t('common.error'),
+        description: t('profile.fillAllFields'),
         variant: "destructive",
       });
       return;
@@ -43,8 +45,8 @@ const Profile = () => {
 
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Error",
-        description: "Las contraseñas no coinciden",
+        title: t('common.error'),
+        description: t('profile.passwordsNoMatch'),
         variant: "destructive",
       });
       return;
@@ -52,8 +54,8 @@ const Profile = () => {
 
     if (newPassword.length < 6) {
       toast({
-        title: "Error",
-        description: "La contraseña debe tener al menos 6 caracteres",
+        title: t('common.error'),
+        description: t('profile.passwordMinLength'),
         variant: "destructive",
       });
       return;
@@ -80,23 +82,23 @@ const Profile = () => {
 
       if (data.success) {
         toast({
-          title: "¡Contraseña actualizada!",
-          description: "Tu contraseña ha sido cambiada correctamente",
+          title: t('profile.passwordUpdated'),
+          description: t('profile.passwordUpdatedDesc'),
         });
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
       } else {
         toast({
-          title: "Error",
-          description: data.error || "No se pudo actualizar la contraseña",
+          title: t('common.error'),
+          description: data.error || t('profile.couldNotUpdatePassword'),
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "No se pudo conectar con el servidor",
+        title: t('common.error'),
+        description: t('profile.connectionError'),
         variant: "destructive",
       });
     } finally {
@@ -121,22 +123,22 @@ const Profile = () => {
 
       if (data.success) {
         toast({
-          title: "Cuenta eliminada",
-          description: "Tu cuenta y todos tus datos han sido eliminados",
+          title: t('profile.accountDeleted'),
+          description: t('profile.accountDeletedDesc'),
         });
         localStorage.clear();
         navigate('/auth');
       } else {
         toast({
-          title: "Error",
-          description: data.error || "No se pudo eliminar la cuenta",
+          title: t('common.error'),
+          description: data.error || t('profile.couldNotDeleteAccount'),
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "No se pudo conectar con el servidor",
+        title: t('common.error'),
+        description: t('profile.connectionError'),
         variant: "destructive",
       });
     } finally {
@@ -153,7 +155,7 @@ const Profile = () => {
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
+          {t('common.back')}
         </Button>
 
         {/* User Info Card */}
@@ -178,41 +180,41 @@ const Profile = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Lock className="mr-2 h-5 w-5" />
-              Cambiar Contraseña
+              {t('profile.changePassword')}
             </CardTitle>
             <CardDescription>
-              Actualiza tu contraseña para mantener tu cuenta segura
+              {t('profile.changePasswordDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="current-password">Contraseña Actual</Label>
+              <Label htmlFor="current-password">{t('profile.currentPassword')}</Label>
               <Input
                 id="current-password"
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Introduce tu contraseña actual"
+                placeholder={t('profile.enterCurrentPassword')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-password">Nueva Contraseña</Label>
+              <Label htmlFor="new-password">{t('profile.newPassword')}</Label>
               <Input
                 id="new-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('profile.minCharacters')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirmar Nueva Contraseña</Label>
+              <Label htmlFor="confirm-password">{t('profile.confirmNewPassword')}</Label>
               <Input
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repite la nueva contraseña"
+                placeholder={t('profile.repeatNewPassword')}
               />
             </div>
             <Button 
@@ -221,7 +223,7 @@ const Profile = () => {
               className="w-full"
             >
               <Save className="mr-2 h-4 w-4" />
-              {isChangingPassword ? 'Actualizando...' : 'Actualizar Contraseña'}
+              {isChangingPassword ? t('profile.updating') : t('profile.updatePassword')}
             </Button>
           </CardContent>
         </Card>
@@ -231,10 +233,10 @@ const Profile = () => {
           <CardHeader>
             <CardTitle className="flex items-center text-pink-600">
               <Heart className="mr-2 h-5 w-5" />
-              Apoya el proyecto
+              {t('profile.supportProject')}
             </CardTitle>
             <CardDescription>
-              Si Oposiciones-Test te está ayudando, considera hacer una donación para mantener la plataforma
+              {t('profile.supportProjectDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -243,7 +245,7 @@ const Profile = () => {
               onClick={() => navigate('/donacion')}
             >
               <Heart className="mr-2 h-4 w-4" />
-              Hacer una donación
+              {t('profile.makeDonation')}
             </Button>
           </CardContent>
         </Card>
@@ -251,9 +253,9 @@ const Profile = () => {
         {/* Privacy Policy Link */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Políticas de Privacidad</CardTitle>
+            <CardTitle>{t('profile.privacyPolicy')}</CardTitle>
             <CardDescription>
-              Consulta nuestra política de privacidad y protección de datos
+              {t('profile.privacyPolicyDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -262,7 +264,7 @@ const Profile = () => {
               className="w-full"
               onClick={() => navigate('/privacy-policy')}
             >
-              Ver Políticas de Privacidad
+              {t('profile.viewPrivacyPolicy')}
             </Button>
           </CardContent>
         </Card>
@@ -272,40 +274,39 @@ const Profile = () => {
           <CardHeader>
             <CardTitle className="text-red-600 flex items-center">
               <Trash2 className="mr-2 h-5 w-5" />
-              Zona de Peligro
+              {t('profile.dangerZone')}
             </CardTitle>
             <CardDescription>
-              Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.
+              {t('profile.dangerZoneDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="w-full" disabled={isDeleting}>
-                  {isDeleting ? 'Eliminando...' : 'Eliminar Cuenta y Todos los Datos'}
+                  {isDeleting ? t('profile.deleting') : t('profile.deleteAccountButton')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('profile.confirmDeleteTitle')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Esto eliminará permanentemente tu cuenta
-                    y borrará todos tus datos de nuestros servidores, incluyendo:
+                    {t('profile.confirmDeleteDesc')}
                     <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Todos los tests realizados</li>
-                      <li>Tu historial y estadísticas</li>
-                      <li>Tu información de perfil</li>
-                      <li>Cualquier dato asociado a tu cuenta</li>
+                      <li>{t('profile.deleteItem1')}</li>
+                      <li>{t('profile.deleteItem2')}</li>
+                      <li>{t('profile.deleteItem3')}</li>
+                      <li>{t('profile.deleteItem4')}</li>
                     </ul>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
                     className="bg-red-600 hover:bg-red-700"
                   >
-                    Sí, eliminar mi cuenta
+                    {t('profile.confirmDelete')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
