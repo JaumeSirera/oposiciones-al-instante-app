@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Smartphone, CreditCard } from 'lucide-react';
@@ -9,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
 
 const Donacion = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -24,19 +26,19 @@ const Donacion = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       toast({
-        title: '¡Gracias por tu donación! 💙',
-        description: 'Tu apoyo es muy valioso para nosotros',
+        title: t('donation.thankYou'),
+        description: t('donation.supportValuable'),
       });
       navigate('/donacion', { replace: true });
     } else if (params.get('canceled') === 'true') {
       toast({
-        title: 'Pago cancelado',
-        description: 'El pago fue cancelado. Puedes intentarlo de nuevo cuando quieras.',
+        title: t('donation.paymentCanceled'),
+        description: t('donation.paymentCanceledDesc'),
         variant: 'destructive',
       });
       navigate('/donacion', { replace: true });
     }
-  }, [toast, navigate]);
+  }, [toast, navigate, t]);
 
   // Inicializar Google Pay
   useEffect(() => {
@@ -96,8 +98,8 @@ const Donacion = () => {
   const handleGooglePay = async () => {
     if (!user?.id) {
       toast({
-        title: 'Inicia sesión',
-        description: 'Debes iniciar sesión para donar',
+        title: t('donation.loginRequired'),
+        description: t('donation.mustLoginToDonate'),
         variant: 'destructive',
       });
       navigate('/auth');
@@ -108,7 +110,6 @@ const Donacion = () => {
     try {
       console.log('Creating payment for user:', user.username);
       
-      // Crear sesión de pago en el backend pasando el email del usuario
       const userEmail = user.username.includes('@') ? user.username : `${user.username}@oposiciones-test.com`;
       
       const { data, error } = await supabase.functions.invoke('create-donation-payment', {
@@ -124,23 +125,22 @@ const Donacion = () => {
       }
 
       if (!data?.url) {
-        throw new Error('No se recibió URL de pago');
+        throw new Error(t('donation.noPaymentUrl'));
       }
 
       console.log('Payment session created, redirecting to:', data.url);
 
-      // Abrir Stripe Checkout en una nueva pestaña
       window.open(data.url, '_blank');
       
       toast({
-        title: 'Redirigiendo a la pasarela de pago',
-        description: 'Se ha abierto una nueva pestaña con el formulario de pago',
+        title: t('donation.redirectingToPayment'),
+        description: t('donation.newTabOpened'),
       });
     } catch (err: any) {
       console.error('Payment error:', err);
       toast({
-        title: 'Error en el pago',
-        description: 'No se pudo completar el pago. Por favor, intenta de nuevo.',
+        title: t('donation.paymentError'),
+        description: t('donation.paymentErrorDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -151,8 +151,8 @@ const Donacion = () => {
   const handleBizumDonation = (amount: number) => {
     if (!user?.id) {
       toast({
-        title: 'Error',
-        description: 'Debes estar autenticado para donar',
+        title: t('common.error'),
+        description: t('donation.mustBeAuthenticated'),
         variant: 'destructive',
       });
       return;
@@ -160,8 +160,8 @@ const Donacion = () => {
 
     if (!phoneNumber || phoneNumber.length < 9) {
       toast({
-        title: 'Error',
-        description: 'Por favor, introduce un número de teléfono válido',
+        title: t('common.error'),
+        description: t('donation.invalidPhone'),
         variant: 'destructive',
       });
       return;
@@ -169,8 +169,8 @@ const Donacion = () => {
 
     setShowBizumInfo(true);
     toast({
-      title: 'Información de donación',
-      description: `Abre tu app de Bizum y envía ${amount}€ al número que te mostraremos`,
+      title: t('donation.donationInfo'),
+      description: t('donation.openBizumApp', { amount }),
     });
   };
 
@@ -183,30 +183,29 @@ const Donacion = () => {
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
+          {t('common.back')}
         </Button>
 
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Apoya el proyecto 💙
+            {t('donation.title')} 💙
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Puedes seguir usando la app gratuitamente. Si te aporta valor, 
-            considera realizar una donación para ayudarnos a mantener y mejorar la plataforma.
+            {t('donation.subtitle')}
           </p>
         </div>
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-center">Elige tu método de pago</CardTitle>
+            <CardTitle className="text-center">{t('donation.choosePaymentMethod')}</CardTitle>
             <CardDescription className="text-center">
-              Realiza tu donación de forma rápida y segura
+              {t('donation.quickAndSecure')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center mb-6">
               <p className="text-sm text-muted-foreground mb-4">
-                Selecciona el importe de tu donación
+                {t('donation.selectAmount')}
               </p>
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {[5, 10, 20].map((amount) => (
@@ -226,7 +225,7 @@ const Donacion = () => {
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="googlepay">
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Tarjeta
+                  {t('donation.card')}
                 </TabsTrigger>
                 <TabsTrigger value="bizum">
                   <Smartphone className="w-4 h-4 mr-2" />
@@ -238,7 +237,7 @@ const Donacion = () => {
                 <div className="space-y-4">
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <p className="text-sm text-gray-600 mb-2">
-                      Donarás <span className="font-bold text-blue-600">{selectedAmount}€</span>
+                      {t('donation.youWillDonate')} <span className="font-bold text-blue-600">{selectedAmount}€</span>
                     </p>
                   </div>
                   <Button 
@@ -248,15 +247,15 @@ const Donacion = () => {
                     disabled={isLoading || !user}
                   >
                     <CreditCard className="w-5 h-5 mr-2" />
-                    {isLoading ? 'Procesando...' : 'Pagar con Tarjeta'}
+                    {isLoading ? t('donation.processing') : t('donation.payWithCard')}
                   </Button>
                   {!user && (
                     <p className="text-xs text-amber-600 text-center">
-                      Debes iniciar sesión para donar
+                      {t('donation.mustLoginToDonate')}
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground text-center">
-                    Pago seguro procesado por Stripe
+                    {t('donation.securePayment')}
                   </p>
                 </div>
               </TabsContent>
@@ -266,7 +265,7 @@ const Donacion = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
-                        Tu número de teléfono (opcional)
+                        {t('donation.yourPhone')}
                       </label>
                       <input
                         type="tel"
@@ -277,7 +276,7 @@ const Donacion = () => {
                         maxLength={9}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Para confirmar tu donación (no se compartirá)
+                        {t('donation.phoneNotShared')}
                       </p>
                     </div>
 
@@ -287,26 +286,26 @@ const Donacion = () => {
                       onClick={() => handleBizumDonation(selectedAmount)}
                     >
                       <Smartphone className="w-5 h-5 mr-2" />
-                      Donar {selectedAmount}€ con Bizum
+                      {t('donation.donateWithBizum', { amount: selectedAmount })}
                     </Button>
 
                     <p className="text-xs text-muted-foreground text-center">
-                      Solo disponible en España
+                      {t('donation.onlySpain')}
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-4 text-center">
                     <div className="bg-blue-50 p-6 rounded-lg">
                       <Smartphone className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-                      <h3 className="font-semibold text-lg mb-2">Completa tu donación</h3>
+                      <h3 className="font-semibold text-lg mb-2">{t('donation.completeDonation')}</h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        Abre tu app de Bizum y envía <span className="font-bold text-blue-600">{selectedAmount}€</span> al número:
+                        {t('donation.openBizumAndSend')} <span className="font-bold text-blue-600">{selectedAmount}€</span> {t('donation.toNumber')}:
                       </p>
                       <div className="bg-white p-4 rounded-lg border-2 border-blue-200">
                         <p className="text-3xl font-bold text-blue-600">612345678</p>
                       </div>
                       <p className="text-xs text-muted-foreground mt-4">
-                        Concepto: Donación Oposiciones-Test
+                        {t('donation.concept')}
                       </p>
                     </div>
                     
@@ -315,20 +314,20 @@ const Donacion = () => {
                       onClick={() => setShowBizumInfo(false)}
                       className="w-full"
                     >
-                      Cambiar importe o método
+                      {t('donation.changeAmountOrMethod')}
                     </Button>
 
                     <Button 
                       onClick={() => {
                         toast({
-                          title: '¡Muchas gracias! 💙',
-                          description: 'Tu apoyo es muy valioso para nosotros',
+                          title: t('donation.thankYouMuch'),
+                          description: t('donation.supportValuable'),
                         });
                         setTimeout(() => navigate('/'), 2000);
                       }}
                       className="w-full"
                     >
-                      Ya he completado la donación
+                      {t('donation.alreadyCompleted')}
                     </Button>
                   </div>
                 )}
@@ -339,7 +338,7 @@ const Donacion = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>¿Por qué donar?</CardTitle>
+            <CardTitle>{t('donation.whyDonate')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start space-x-3">
@@ -347,9 +346,9 @@ const Donacion = () => {
                 <span className="text-blue-600 text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Mantén la plataforma gratuita</h3>
+                <h3 className="font-semibold mb-1">{t('donation.keepPlatformFree')}</h3>
                 <p className="text-sm text-gray-600">
-                  Tu donación ayuda a mantener Oposiciones-Test accesible para todos
+                  {t('donation.keepPlatformFreeDesc')}
                 </p>
               </div>
             </div>
@@ -358,9 +357,9 @@ const Donacion = () => {
                 <span className="text-blue-600 text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Nuevas funcionalidades</h3>
+                <h3 className="font-semibold mb-1">{t('donation.newFeatures')}</h3>
                 <p className="text-sm text-gray-600">
-                  Ayuda a financiar el desarrollo de nuevas características
+                  {t('donation.newFeaturesDesc')}
                 </p>
               </div>
             </div>
@@ -369,9 +368,9 @@ const Donacion = () => {
                 <span className="text-blue-600 text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Soporte y mejoras</h3>
+                <h3 className="font-semibold mb-1">{t('donation.supportAndImprovements')}</h3>
                 <p className="text-sm text-gray-600">
-                  Permite mantener el servidor y mejorar continuamente la experiencia
+                  {t('donation.supportAndImprovementsDesc')}
                 </p>
               </div>
             </div>
@@ -384,7 +383,7 @@ const Donacion = () => {
             size="lg"
             onClick={() => navigate('/')}
           >
-            Continuar sin donar
+            {t('donation.continueWithoutDonating')}
           </Button>
         </div>
       </div>
