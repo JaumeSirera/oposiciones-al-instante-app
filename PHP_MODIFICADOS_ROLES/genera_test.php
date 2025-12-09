@@ -50,7 +50,7 @@ $temas_arr = array_values(array_filter(array_map('trim', explode(',', (string)$t
 
 /* ------------------ query builder ------------------ */
 function fetch_preguntas($conn, $proceso_id, $secciones, $temas, $limit, $dificultad = '', $tipo = '', $habilidad = '') {
-    $sql   = "SELECT id, pregunta, correcta FROM preguntas WHERE id_proceso = ?";
+    $sql   = "SELECT id, pregunta, correcta, documento, pagina, ubicacion, cita FROM preguntas WHERE id_proceso = ?";
     $types = 'i';
     $bind  = [$proceso_id];
 
@@ -228,12 +228,29 @@ foreach ($pregRows as $pregunta) {
         }
     }
 
-    $out[] = [
+    // Campos de trazabilidad de fuente (solo si existen y no están vacíos)
+    $item = [
         'id'              => $id,
         'pregunta'        => limpiar($pregunta['pregunta']),
         'respuestas'      => $respuestas,
         'correcta_indice' => $correcta_indice
     ];
+    
+    // Añadir campos de fuente solo si tienen valor
+    if (!empty($pregunta['documento'])) {
+        $item['documento'] = $pregunta['documento'];
+    }
+    if (!empty($pregunta['pagina'])) {
+        $item['pagina'] = $pregunta['pagina'];
+    }
+    if (!empty($pregunta['ubicacion'])) {
+        $item['ubicacion'] = $pregunta['ubicacion'];
+    }
+    if (!empty($pregunta['cita'])) {
+        $item['cita'] = $pregunta['cita'];
+    }
+    
+    $out[] = $item;
 }
 
 /* Salida 100% retrocompatible: siempre un array */
