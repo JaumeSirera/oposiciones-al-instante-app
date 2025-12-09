@@ -485,17 +485,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         respuestas: currentQuestion.respuestas,
         correcta: currentQuestion.correcta_indice,
         elegida: selectedAnswer,
+        idioma: needsTranslation ? i18n.language : undefined,
       });
 
       if (result.success && result.explicacion) {
         setExplicacionProfesor(result.explicacion);
-        // Traducir la explicación si es necesario
-        if (needsTranslation) {
-          const [translated] = await translateTexts([result.explicacion]);
-          setTranslatedExplicacion(translated);
-        } else {
-          setTranslatedExplicacion('');
-        }
+        // Ya no necesitamos traducir aquí, el profesor genera en el idioma correcto
+        setTranslatedExplicacion('');
       } else {
         toast({ 
           title: 'Error', 
@@ -827,14 +823,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
             <CardContent>
               {explicacionProfesor ? (
                 <div className="bg-white rounded-lg p-4 shadow-sm">
-                  {needsTranslation && translatedExplicacion && (
+                  {needsTranslation && (
                     <div className="flex items-center gap-2 mb-2">
                       <Languages className="h-4 w-4 text-purple-600" />
                       <Badge variant="outline" className="text-xs">{i18n.language.toUpperCase()}</Badge>
                     </div>
                   )}
                   <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
-                    {needsTranslation && translatedExplicacion ? translatedExplicacion : explicacionProfesor}
+                    {explicacionProfesor}
                   </p>
                 </div>
               ) : (

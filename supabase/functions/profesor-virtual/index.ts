@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { pregunta, respuestas, correcta, elegida } = await req.json();
+    const { pregunta, respuestas, correcta, elegida, idioma } = await req.json();
 
     if (!pregunta || !respuestas || !correcta || !elegida) {
       return new Response(
@@ -26,11 +26,23 @@ serve(async (req) => {
       .map((r: any) => `${r.indice}) ${r.respuesta}`)
       .join('\n');
 
-    const prompt = `Eres un profesor experto en oposiciones. Explica de forma didáctica y sencilla la siguiente pregunta de test, especificando:
+    // Determinar idioma de respuesta
+    const targetLanguage = idioma && idioma !== 'es' ? idioma : null;
+    const languageInstruction = targetLanguage 
+      ? `\n\nIMPORTANTE: Responde COMPLETAMENTE en ${getLanguageName(targetLanguage)}. Toda tu explicación debe estar en ${getLanguageName(targetLanguage)}, no en español.`
+      : '';
 
-- Cuál es la respuesta correcta y por qué.
-- Por qué las demás opciones no son correctas.
-- Si el alumno se ha equivocado, corrígelo de forma amable y motívale.
+    const prompt = `Eres un profesor experto en oposiciones. Explica de forma didáctica y completa la siguiente pregunta de test.
+
+Tu explicación DEBE incluir:
+
+1. **Identificación de la respuesta correcta**: Indica claramente cuál es la opción correcta.
+
+2. **Explicación detallada**: Explica POR QUÉ esa respuesta es la correcta, dando contexto teórico y ejemplos si es necesario.
+
+3. **Análisis de las otras opciones**: Explica brevemente por qué cada una de las demás opciones NO es correcta.
+
+4. **Retroalimentación al alumno**: Si el alumno acertó, felicítalo. Si se equivocó, corrígelo de forma amable y motívale a seguir estudiando.
 
 Pregunta:
 ${pregunta}
@@ -41,66 +53,13 @@ ${textoOpciones}
 Respuesta correcta: ${correcta}
 Respuesta elegida por el alumno: ${elegida}
 
-Explica de forma breve y clara, con lenguaje sencillo.`;
+Proporciona una explicación completa y educativa, con al menos 150-200 palabras.${languageInstruction}`;
 
-    const systemPrompt = "Eres un profesor experto en oposiciones que explica con claridad cada pregunta y respuesta.";
+    const systemPrompt = targetLanguage 
+      ? `You are an expert professor who explains clearly each question and answer. You MUST respond entirely in ${getLanguageName(targetLanguage)}.`
+      : "Eres un profesor experto en oposiciones que explica con claridad cada pregunta y respuesta.";
 
-    // Intentar primero con Google Gemini
-    const GOOGLE_API_KEY = Deno.env.get('GOOGLE_API_KEY');
-    
-    if (GOOGLE_API_KEY) {
-      console.log('Intentando con Google Gemini (gemini-1.5-flash)...');
-      
-      try {
-        const geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{
-                  text: `${systemPrompt}\n\n${prompt}`
-                }]
-              }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1024,
-              }
-            })
-          }
-        );
-
-        if (geminiResponse.ok) {
-          const data = await geminiResponse.json();
-          const explicacion = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-          if (explicacion) {
-            console.log('Explicación generada con Gemini exitosamente');
-            return new Response(
-              JSON.stringify({ success: true, explicacion: explicacion.trim() }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-        } else {
-          const errorText = await geminiResponse.text();
-          console.error('Error de Gemini:', geminiResponse.status, errorText);
-          
-          // Si es error de cuota (429), continuar al fallback
-          if (geminiResponse.status !== 429) {
-            throw new Error(`Gemini error: ${errorText}`);
-          }
-          console.log('Cuota de Gemini agotada, usando Lovable AI como fallback...');
-        }
-      } catch (geminiError) {
-        console.error('Error con Gemini:', geminiError);
-        console.log('Cambiando a Lovable AI como fallback...');
-      }
-    }
-
-    // Fallback a Lovable AI
+    // Usar Lovable AI directamente (más estable)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -110,7 +69,7 @@ Explica de forma breve y clara, con lenguaje sencillo.`;
       );
     }
 
-    console.log('Usando Lovable AI (gemini-2.5-flash)...');
+    console.log(`Generando explicación con Lovable AI${targetLanguage ? ` en ${targetLanguage}` : ''}...`);
     
     const lovableResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -124,6 +83,8 @@ Explica de forma breve y clara, con lenguaje sencillo.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
+        max_tokens: 2048,
+        temperature: 0.7,
       }),
     });
 
@@ -151,7 +112,7 @@ Explica de forma breve y clara, con lenguaje sencillo.`;
       throw new Error('No se recibió explicación de la IA');
     }
 
-    console.log('Explicación generada con Lovable AI exitosamente');
+    console.log('Explicación generada exitosamente');
 
     return new Response(
       JSON.stringify({ success: true, explicacion: explicacion.trim() }),
@@ -169,3 +130,14 @@ Explica de forma breve y clara, con lenguaje sencillo.`;
     );
   }
 });
+
+function getLanguageName(code: string): string {
+  const languages: Record<string, string> = {
+    'en': 'English',
+    'fr': 'French',
+    'pt': 'Portuguese',
+    'de': 'German',
+    'zh': 'Chinese',
+  };
+  return languages[code] || code;
+}
