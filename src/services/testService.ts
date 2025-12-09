@@ -165,70 +165,67 @@ class TestService {
     preguntas: any[];
   }): Promise<{ ok: boolean; error?: string }> {
     try {
-      const formData = new URLSearchParams({
-        endpoint: 'test_progreso.php',
-        action: 'guardar',
-        user_id: data.user_id.toString(),
-        test_key: data.test_key,
-        actual: data.actual.toString(),
-        respuestas: JSON.stringify(data.respuestas),
-        tiempo_restante: data.tiempo_restante.toString(),
-        preguntas: JSON.stringify(data.preguntas),
-      });
-
-      return await this.callAPI('', {
+      console.log('📝 Guardando progreso:', { user_id: data.user_id, test_key: data.test_key, actual: data.actual });
+      
+      const result = await this.callAPI('test_progreso.php', {
         method: 'POST',
-        body: formData.toString(),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        body: JSON.stringify({
+          action: 'guardar',
+          user_id: data.user_id,
+          test_key: data.test_key,
+          actual: data.actual,
+          respuestas: data.respuestas,
+          tiempo_restante: data.tiempo_restante,
+          preguntas: data.preguntas,
+        }),
       });
+      
+      console.log('✅ Progreso guardado:', result);
+      return result;
     } catch (error) {
-      console.error('Error al guardar progreso:', error);
+      console.error('❌ Error al guardar progreso:', error);
       return { ok: false, error: 'Error de conexión' };
     }
   }
 
   async recuperarProgreso(user_id: number, test_key: string): Promise<ProgresoResponse> {
     try {
-      const formData = new URLSearchParams({
-        endpoint: 'test_progreso.php',
-        action: 'recuperar',
-        user_id: user_id.toString(),
-        test_key,
-      });
-
-      return await this.callAPI('', {
+      console.log('🔍 Recuperando progreso:', { user_id, test_key });
+      
+      const result = await this.callAPI('test_progreso.php', {
         method: 'POST',
-        body: formData.toString(),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        body: JSON.stringify({
+          action: 'recuperar',
+          user_id,
+          test_key,
+        }),
       });
+      
+      console.log('✅ Progreso recuperado:', result);
+      return result;
     } catch (error) {
-      console.error('Error al recuperar progreso:', error);
+      console.error('❌ Error al recuperar progreso:', error);
       return { ok: false, error: 'Error de conexión' };
     }
   }
 
   async eliminarProgreso(user_id: number, test_key: string): Promise<{ ok: boolean }> {
     try {
-      const formData = new URLSearchParams({
-        endpoint: 'test_progreso.php',
-        action: 'eliminar',
-        user_id: user_id.toString(),
-        test_key,
-      });
-
-      return await this.callAPI('', {
+      console.log('🗑️ Eliminando progreso:', { user_id, test_key });
+      
+      const result = await this.callAPI('test_progreso.php', {
         method: 'POST',
-        body: formData.toString(),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        body: JSON.stringify({
+          action: 'eliminar',
+          user_id,
+          test_key,
+        }),
       });
+      
+      console.log('✅ Progreso eliminado:', result);
+      return result;
     } catch (error) {
-      console.error('Error al eliminar progreso:', error);
+      console.error('❌ Error al eliminar progreso:', error);
       return { ok: false };
     }
   }
