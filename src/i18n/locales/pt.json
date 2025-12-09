@@ -184,7 +184,8 @@
     "yes": "Sim",
     "no": "Não",
     "error": "Erro",
-    "success": "Sucesso"
+    "success": "Sucesso",
+    "week": "Semana"
   },
   "test": {
     "choosePracticeMode": "Escolha o modo de prática",
@@ -519,6 +520,7 @@
       "source": "Fonte",
       "session": "Sessão",
       "block": "Bloco",
+      "notGenerated": "não gerada",
       "weekNotGenerated": "Esta semana ainda não foi gerada. Clique em \"Gerar com IA\" para criá-la."
     }
   },
