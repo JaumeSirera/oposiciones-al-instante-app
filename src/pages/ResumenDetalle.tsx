@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ interface Detalle {
 }
 
 export default function ResumenDetalle() {
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -51,7 +53,7 @@ export default function ResumenDetalle() {
         }
       );
       
-      if (!response.ok) throw new Error('Error al cargar el resumen');
+      if (!response.ok) throw new Error(t('summaryDetail.errorLoading'));
       
       const data = await response.json();
       
@@ -60,19 +62,19 @@ export default function ResumenDetalle() {
       } else if (data?.error) {
         throw new Error(data.error);
       } else {
-        throw new Error('Formato de respuesta inválido');
+        throw new Error(t('summaries.invalidResponse'));
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudo cargar el resumen'
+        title: t('common.error'),
+        description: error.message || t('summaryDetail.couldNotLoad')
       });
       navigate('/resumenes');
     } finally {
       setLoading(false);
     }
-  }, [id, supabaseUrl, supabaseKey, navigate, toast]);
+  }, [id, navigate, toast, t]);
 
   const cargarTecnica = useCallback(async () => {
     if (!id) return;
@@ -88,7 +90,7 @@ export default function ResumenDetalle() {
         }
       );
       
-      if (!response.ok) throw new Error('Error al cargar la técnica');
+      if (!response.ok) throw new Error(t('summaryDetail.errorLoadingTechnique'));
       
       const data = await response.json();
       
@@ -100,7 +102,7 @@ export default function ResumenDetalle() {
     } finally {
       setTechLoading(false);
     }
-  }, [id, supabaseUrl, supabaseKey]);
+  }, [id, t]);
 
   const guardarTecnica = useCallback(async () => {
     if (!id) return;
@@ -121,29 +123,29 @@ export default function ResumenDetalle() {
         }
       );
       
-      if (!response.ok) throw new Error('Error al guardar la técnica');
+      if (!response.ok) throw new Error(t('summaryDetail.errorSavingTechnique'));
       
       const data = await response.json();
       
       if (data?.success) {
         toast({
-          title: "Éxito",
-          description: "Técnica guardada correctamente",
+          title: t('common.success'),
+          description: t('summaryDetail.techniqueSaved'),
         });
         setTechVisible(false);
       } else {
-        throw new Error(data?.error || 'Error al guardar');
+        throw new Error(data?.error || t('summaryDetail.errorSaving'));
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudo guardar la técnica'
+        title: t('common.error'),
+        description: error.message || t('summaryDetail.couldNotSaveTechnique')
       });
     } finally {
       setTechSaving(false);
     }
-  }, [id, techText, supabaseUrl, supabaseKey, toast]);
+  }, [id, techText, toast, t]);
 
   useEffect(() => {
     cargarDetalle();
@@ -171,55 +173,36 @@ export default function ResumenDetalle() {
         }
       );
       
-      if (!response.ok) throw new Error('Error al generar la técnica');
+      if (!response.ok) throw new Error(t('summaryDetail.errorGeneratingTechnique'));
       
       const data = await response.json();
       
       if (data?.tecnica) {
         setTechText(data.tecnica);
         toast({
-          title: "Éxito",
-          description: "Técnica generada con Gemini",
+          title: t('common.success'),
+          description: t('summaryDetail.techniqueGenerated'),
         });
       } else {
-        throw new Error(data?.error || 'Error al generar');
+        throw new Error(data?.error || t('summaryDetail.errorGenerating'));
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudo generar la técnica'
+        title: t('common.error'),
+        description: error.message || t('summaryDetail.couldNotGenerate')
       });
     } finally {
       setTechGenerating(false);
     }
-  }, [detalle, supabaseUrl, supabaseKey, toast]);
+  }, [detalle, supabaseUrl, supabaseKey, toast, t]);
 
   const insertTemplate = (template: string) => {
     const templates: Record<string, string> = {
-      'loci': `# Método de Loci (palacio de la memoria)
-1) Elige un lugar que conozcas muy bien (casa/recorrido).
-2) Divide el resumen en 8-12 ideas clave.
-3) Asigna cada idea a un "locus" (habitación/objeto) y crea una imagen vívida y exagerada.
-4) Recorre mentalmente el itinerario para recordar las ideas en orden.
-5) Repaso espaciado: 10 min, 1 día, 3 días, 1 semana, 1 mes.`,
-      'feynman': `# Técnica Feynman
-1) Escribe el tema como si se lo explicaras a un niño de 12 años.
-2) Detecta lagunas (donde uses jerga o no puedas simplificar).
-3) Vuelve a la fuente, comprende y reescribe con palabras simples.
-4) Crea un ejemplo numérico del resumen y una analogía cotidiana.
-5) Repite hasta que puedas contarlo en 2 minutos sin mirar.`,
-      'acronimo': `# Acrónimo / Acróstico
-1) Toma las palabras clave del resumen.
-2) Extrae iniciales y forma un acrónimo fácil de pronunciar (o una frase).
-3) Refuerza con una imagen mental que conecte el acrónimo con el tema.
-4) Practica evocación: intenta recordar cada palabra a partir del acrónimo.`,
-      'flashcards': `# Flashcards + Repetición espaciada
-1) Divide el resumen en preguntas y respuestas breves.
-2) Crea tarjetas (anverso pregunta, reverso respuesta).
-3) Usa un algoritmo de espaciamiento (2d, 4d, 7d, 15d…).
-4) Marca como "difícil" lo que falle y reduce el intervalo.
-5) Mezcla tarjetas y autoexplica la respuesta en voz alta.`,
+      'loci': t('summaryDetail.templates.loci'),
+      'feynman': t('summaryDetail.templates.feynman'),
+      'acronimo': t('summaryDetail.templates.acronym'),
+      'flashcards': t('summaryDetail.templates.flashcards'),
     };
     
     const txt = templates[template] || '';
@@ -235,7 +218,7 @@ export default function ResumenDetalle() {
     if (!fecha) return '-';
     const date = new Date(fecha);
     if (isNaN(date.getTime())) return fecha;
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(i18n.language, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -257,10 +240,10 @@ export default function ResumenDetalle() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <p className="text-destructive mb-4">Resumen no encontrado</p>
+            <p className="text-destructive mb-4">{t('summaryDetail.notFound')}</p>
             <Button onClick={() => navigate('/resumenes')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver a resúmenes
+              {t('summaryDetail.backToSummaries')}
             </Button>
           </CardContent>
         </Card>
@@ -277,14 +260,14 @@ export default function ResumenDetalle() {
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver a resúmenes
+          {t('summaryDetail.backToSummaries')}
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-start gap-2">
               <FileText className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
-              <span>{detalle.tema || '(Sin tema)'}</span>
+              <span>{detalle.tema || t('summaryDetail.noTopic')}</span>
             </CardTitle>
             {detalle.seccion && (
               <CardDescription className="text-base font-medium">
@@ -294,9 +277,9 @@ export default function ResumenDetalle() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">Resumen:</h3>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">{t('summaryDetail.summary')}:</h3>
               <p className="text-base leading-relaxed whitespace-pre-wrap">
-                {detalle.resumen || 'Sin contenido'}
+                {detalle.resumen || t('summaryDetail.noContent')}
               </p>
             </div>
 
@@ -305,7 +288,7 @@ export default function ResumenDetalle() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               {detalle.archivo_nombre && (
                 <div>
-                  <h3 className="font-semibold text-muted-foreground mb-1">Archivo original:</h3>
+                  <h3 className="font-semibold text-muted-foreground mb-1">{t('summaryDetail.originalFile')}:</h3>
                   <p className="flex items-center gap-2">
                     <FileText className="w-4 h-4" />
                     {detalle.archivo_nombre}
@@ -316,14 +299,14 @@ export default function ResumenDetalle() {
               
               {detalle.archivo_tipo && (
                 <div>
-                  <h3 className="font-semibold text-muted-foreground mb-1">Tipo:</h3>
+                  <h3 className="font-semibold text-muted-foreground mb-1">{t('summaryDetail.type')}:</h3>
                   <p>{detalle.archivo_tipo}</p>
                 </div>
               )}
               
               {detalle.fecha && (
                 <div>
-                  <h3 className="font-semibold text-muted-foreground mb-1">Fecha:</h3>
+                  <h3 className="font-semibold text-muted-foreground mb-1">{t('summaryDetail.date')}:</h3>
                   <p className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     {formatDate(detalle.fecha)}
@@ -345,20 +328,20 @@ export default function ResumenDetalle() {
                   }}
                 >
                   <Brain className="w-4 h-4 mr-2" />
-                  Técnica de memorización
+                  {t('summaryDetail.memorizationTechnique')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Memorizar este resumen</DialogTitle>
+                  <DialogTitle>{t('summaryDetail.memorizeThis')}</DialogTitle>
                   <DialogDescription>
-                    Añade tu propia técnica o inserta una plantilla
+                    {t('summaryDetail.addTechniqueOrTemplate')}
                   </DialogDescription>
                 </DialogHeader>
                 
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm font-medium mb-2">Generar con IA (Gemini):</p>
+                    <p className="text-sm font-medium mb-2">{t('summaryDetail.generateWithAI')}:</p>
                     <div className="flex flex-wrap gap-2">
                       <Button 
                         size="sm" 
@@ -366,7 +349,7 @@ export default function ResumenDetalle() {
                         onClick={() => generarConGemini('feynman')}
                         disabled={techGenerating}
                       >
-                        {techGenerating ? 'Generando...' : 'Generar Feynman'}
+                        {techGenerating ? t('summaryDetail.generating') : t('summaryDetail.generateFeynman')}
                       </Button>
                       <Button 
                         size="sm" 
@@ -374,7 +357,7 @@ export default function ResumenDetalle() {
                         onClick={() => generarConGemini('loci')}
                         disabled={techGenerating}
                       >
-                        {techGenerating ? 'Generando...' : 'Generar Loci'}
+                        {techGenerating ? t('summaryDetail.generating') : t('summaryDetail.generateLoci')}
                       </Button>
                       <Button 
                         size="sm" 
@@ -382,7 +365,7 @@ export default function ResumenDetalle() {
                         onClick={() => generarConGemini('mapa')}
                         disabled={techGenerating}
                       >
-                        {techGenerating ? 'Generando...' : 'Generar Mapa Mental'}
+                        {techGenerating ? t('summaryDetail.generating') : t('summaryDetail.generateMindMap')}
                       </Button>
                       <Button 
                         size="sm" 
@@ -390,7 +373,7 @@ export default function ResumenDetalle() {
                         onClick={() => generarConGemini('preguntas')}
                         disabled={techGenerating}
                       >
-                        {techGenerating ? 'Generando...' : 'Generar Q&A'}
+                        {techGenerating ? t('summaryDetail.generating') : t('summaryDetail.generateQA')}
                       </Button>
                     </div>
                   </div>
@@ -398,7 +381,7 @@ export default function ResumenDetalle() {
                   <Separator />
 
                   <div>
-                    <p className="text-sm font-medium mb-2">O inserta una plantilla:</p>
+                    <p className="text-sm font-medium mb-2">{t('summaryDetail.orInsertTemplate')}:</p>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={() => insertTemplate('loci')}>
                         Loci
@@ -407,7 +390,7 @@ export default function ResumenDetalle() {
                         Feynman
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => insertTemplate('acronimo')}>
-                        Acrónimo
+                        {t('summaryDetail.acronym')}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => insertTemplate('flashcards')}>
                         Flashcards
@@ -424,11 +407,11 @@ export default function ResumenDetalle() {
                       <Textarea
                         value={techText}
                         onChange={(e) => setTechText(e.target.value)}
-                        placeholder="Describe aquí cómo memorizarás este contenido (pasos, imágenes mentales, repaso espaciado, etc.)"
+                        placeholder={t('summaryDetail.describeHowToMemorize')}
                         className="min-h-[300px]"
                       />
                       <p className="text-sm text-muted-foreground">
-                        {techText.length} caracteres
+                        {techText.length} {t('summaryDetail.characters')}
                       </p>
                     </>
                   )}
@@ -438,14 +421,14 @@ export default function ResumenDetalle() {
                       variant="outline"
                       onClick={() => setTechVisible(false)}
                     >
-                      Cerrar
+                      {t('common.close')}
                     </Button>
                     <Button
                       onClick={guardarTecnica}
                       disabled={techSaving || techLoading}
                     >
                       {techSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      Guardar
+                      {t('common.save')}
                     </Button>
                   </div>
                 </div>
