@@ -292,6 +292,7 @@ class TestService {
     respuestas: Respuesta[];
     correcta: string;
     elegida: string;
+    idioma?: string;
   }): Promise<{ success: boolean; explicacion?: string; error?: string }> {
     try {
       const { data: result, error } = await supabase.functions.invoke('profesor-virtual', {
