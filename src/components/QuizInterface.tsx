@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ interface QuizInterfaceProps {
 }
 
 const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExit }) => {
+  const { t } = useTranslation();
   const [questions, setQuestions] = useState<Pregunta[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -99,7 +101,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'No se encontraron preguntas con los criterios seleccionados',
+          description: t('quiz.noQuestionsFound'),
         });
         onExit();
         return;
@@ -115,7 +117,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No se pudieron cargar las preguntas',
+        description: t('quiz.couldNotLoadQuestions'),
       });
       onExit();
     } finally {
@@ -208,8 +210,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
     setIsTimerActive(false);
     
     toast({
-      title: '¡Tiempo agotado!',
-      description: 'El examen ha finalizado automáticamente',
+      title: t('quiz.timeUp'),
+      description: t('quiz.examFinishedAuto'),
       variant: 'destructive',
     });
 
@@ -386,7 +388,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
     if (result.success) {
       setNuevoComentario('');
       loadComentarios();
-      toast({ title: 'Comentario añadido' });
+      toast({ title: t('quiz.commentAdded') });
     } else {
       toast({ title: 'Error', description: result.error, variant: 'destructive' });
     }
@@ -399,20 +401,20 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
       setEditandoId(null);
       setTextoEditado('');
       loadComentarios();
-      toast({ title: 'Comentario actualizado' });
+      toast({ title: t('quiz.commentUpdated') });
     } else {
-      toast({ title: 'Error al actualizar', variant: 'destructive' });
+      toast({ title: t('quiz.errorUpdating'), variant: 'destructive' });
     }
   };
 
   const handleDeleteComentario = async (id: number) => {
-    if (!confirm('¿Eliminar este comentario?')) return;
+    if (!confirm(t('quiz.deleteComment'))) return;
     const result = await testService.deleteComentario(id, user?.nivel || '');
     if (result.success) {
       loadComentarios();
-      toast({ title: 'Comentario eliminado' });
+      toast({ title: t('quiz.commentDeleted') });
     } else {
-      toast({ title: 'Error al eliminar', variant: 'destructive' });
+      toast({ title: t('quiz.errorDeleting'), variant: 'destructive' });
     }
   };
 
@@ -435,14 +437,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
       } else {
         toast({ 
           title: 'Error', 
-          description: result.error || 'Error al obtener explicación',
+          description: result.error || t('quiz.errorGettingExplanation'),
           variant: 'destructive' 
         });
       }
     } catch (error) {
       toast({ 
         title: 'Error', 
-        description: 'Error al conectar con el profesor virtual',
+        description: t('quiz.errorConnectingProfessor'),
         variant: 'destructive' 
       });
     } finally {
@@ -455,7 +457,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-lg text-gray-600">Cargando preguntas...</p>
+          <p className="text-lg text-gray-600">{t('quiz.loadingQuestions')}</p>
         </div>
       </div>
     );
@@ -472,12 +474,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         <div className="flex items-center justify-between mb-8">
           <Button variant="ghost" onClick={onExit}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Salir del Test
+            {t('quiz.exitTest')}
           </Button>
           <div className="flex items-center space-x-4">
             {config.tipo === 'examen' && (
               <Badge variant="destructive" className="text-sm font-semibold">
-                MODO EXAMEN
+                {t('quiz.examMode')}
               </Badge>
             )}
             <div className="flex items-center space-x-2">
@@ -496,7 +498,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         <div className="mb-8">
           <Progress value={progress} className="h-2" />
           <div className="text-center mt-2 text-sm text-gray-600">
-            Progreso: {Math.round(progress)}%
+            {t('quiz.progress')}: {Math.round(progress)}%
           </div>
         </div>
 
@@ -564,10 +566,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold mb-2">
-                    {selectedAnswer === currentQuestion.correcta_indice ? '¡Correcto!' : 'Incorrecto'}
+                    {selectedAnswer === currentQuestion.correcta_indice ? t('quiz.correct') : t('quiz.incorrect')}
                   </h3>
                   <p className="text-gray-700">
-                    La respuesta correcta es: {String.fromCharCode(64 + parseInt(currentQuestion.correcta_indice))}. {
+                    {t('quiz.correctAnswerIs')}: {String.fromCharCode(64 + parseInt(currentQuestion.correcta_indice))}. {
                       currentQuestion.respuestas.find(r => r.indice === currentQuestion.correcta_indice)?.respuesta
                     }
                   </p>
@@ -577,18 +579,18 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                     <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
                       <div className="flex items-center gap-2 mb-2">
                         <BookOpen className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-800">Referencia del documento</span>
+                        <span className="text-sm font-medium text-blue-800">{t('quiz.documentReference')}</span>
                       </div>
                       <div className="space-y-1 text-sm text-gray-600">
                         <p className="flex items-center gap-2">
                           <FileText className="w-3 h-3" />
-                          <span className="font-medium">Documento:</span> {currentQuestion.documento}
+                          <span className="font-medium">{t('quiz.document')}:</span> {currentQuestion.documento}
                         </p>
                         {currentQuestion.pagina && (
-                          <p><span className="font-medium">Página:</span> {currentQuestion.pagina}</p>
+                          <p><span className="font-medium">{t('quiz.page')}:</span> {currentQuestion.pagina}</p>
                         )}
                         {currentQuestion.ubicacion && (
-                          <p><span className="font-medium">Ubicación:</span> {currentQuestion.ubicacion}</p>
+                          <p><span className="font-medium">{t('quiz.location')}:</span> {currentQuestion.ubicacion}</p>
                         )}
                         {currentQuestion.cita && (
                           <div className="mt-2 p-2 bg-gray-50 rounded border-l-2 border-blue-400 italic text-gray-700">
@@ -608,7 +610,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         {showExplanation && (
           <div className="text-center">
             <Button onClick={handleNextQuestion} size="lg" className="bg-blue-600 hover:bg-blue-700">
-              {currentQuestionIndex < questions.length - 1 ? 'Siguiente Pregunta' : 'Finalizar Test'}
+              {currentQuestionIndex < questions.length - 1 ? t('quiz.nextQuestion') : t('quiz.finishTest')}
             </Button>
           </div>
         )}
@@ -616,7 +618,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         {/* Score Display */}
         <div className="text-center mt-8">
           <div className="text-lg text-gray-600">
-            Puntuación actual: <span className="font-bold text-blue-600">{score}/{currentQuestionIndex + (showExplanation ? 1 : 0)}</span>
+            {t('quiz.currentScore')}: <span className="font-bold text-blue-600">{score}/{currentQuestionIndex + (showExplanation ? 1 : 0)}</span>
           </div>
         </div>
 
@@ -624,15 +626,15 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         {selectedAnswer && (
           <Card className="mt-8">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Comentarios
-              </CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              {t('quiz.comments')}
+            </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {comentarios.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay comentarios aún</p>
+                  <p className="text-sm text-muted-foreground">{t('quiz.noCommentsYet')}</p>
                 ) : (
                   comentarios.map((c) => (
                     <div key={c.id} className="border-b pb-3 last:border-b-0">
@@ -645,10 +647,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                           />
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => handleEditComentario(c.id)}>
-                              Guardar
+                              {t('quiz.save')}
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setEditandoId(null)}>
-                              Cancelar
+                              {t('quiz.cancel')}
                             </Button>
                           </div>
                         </div>
@@ -656,7 +658,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                         <>
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <p className="font-semibold text-sm">{c.username || 'Usuario'}</p>
+                              <p className="font-semibold text-sm">{c.username || t('quiz.user')}</p>
                               <p className="text-sm mt-1">{c.comentario}</p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {c.fecha?.substring(0, 16).replace('T', ' ')}
@@ -693,7 +695,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 )}
                 <div className="space-y-2 pt-2">
                   <Textarea
-                    placeholder="Escribe tu comentario..."
+                    placeholder={t('quiz.writeComment')}
                     value={nuevoComentario}
                     onChange={(e) => setNuevoComentario(e.target.value)}
                     rows={3}
@@ -704,7 +706,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                     className="w-full sm:w-auto"
                   >
                     <Send className="h-4 w-4 mr-2" />
-                    Enviar comentario
+                    {t('quiz.sendComment')}
                   </Button>
                 </div>
               </div>
@@ -719,7 +721,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-purple-900">
                   <GraduationCap className="h-6 w-6" />
-                  Profesor Virtual
+                  {t('quiz.virtualProfessor')}
                 </CardTitle>
                 <Button
                   onClick={handlePedirExplicacion}
@@ -731,12 +733,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                   {cargandoProfesor ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Pensando...
+                      {t('quiz.thinking')}
                     </>
                   ) : (
                     <>
                       <GraduationCap className="h-4 w-4 mr-2" />
-                      Pedir Explicación
+                      {t('quiz.askExplanation')}
                     </>
                   )}
                 </Button>
@@ -751,7 +753,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 </div>
               ) : (
                 <p className="text-sm text-purple-700">
-                  Haz clic en "Pedir Explicación" para obtener una explicación detallada de la respuesta correcta.
+                  {t('quiz.clickToGetExplanation')}
                 </p>
               )}
             </CardContent>
