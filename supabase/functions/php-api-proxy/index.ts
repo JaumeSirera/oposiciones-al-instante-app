@@ -709,7 +709,7 @@ Deno.serve(async (req) => {
       return await handleGenerarPsicotecnicos(bodyData, corsHeaders);
     }
     
-    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_tests_realizados.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php' || cleanEndpoint === 'planes_fisicos.php' || cleanEndpoint === 'recordatorios_plan.php' || cleanEndpoint === 'obtener_plan_json.php') {
+    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_test_realizado.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php' || cleanEndpoint === 'planes_fisicos.php' || cleanEndpoint === 'recordatorios_plan.php' || cleanEndpoint === 'obtener_plan_json.php') {
       // Direct API calls to specific endpoints
       const baseUrl = 'https://oposiciones-test.com/api/';
       
@@ -718,6 +718,7 @@ Deno.serve(async (req) => {
       if (endpointParams) queryParams.push(endpointParams);
       
       // For planes_estudio.php, planes_fisicos.php or recordatorios_plan.php, extract action from body and add to URL
+      // But NOT for test_progreso.php - it needs action in body
       if ((cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'planes_fisicos.php' || cleanEndpoint === 'recordatorios_plan.php') && bodyData?.action) {
         queryParams.push(`action=${bodyData.action}`);
       }
@@ -737,12 +738,21 @@ Deno.serve(async (req) => {
         ? `${baseUrl}${cleanEndpoint}?${queryParams.join('&')}`
         : `${baseUrl}${cleanEndpoint}`;
       
-      // Remove the 'endpoint', 'action', and 'method' fields from bodyData before sending to PHP API
+      // Remove the 'endpoint' and 'method' fields from bodyData before sending to PHP API
+      // For test_progreso.php, KEEP the action in the body (it needs it)
       if (bodyData && typeof bodyData === 'object') {
-        const { endpoint: _, method: __, action: ___, body: bodyContent, ...cleanBody } = bodyData;
-        // If there's a 'body' field, use its content directly
-        const finalData = bodyContent || cleanBody;
-        finalBody = Object.keys(finalData).length > 0 ? JSON.stringify(finalData) : null;
+        if (cleanEndpoint === 'test_progreso.php') {
+          // Keep action in body for test_progreso.php
+          const { endpoint: _, method: __, body: bodyContent, ...cleanBody } = bodyData;
+          const finalData = bodyContent || cleanBody;
+          finalBody = Object.keys(finalData).length > 0 ? JSON.stringify(finalData) : null;
+          console.log('[test_progreso] Sending body with action:', finalBody);
+        } else {
+          const { endpoint: _, method: __, action: ___, body: bodyContent, ...cleanBody } = bodyData;
+          // If there's a 'body' field, use its content directly
+          const finalData = bodyContent || cleanBody;
+          finalBody = Object.keys(finalData).length > 0 ? JSON.stringify(finalData) : null;
+        }
       } else {
         finalBody = bodyData ? JSON.stringify(bodyData) : null;
       }
