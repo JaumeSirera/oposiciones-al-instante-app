@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
@@ -61,6 +62,7 @@ interface Recordatorio {
 }
 
 export default function AdministrarRecordatorios() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [recordatorios, setRecordatorios] = useState<Recordatorio[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,11 +118,11 @@ export default function AdministrarRecordatorios() {
       if (data.success) {
         setRecordatorios(data.recordatorios || []);
       } else {
-        throw new Error(data.error || "Error al cargar recordatorios");
+        throw new Error(data.error || t('reminders.errorLoading'));
       }
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error("Error al cargar recordatorios");
+      toast.error(t('reminders.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -139,9 +141,9 @@ export default function AdministrarRecordatorios() {
       let temas: string[];
       try {
         temas = JSON.parse(editTemas);
-        if (!Array.isArray(temas)) throw new Error("Los temas deben ser un array");
+        if (!Array.isArray(temas)) throw new Error(t('reminders.topicsMustBeArray'));
       } catch {
-        toast.error("Formato JSON inválido para temas");
+        toast.error(t('reminders.invalidJsonFormat'));
         return;
       }
 
@@ -159,7 +161,7 @@ export default function AdministrarRecordatorios() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success("Recordatorio actualizado");
+        toast.success(t('reminders.updated'));
         setEditandoRecordatorio(null);
         cargarRecordatorios();
       } else {
@@ -167,12 +169,12 @@ export default function AdministrarRecordatorios() {
       }
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error("Error al actualizar recordatorio");
+      toast.error(t('reminders.errorUpdating'));
     }
   };
 
   const eliminarRecordatorio = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este recordatorio?")) return;
+    if (!confirm(t('reminders.confirmDelete'))) return;
 
     try {
       const { data, error } = await supabase.functions.invoke("php-api-proxy", {
@@ -187,19 +189,19 @@ export default function AdministrarRecordatorios() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success("Recordatorio eliminado");
+        toast.success(t('reminders.deleted'));
         cargarRecordatorios();
       } else {
         throw new Error(data.error);
       }
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error("Error al eliminar recordatorio");
+      toast.error(t('reminders.errorDeleting'));
     }
   };
 
   const enviarRecordatorioAhora = async (id: number) => {
-    if (!confirm("¿Enviar este recordatorio ahora?")) return;
+    if (!confirm(t('reminders.confirmSendNow'))) return;
 
     try {
       const { data, error } = await supabase.functions.invoke("php-api-proxy", {
@@ -214,14 +216,14 @@ export default function AdministrarRecordatorios() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success("Recordatorio enviado");
+        toast.success(t('reminders.sent'));
         cargarRecordatorios();
       } else {
         throw new Error(data.error);
       }
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error("Error al enviar recordatorio");
+      toast.error(t('reminders.errorSending'));
     }
   };
 
@@ -237,15 +239,15 @@ export default function AdministrarRecordatorios() {
   return (
     <>
       <Helmet>
-        <title>Administrar Recordatorios | Oposiciones Test</title>
+        <title>{t('reminders.pageTitle')} | Oposiciones Test</title>
       </Helmet>
 
       <div className="container mx-auto py-8 px-4 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Administrar Recordatorios</h1>
+            <h1 className="text-3xl font-bold">{t('reminders.title')}</h1>
             <p className="text-muted-foreground mt-2">
-              Gestiona todos los recordatorios de planes de estudio y físicos
+              {t('reminders.subtitle')}
             </p>
           </div>
           <Button onClick={cargarRecordatorios} variant="outline" size="icon">
@@ -258,17 +260,17 @@ export default function AdministrarRecordatorios() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              Filtros
+              {t('reminders.filters')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <Label>Buscar</Label>
+                <Label>{t('reminders.search')}</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Plan, usuario, email..."
+                    placeholder={t('reminders.searchPlaceholder')}
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}
                     className="pl-9"
@@ -277,35 +279,35 @@ export default function AdministrarRecordatorios() {
               </div>
 
               <div>
-                <Label>Tipo de Plan</Label>
+                <Label>{t('reminders.planType')}</Label>
                 <Select value={filtroTipoPlan} onValueChange={setFiltroTipoPlan}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="estudio">Estudio</SelectItem>
-                    <SelectItem value="fisico">Físico</SelectItem>
+                    <SelectItem value="todos">{t('reminders.all')}</SelectItem>
+                    <SelectItem value="estudio">{t('reminders.study')}</SelectItem>
+                    <SelectItem value="fisico">{t('reminders.physical')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label>Estado</Label>
+                <Label>{t('reminders.status')}</Label>
                 <Select value={filtroEnviado} onValueChange={setFiltroEnviado}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="pendientes">Pendientes</SelectItem>
-                    <SelectItem value="enviados">Enviados</SelectItem>
+                    <SelectItem value="todos">{t('reminders.all')}</SelectItem>
+                    <SelectItem value="pendientes">{t('reminders.pending')}</SelectItem>
+                    <SelectItem value="enviados">{t('reminders.sentStatus')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label>Fecha Desde</Label>
+                <Label>{t('reminders.dateFrom')}</Label>
                 <Input
                   type="date"
                   value={filtroFechaDesde}
@@ -314,7 +316,7 @@ export default function AdministrarRecordatorios() {
               </div>
 
               <div>
-                <Label>Fecha Hasta</Label>
+                <Label>{t('reminders.dateTo')}</Label>
                 <Input
                   type="date"
                   value={filtroFechaHasta}
@@ -329,29 +331,29 @@ export default function AdministrarRecordatorios() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Recordatorios ({recordatoriosFiltrados.length})</span>
+              <span>{t('reminders.reminders')} ({recordatoriosFiltrados.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">Cargando...</div>
+              <div className="text-center py-8">{t('reminders.loading')}</div>
             ) : recordatoriosFiltrados.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No hay recordatorios con los filtros seleccionados
+                {t('reminders.noReminders')}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Usuario</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Temas</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
+                      <TableHead>{t('reminders.date')}</TableHead>
+                      <TableHead>{t('reminders.plan')}</TableHead>
+                      <TableHead>{t('reminders.type')}</TableHead>
+                      <TableHead>{t('reminders.user')}</TableHead>
+                      <TableHead>{t('reminders.email')}</TableHead>
+                      <TableHead>{t('reminders.topics')}</TableHead>
+                      <TableHead>{t('reminders.statusColumn')}</TableHead>
+                      <TableHead className="text-right">{t('reminders.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -370,7 +372,7 @@ export default function AdministrarRecordatorios() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={recordatorio.tipo_plan === "estudio" ? "default" : "secondary"}>
-                            {recordatorio.tipo_plan === "estudio" ? "Estudio" : "Físico"}
+                            {recordatorio.tipo_plan === "estudio" ? t('reminders.study') : t('reminders.physical')}
                           </Badge>
                         </TableCell>
                         <TableCell>{recordatorio.nombre_usuario}</TableCell>
@@ -382,19 +384,19 @@ export default function AdministrarRecordatorios() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {recordatorio.temas.length} tema(s)
+                            {recordatorio.temas.length} {t('reminders.topicsCount')}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           {recordatorio.enviado ? (
                             <div className="flex items-center gap-2 text-green-600">
                               <CheckCircle2 className="h-4 w-4" />
-                              Enviado
+                              {t('reminders.sentStatus')}
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-orange-600">
                               <Clock className="h-4 w-4" />
-                              Pendiente
+                              {t('reminders.pending')}
                             </div>
                           )}
                         </TableCell>
@@ -446,11 +448,11 @@ export default function AdministrarRecordatorios() {
       >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Editar Recordatorio</DialogTitle>
+            <DialogTitle>{t('reminders.editReminder')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Fecha</Label>
+              <Label>{t('reminders.date')}</Label>
               <Input
                 type="date"
                 value={editFecha}
@@ -458,7 +460,7 @@ export default function AdministrarRecordatorios() {
               />
             </div>
             <div>
-              <Label>Temas (JSON)</Label>
+              <Label>{t('reminders.topicsJson')}</Label>
               <Textarea
                 value={editTemas}
                 onChange={(e) => setEditTemas(e.target.value)}
@@ -467,15 +469,15 @@ export default function AdministrarRecordatorios() {
                 placeholder='["Tema 1", "Tema 2", "Tema 3"]'
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Formato JSON de array de strings
+                {t('reminders.jsonFormat')}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditandoRecordatorio(null)}>
-              Cancelar
+              {t('reminders.cancel')}
             </Button>
-            <Button onClick={guardarEdicion}>Guardar</Button>
+            <Button onClick={guardarEdicion}>{t('reminders.save')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
