@@ -184,7 +184,8 @@
     "yes": "Ja",
     "no": "Nein",
     "error": "Fehler",
-    "success": "Erfolg"
+    "success": "Erfolg",
+    "week": "Woche"
   },
   "test": {
     "choosePracticeMode": "Übungsmodus wählen",
@@ -519,6 +520,7 @@
       "source": "Quelle",
       "session": "Sitzung",
       "block": "Block",
+      "notGenerated": "nicht generiert",
       "weekNotGenerated": "Diese Woche wurde noch nicht generiert. Klicken Sie auf \"Mit KI generieren\", um sie zu erstellen."
     }
   },

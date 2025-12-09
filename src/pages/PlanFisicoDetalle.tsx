@@ -247,11 +247,11 @@ export default function PlanFisicoDetalle() {
     const loadingOne = !!imgLoading[key];
 
     const detalles: string[] = [];
-    if (ej.series) detalles.push(`Series: ${ej.series}`);
-    if (ej.reps) detalles.push(`Reps: ${ej.reps}`);
-    if (ej.rpe) detalles.push(`RPE: ${ej.rpe}`);
-    if (ej.tempo) detalles.push(`Tempo: ${ej.tempo}`);
-    if (ej.descanso) detalles.push(`Descanso: ${ej.descanso}`);
+    if (ej.series) detalles.push(`${t('physicalPlans.detail.series')}: ${ej.series}`);
+    if (ej.reps) detalles.push(`${t('physicalPlans.detail.reps')}: ${ej.reps}`);
+    if (ej.rpe) detalles.push(`${t('physicalPlans.detail.rpe')}: ${ej.rpe}`);
+    if (ej.tempo) detalles.push(`${t('physicalPlans.detail.tempo')}: ${ej.tempo}`);
+    if (ej.descanso) detalles.push(`${t('physicalPlans.detail.rest')}: ${ej.descanso}`);
 
     return (
       <div key={ejidx} className="border rounded-lg p-4 mb-3 bg-card">
@@ -266,14 +266,14 @@ export default function PlanFisicoDetalle() {
             )}
             {ej.notas && (
               <p className="text-sm text-muted-foreground mt-1">
-                <span className="font-medium">Notas:</span> {ej.notas}
+                <span className="font-medium">{t('physicalPlans.detail.notes')}:</span> {ej.notas}
               </p>
             )}
             {ej.explicacion_neofita && (
               <div className="mt-2 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
                 <p className="text-sm">
                   <span className="font-medium text-green-800 dark:text-green-200">
-                    Para principiantes:
+                    {t('physicalPlans.detail.forBeginners')}
                   </span>{' '}
                   {ej.explicacion_neofita}
                 </p>
@@ -317,7 +317,7 @@ export default function PlanFisicoDetalle() {
               ))}
             </div>
             {preview[0]?.credit && (
-              <p className="text-xs text-muted-foreground mt-2">Fuente: {preview[0].credit}</p>
+              <p className="text-xs text-muted-foreground mt-2">{t('physicalPlans.detail.source')}: {preview[0].credit}</p>
             )}
           </div>
         )}
@@ -405,24 +405,25 @@ export default function PlanFisicoDetalle() {
                 <AccordionItem key={idx} value={`semana-${idx}`}>
                   <AccordionTrigger>
                     {semana
-                      ? `${semana.titulo || `Semana ${semanaN}`} (${format(
+                      ? `${semana.titulo || `${t('common.week')} ${semanaN}`} (${format(
                           new Date(semana.fecha_inicio || ''),
                           'dd/MM/yyyy',
                           { locale: es }
                         )} → ${format(new Date(semana.fecha_fin || ''), 'dd/MM/yyyy', {
                           locale: es,
                         })})`
-                      : `Semana ${semanaN} (sin generar)`}
+                      : `${t('common.week')} ${semanaN} (${t('physicalPlans.detail.notGenerated')})`}
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4 pt-4">
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-2">
                           <Checkbox
+                            id={`week-${idx}`}
                             checked={avance[idx] || false}
                             onCheckedChange={(checked) => toggleAvance(idx, checked as boolean)}
                           />
-                          <span className="text-sm">Marcar semana {semanaN} como completada</span>
+                          <label htmlFor={`week-${idx}`} className="text-sm">{t('physicalPlans.detail.markWeekCompleted', { week: semanaN })}</label>
                         </div>
 
                         {loadingWeek === idx ? (
@@ -434,7 +435,7 @@ export default function PlanFisicoDetalle() {
                             onClick={() => handleGenerarSemana(idx)}
                           >
                             <Sparkles className="h-4 w-4 mr-2" />
-                            {semana ? 'Regenerar' : 'Generar'} con IA
+                            {semana ? t('physicalPlans.detail.regenerate') : t('physicalPlans.detail.generate')} {t('physicalPlans.detail.withAI')}
                           </Button>
                         )}
                       </div>
@@ -443,14 +444,14 @@ export default function PlanFisicoDetalle() {
                         <>
                           {semana.resumen && (
                             <div className="p-3 bg-muted rounded">
-                              <h4 className="font-semibold mb-1">Foco semanal</h4>
+                              <h4 className="font-semibold mb-1">{t('physicalPlans.detail.weekFocus')}</h4>
                               <p className="text-sm">{semana.resumen}</p>
                             </div>
                           )}
 
                           {semana.glosario && semana.glosario.length > 0 && (
                             <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded border">
-                              <h4 className="font-semibold mb-2">Glosario</h4>
+                              <h4 className="font-semibold mb-2">{t('physicalPlans.detail.glossary')}</h4>
                               {semana.glosario.map((g, i) => (
                                 <div key={i} className="mb-2">
                                   <p className="font-medium text-sm">{g.termino}</p>
@@ -463,18 +464,18 @@ export default function PlanFisicoDetalle() {
                           {Array.isArray(semana.sesiones) &&
                             semana.sesiones.map((ses, sidx) => (
                               <div key={sidx} className="space-y-3">
-                                <h4 className="font-bold text-lg">{ses.dia || `Sesión ${sidx + 1}`}</h4>
+                                <h4 className="font-bold text-lg">{ses.dia || `${t('physicalPlans.detail.session')} ${sidx + 1}`}</h4>
                                 {Array.isArray(ses.bloques) &&
                                   ses.bloques.map((bloq, bidx) => (
                                     <div key={bidx} className="border-l-4 border-primary pl-4 space-y-2">
-                                      <h5 className="font-semibold">{bloq.tipo || `Bloque ${bidx + 1}`}</h5>
+                                      <h5 className="font-semibold">{bloq.tipo || `${t('physicalPlans.detail.block')} ${bidx + 1}`}</h5>
                                       {bloq.descripcion && (
                                         <p className="text-sm text-muted-foreground">{bloq.descripcion}</p>
                                       )}
                                       {bloq.explicacion_neofita && (
                                         <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
                                           <p className="text-sm">
-                                            <span className="font-medium">Explicación fácil:</span>{' '}
+                                            <span className="font-medium">{t('physicalPlans.detail.easyExplanation')}:</span>{' '}
                                             {bloq.explicacion_neofita}
                                           </p>
                                         </div>

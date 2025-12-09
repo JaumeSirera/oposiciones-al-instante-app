@@ -184,7 +184,8 @@
     "yes": "是",
     "no": "否",
     "error": "错误",
-    "success": "成功"
+    "success": "成功",
+    "week": "周"
   },
   "test": {
     "choosePracticeMode": "选择练习模式",
@@ -519,6 +520,7 @@
       "source": "来源",
       "session": "课程",
       "block": "区块",
+      "notGenerated": "未生成",
       "weekNotGenerated": "本周尚未生成。点击\"AI生成\"来创建。"
     }
   },
