@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { testService, type Proceso } from '@/services/testService';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function CrearTest() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -63,8 +65,8 @@ export default function CrearTest() {
         console.error('Error al cargar procesos:', error);
         toast({
           variant: "destructive",
-          title: "Error al cargar procesos",
-          description: "No se pudieron cargar los procesos disponibles. Intenta recargar la página.",
+          title: t('createTest.errorLoadingProcesses'),
+          description: t('createTest.errorLoadingProcessesDesc'),
         });
         setProcesos([]);
       } finally {
@@ -72,7 +74,7 @@ export default function CrearTest() {
       }
     };
     loadProcesos();
-  }, [user, toast]);
+  }, [user, toast, t]);
 
   useEffect(() => {
     const loadSecciones = async () => {
@@ -92,15 +94,15 @@ export default function CrearTest() {
         setSecciones([]);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "No se pudieron cargar las secciones del proceso seleccionado.",
+          title: t('createTest.error'),
+          description: t('createTest.errorLoadingSections'),
         });
       } finally {
         setLoadingSecciones(false);
       }
     };
     loadSecciones();
-  }, [formData.proceso, useCustomProceso, toast]);
+  }, [formData.proceso, useCustomProceso, toast, t]);
 
   useEffect(() => {
     const loadTemas = async () => {
@@ -120,15 +122,15 @@ export default function CrearTest() {
         setTemas([]);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "No se pudieron cargar los temas de la sección seleccionada.",
+          title: t('createTest.error'),
+          description: t('createTest.errorLoadingTopics'),
         });
       } finally {
         setLoadingTemas(false);
       }
     };
     loadTemas();
-  }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion, toast]);
+  }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion, toast, t]);
 
   const handleArchivoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -146,20 +148,20 @@ export default function CrearTest() {
       });
 
       if (response.error) throw new Error(response.error.message);
-      if (!response.data?.texto) throw new Error('No se pudo extraer el texto');
+      if (!response.data?.texto) throw new Error(t('createTest.couldNotExtractText'));
 
       setFormData(prev => ({ ...prev, textoBase: response.data.texto }));
 
       toast({
-        title: "Texto extraído",
-        description: "El texto del documento se ha extraído correctamente",
+        title: t('createTest.textExtracted'),
+        description: t('createTest.textExtractedDesc'),
       });
     } catch (error: any) {
       console.error('Error:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "Error al extraer el texto del documento",
+        title: t('createTest.error'),
+        description: error.message || t('createTest.errorExtractingText'),
       });
       setArchivo(null);
     } finally {
@@ -173,8 +175,8 @@ export default function CrearTest() {
     if (!user?.id) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Debes iniciar sesión"
+        title: t('createTest.error'),
+        description: t('createTest.mustLogin')
       });
       return;
     }
@@ -182,8 +184,8 @@ export default function CrearTest() {
     if (!formData.textoBase) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes proporcionar un texto o subir un documento"
+        title: t('createTest.requiredField'),
+        description: t('createTest.mustProvideText')
       });
       return;
     }
@@ -191,8 +193,8 @@ export default function CrearTest() {
     if (!formData.proceso && !useCustomProceso) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes seleccionar un proceso"
+        title: t('createTest.requiredField'),
+        description: t('createTest.mustSelectProcess')
       });
       return;
     }
@@ -203,8 +205,8 @@ export default function CrearTest() {
     if (!seccionFinal) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes seleccionar o escribir una sección"
+        title: t('createTest.requiredField'),
+        description: t('createTest.mustSelectSection')
       });
       return;
     }
@@ -212,8 +214,8 @@ export default function CrearTest() {
     if (!temaFinal) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes seleccionar o escribir un tema"
+        title: t('createTest.requiredField'),
+        description: t('createTest.mustSelectTopic')
       });
       return;
     }
@@ -245,14 +247,14 @@ export default function CrearTest() {
         const crearProcesoData = await crearProcesoResponse.json();
         
         if (!crearProcesoData.ok) {
-          throw new Error(crearProcesoData.error || 'No se pudo crear el proceso');
+          throw new Error(crearProcesoData.error || t('createTest.couldNotCreateProcess'));
         }
         
         procesoId = crearProcesoData.id_proceso;
       }
 
       if (!procesoId) {
-        throw new Error('No se pudo determinar el ID del proceso');
+        throw new Error(t('createTest.couldNotDetermineProcess'));
       }
       
       // Check if text is long enough to use streaming
@@ -320,14 +322,14 @@ export default function CrearTest() {
                   setProgressInfo({
                     current: event.current,
                     total: event.total,
-                    message: `Completado fragmento ${event.current}/${event.total}`,
+                    message: t('createTest.completedFragment', { current: event.current, total: event.total }),
                     generated: event.totalGenerated
                   });
                 } else if (event.type === 'complete') {
                   setAbortController(null);
                   toast({
-                    title: "¡Preguntas guardadas!",
-                    description: `Se han generado y guardado ${event.generadas} preguntas en la base de datos (${event.chunks_procesados}/${event.total_chunks} fragmentos)`
+                    title: t('createTest.questionsSaved'),
+                    description: t('createTest.questionsSavedDesc', { count: event.generadas, chunks: event.chunks_procesados, total: event.total_chunks })
                   });
                   setFormData(prev => ({ ...prev, numPreguntas: 50, textoBase: '' }));
                   setProgressInfo(null);
@@ -369,12 +371,12 @@ export default function CrearTest() {
 
         if (data.ok) {
           toast({
-            title: "¡Preguntas guardadas!",
-            description: `Se han generado y guardado ${data.generadas || data.preguntas} preguntas en la base de datos`
+            title: t('createTest.questionsSaved'),
+            description: t('createTest.simpleQuestionsSavedDesc', { count: data.generadas || data.preguntas })
           });
           setFormData(prev => ({ ...prev, numPreguntas: 50, textoBase: '' }));
         } else {
-          throw new Error(data.error || 'No se pudieron guardar las preguntas');
+          throw new Error(data.error || t('createTest.couldNotSaveQuestions'));
         }
       }
     } catch (error: any) {
@@ -383,15 +385,15 @@ export default function CrearTest() {
       // Check if it was cancelled
       if (error.name === 'AbortError') {
         toast({
-          title: "Generación cancelada",
-          description: "El proceso ha sido cancelado por el usuario",
+          title: t('createTest.generationCancelled'),
+          description: t('createTest.generationCancelledDesc'),
           variant: "destructive"
         });
       } else {
         toast({
           variant: "destructive",
-          title: "Error",
-          description: error.message || 'No se pudo generar el test'
+          title: t('createTest.error'),
+          description: error.message || t('createTest.couldNotGenerateTest')
         });
       }
     } finally {
@@ -408,8 +410,8 @@ export default function CrearTest() {
       setLoading(false);
       setProgressInfo(null);
       toast({
-        title: "Cancelado",
-        description: "La generación de preguntas ha sido cancelada"
+        title: t('createTest.cancelled'),
+        description: t('createTest.cancelledDesc')
       });
     }
   };
@@ -423,17 +425,17 @@ export default function CrearTest() {
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver al inicio
+          {t('createTest.backToHome')}
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileQuestion className="w-6 h-6 text-primary" />
-              Generar Test
+              {t('createTest.title')}
             </CardTitle>
             <CardDescription>
-              Genera preguntas de test a partir de un documento o texto base
+              {t('createTest.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -441,9 +443,9 @@ export default function CrearTest() {
               {/* Documento o Texto Base */}
               <div className="space-y-4">
                 <div>
-                  <Label>Documento o Texto Base *</Label>
+                  <Label>{t('createTest.documentOrText')} *</Label>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Sube un documento o escribe el texto del cual se generarán las preguntas
+                    {t('createTest.documentOrTextDesc')}
                   </p>
                   
                   {extractingText && (
@@ -456,9 +458,9 @@ export default function CrearTest() {
                           </div>
                         </div>
                         <div className="text-center">
-                          <p className="font-semibold text-lg mb-1">Extrayendo texto del documento</p>
+                          <p className="font-semibold text-lg mb-1">{t('createTest.extractingText')}</p>
                           <p className="text-sm text-muted-foreground">
-                            Esto puede tardar unos segundos...
+                            {t('createTest.mayTakeFewSeconds')}
                           </p>
                         </div>
                       </div>
@@ -482,10 +484,10 @@ export default function CrearTest() {
                         >
                           <Upload className="h-8 w-8 text-muted-foreground" />
                           <span className="text-sm font-medium">
-                            Subir documento
+                            {t('createTest.uploadDocument')}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            PDF, DOC, DOCX o TXT
+                            PDF, DOC, DOCX {t('createTest.or')} TXT
                           </span>
                         </label>
                       </div>
@@ -496,13 +498,13 @@ export default function CrearTest() {
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                           <span className="bg-background px-2 text-muted-foreground">
-                            O escribe el texto
+                            {t('createTest.orWriteText')}
                           </span>
                         </div>
                       </div>
 
                       <Textarea
-                        placeholder="Escribe o pega aquí el texto del cual generar las preguntas..."
+                        placeholder={t('createTest.writeOrPasteText')}
                         value={formData.textoBase}
                         onChange={(e) => setFormData({ ...formData, textoBase: e.target.value })}
                         className="min-h-[200px]"
@@ -525,7 +527,7 @@ export default function CrearTest() {
                               <div className="flex items-center gap-2 mt-2">
                                 <div className="h-2 w-2 rounded-full bg-green-600 animate-pulse" />
                                 <p className="text-xs text-green-600 font-medium">
-                                  Texto extraído correctamente ({formData.textoBase.length} caracteres)
+                                  {t('createTest.textExtractedCorrectly', { chars: formData.textoBase.length })}
                                 </p>
                               </div>
                             )}
@@ -553,9 +555,9 @@ export default function CrearTest() {
                         <div className="flex items-start gap-3 flex-1">
                           <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm">Texto proporcionado</p>
+                            <p className="font-medium text-sm">{t('createTest.textProvided')}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {formData.textoBase.length} caracteres
+                              {formData.textoBase.length} {t('createTest.characters')}
                             </p>
                           </div>
                         </div>
@@ -578,7 +580,7 @@ export default function CrearTest() {
 
               {/* Proceso */}
               <div className="space-y-2">
-                <Label htmlFor="proceso">Proceso *</Label>
+                <Label htmlFor="proceso">{t('createTest.process')} *</Label>
                 <div className="space-y-2">
                   {!useCustomProceso ? (
                     <>
@@ -592,7 +594,7 @@ export default function CrearTest() {
                         disabled={loadingProcesos}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={loadingProcesos ? "Cargando..." : "Selecciona un proceso"} />
+                          <SelectValue placeholder={loadingProcesos ? t('createTest.loading') : t('createTest.selectProcess')} />
                         </SelectTrigger>
                         <SelectContent>
                           {procesos.map((proceso) => (
@@ -614,14 +616,14 @@ export default function CrearTest() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createTest.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
                         id="procesoPersonalizado"
-                        placeholder="Escribe tu propio concepto"
+                        placeholder={t('createTest.writeYourConcept')}
                         value={formData.procesoPersonalizado}
                         onChange={(e) => setFormData(prev => ({ ...prev, procesoPersonalizado: e.target.value }))}
                       />
@@ -635,7 +637,7 @@ export default function CrearTest() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createTest.backToList')}
                       </Button>
                     </>
                   )}
@@ -644,7 +646,7 @@ export default function CrearTest() {
 
               {/* Sección */}
               <div className="space-y-2">
-                <Label>Secciones (opcional - puedes seleccionar varias)</Label>
+                <Label>{t('createTest.sections')}</Label>
                 <div className="space-y-2">
                   {!useCustomSeccion ? (
                     <>
@@ -659,10 +661,10 @@ export default function CrearTest() {
                         <SelectTrigger>
                           <SelectValue 
                             placeholder={
-                              loadingSecciones ? "Cargando..." :
-                              !formData.proceso && !useCustomProceso ? "Primero selecciona un proceso" :
-                              secciones.length === 0 ? "No hay secciones disponibles" :
-                              "Selecciona una sección"
+                              loadingSecciones ? t('createTest.loading') :
+                              !formData.proceso && !useCustomProceso ? t('createTest.firstSelectProcess') :
+                              secciones.length === 0 ? t('createTest.noSectionsAvailable') :
+                              t('createTest.selectSection')
                             } 
                           />
                         </SelectTrigger>
@@ -700,13 +702,13 @@ export default function CrearTest() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createTest.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
-                        placeholder="Escribe tu propia sección"
+                        placeholder={t('createTest.writeYourSection')}
                         value={formData.seccionPersonalizada}
                         onChange={(e) => setFormData(prev => ({ ...prev, seccionPersonalizada: e.target.value }))}
                       />
@@ -720,7 +722,7 @@ export default function CrearTest() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createTest.backToList')}
                       </Button>
                     </>
                   )}
@@ -729,7 +731,7 @@ export default function CrearTest() {
 
               {/* Temas */}
               <div className="space-y-2">
-                <Label>Temas (opcional - puedes seleccionar varios)</Label>
+                <Label>{t('createTest.topics')}</Label>
                 <div className="space-y-2">
                   {!useCustomTema ? (
                     <>
@@ -744,10 +746,10 @@ export default function CrearTest() {
                         <SelectTrigger>
                           <SelectValue 
                             placeholder={
-                              loadingTemas ? "Cargando..." :
-                              seccionesSeleccionadas.length === 0 && !useCustomSeccion ? "Primero selecciona una sección" :
-                              temas.length === 0 ? "No hay temas disponibles" :
-                              "Selecciona un tema"
+                              loadingTemas ? t('createTest.loading') :
+                              seccionesSeleccionadas.length === 0 && !useCustomSeccion ? t('createTest.firstSelectSection') :
+                              temas.length === 0 ? t('createTest.noTopicsAvailable') :
+                              t('createTest.selectTopic')
                             } 
                           />
                         </SelectTrigger>
@@ -784,13 +786,13 @@ export default function CrearTest() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createTest.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
-                        placeholder="Escribe tu propio tema"
+                        placeholder={t('createTest.writeYourTopic')}
                         value={formData.temaPersonalizado}
                         onChange={(e) => setFormData(prev => ({ ...prev, temaPersonalizado: e.target.value }))}
                       />
@@ -804,7 +806,7 @@ export default function CrearTest() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createTest.backToList')}
                       </Button>
                     </>
                   )}
@@ -813,7 +815,7 @@ export default function CrearTest() {
 
               {/* Número de preguntas */}
               <div className="space-y-2">
-                <Label htmlFor="numPreguntas">Número de preguntas *</Label>
+                <Label htmlFor="numPreguntas">{t('createTest.numberOfQuestions')} *</Label>
                 <Input
                   id="numPreguntas"
                   type="number"
@@ -824,7 +826,7 @@ export default function CrearTest() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Entre 1 y 200 preguntas
+                  {t('createTest.between1And200')}
                 </p>
               </div>
 
@@ -845,7 +847,7 @@ export default function CrearTest() {
                   </div>
                   {progressInfo.generated !== undefined && (
                     <p className="text-xs text-muted-foreground text-center">
-                      {progressInfo.generated} preguntas generadas hasta ahora
+                      {t('createTest.questionsGeneratedSoFar', { count: progressInfo.generated })}
                     </p>
                   )}
                   <Button
@@ -855,7 +857,7 @@ export default function CrearTest() {
                     onClick={handleCancelar}
                     className="w-full mt-2"
                   >
-                    Cancelar generación
+                    {t('createTest.cancelGeneration')}
                   </Button>
                 </div>
               )}
@@ -869,12 +871,12 @@ export default function CrearTest() {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generando...
+                      {t('createTest.generating')}
                     </>
                   ) : (
                     <>
                       <FileQuestion className="w-4 h-4 mr-2" />
-                      Generar Test
+                      {t('createTest.generateTest')}
                     </>
                   )}
                 </Button>
@@ -884,7 +886,7 @@ export default function CrearTest() {
                   onClick={() => navigate('/')}
                   disabled={loading}
                 >
-                  Cancelar
+                  {t('createTest.cancel')}
                 </Button>
               </div>
             </form>
