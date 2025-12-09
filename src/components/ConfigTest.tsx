@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,10 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, BookOpen, Clock, Play, Loader2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Play, Loader2, Languages } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testService, type Proceso } from '@/services/testService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 
 interface ConfigTestProps {
   onStartQuiz: (config: TestConfig) => void;
@@ -52,9 +53,15 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
   initialSecciones,
   autoStart = false
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { translateTexts, isTranslating } = useTranslateContent();
+  
+  // Estados para traducciones
+  const [translatedProcesos, setTranslatedProcesos] = useState<Record<number, string>>({});
+  const [translatedSecciones, setTranslatedSecciones] = useState<Record<string, string>>({});
+  const [translatedTemas, setTranslatedTemas] = useState<Record<string, string>>({});
   
   const [loading, setLoading] = useState(false);
   const [procesos, setProcesos] = useState<Proceso[]>([]);
@@ -154,6 +161,17 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
       setLoading(true);
       const data = await testService.getProcesos(user?.id);
       setProcesos(data);
+      
+      // Traducir procesos si no es español
+      if (i18n.language !== 'es' && data.length > 0) {
+        const textos = data.map(p => p.descripcion);
+        const traducciones = await translateTexts(textos);
+        const mapeo: Record<number, string> = {};
+        data.forEach((p, idx) => {
+          mapeo[p.id] = traducciones[idx] || p.descripcion;
+        });
+        setTranslatedProcesos(mapeo);
+      }
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -173,6 +191,16 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
       const data = await testService.getSeccionesYTemas(selectedProceso);
       if (data.success) {
         setSecciones(data.secciones || []);
+        
+        // Traducir secciones si no es español
+        if (i18n.language !== 'es' && data.secciones && data.secciones.length > 0) {
+          const traducciones = await translateTexts(data.secciones);
+          const mapeo: Record<string, string> = {};
+          data.secciones.forEach((s: string, idx: number) => {
+            mapeo[s] = traducciones[idx] || s;
+          });
+          setTranslatedSecciones(mapeo);
+        }
       }
     } catch (error) {
       toast({
@@ -203,6 +231,16 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
       
       setTemas(uniqueTemas);
       setSelectedTemas([]);
+      
+      // Traducir temas si no es español
+      if (i18n.language !== 'es' && uniqueTemas.length > 0) {
+        const traducciones = await translateTexts(uniqueTemas);
+        const mapeo: Record<string, string> = {};
+        uniqueTemas.forEach((t, idx) => {
+          mapeo[t] = traducciones[idx] || t;
+        });
+        setTranslatedTemas(mapeo);
+      }
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -354,11 +392,19 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                 <SelectContent>
                   {procesos.map((proceso) => (
                     <SelectItem key={proceso.id} value={proceso.id.toString()}>
-                      {proceso.descripcion}
+                      {i18n.language !== 'es' && translatedProcesos[proceso.id] 
+                        ? translatedProcesos[proceso.id] 
+                        : proceso.descripcion}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {isTranslating && i18n.language !== 'es' && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Languages className="w-3 h-3 animate-pulse" />
+                  {t('quiz.translating')}
+                </div>
+              )}
             </div>
 
             {selectedProceso && (
@@ -381,7 +427,9 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                           className="cursor-pointer hover:opacity-80 px-3 py-2"
                           onClick={() => toggleSeccion(seccion)}
                         >
-                          {seccion}
+                          {i18n.language !== 'es' && translatedSecciones[seccion] 
+                            ? translatedSecciones[seccion] 
+                            : seccion}
                         </Badge>
                       ))}
                     </div>
@@ -410,7 +458,9 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                           className="cursor-pointer hover:opacity-80 px-3 py-2"
                           onClick={() => toggleTema(tema)}
                         >
-                          {tema}
+                          {i18n.language !== 'es' && translatedTemas[tema] 
+                            ? translatedTemas[tema] 
+                            : tema}
                         </Badge>
                       ))}
                     </div>
