@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,7 @@ interface RankingProps {
 }
 
 const Ranking: React.FC<RankingProps> = ({ onBack }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [ranking, setRanking] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,15 +27,11 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
     setLoading(true);
     try {
       const userId = user?.id ? Number(user.id) : undefined;
-      console.log('🔍 Cargando ranking con:', { userId, tipo });
-      
       const response = await testService.getRanking({
         user_id: userId,
         tipo_test: tipo || undefined,
         limit: 50
       });
-      
-      console.log('📊 Respuesta del ranking:', response);
       setRanking(response.ranking);
     } catch (error) {
       console.error('❌ Error al cargar ranking:', error);
@@ -63,46 +61,44 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
         <div className="mb-8">
           <Button variant="ghost" onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver al Inicio
+            {t('ranking.backToHome')}
           </Button>
         </div>
 
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             <Trophy className="w-10 h-10 inline-block text-yellow-500 mr-2" />
-            Ranking de Usuarios
+            {t('ranking.title')}
           </h1>
-          <p className="text-gray-600">Los mejores estudiantes de Oposiciones-Test</p>
+          <p className="text-gray-600">{t('ranking.subtitle')}</p>
         </div>
 
-        {/* Filtros */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Filtrar por tipo de test</CardTitle>
+            <CardTitle>{t('ranking.filterByType')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs value={tipo} onValueChange={(v) => setTipo(v as any)}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="">Todos</TabsTrigger>
-                <TabsTrigger value="simulacion">Simulaciones</TabsTrigger>
-                <TabsTrigger value="examen">Exámenes</TabsTrigger>
+                <TabsTrigger value="">{t('ranking.all')}</TabsTrigger>
+                <TabsTrigger value="simulacion">{t('ranking.simulations')}</TabsTrigger>
+                <TabsTrigger value="examen">{t('ranking.exams')}</TabsTrigger>
               </TabsList>
             </Tabs>
           </CardContent>
         </Card>
 
-        {/* Ranking */}
         {loading ? (
-          <p className="text-center text-gray-600">Cargando ranking...</p>
+          <p className="text-center text-gray-600">{t('ranking.loading')}</p>
         ) : ranking.length === 0 ? (
-          <p className="text-center text-gray-600">No hay datos de ranking disponibles.</p>
+          <p className="text-center text-gray-600">{t('ranking.noData')}</p>
         ) : (
           <div className="space-y-3">
             {ranking.map((item, index) => {
               const posicion = index + 1;
               const esUsuarioActual = user?.id && Number(user.id) === item.id;
               
-                return (
+              return (
                 <Card 
                   key={item.id} 
                   className={`hover:shadow-lg transition-shadow ${getMedalBg(posicion)} ${esUsuarioActual ? 'ring-2 ring-blue-500' : ''}`}
@@ -118,16 +114,16 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-lg">
-                            {item.username || 'Usuario Anónimo'}
+                            {item.username || t('ranking.anonymousUser')}
                           </h3>
                           {esUsuarioActual && (
-                            <Badge variant="default">Tú</Badge>
+                            <Badge variant="default">{t('ranking.you')}</Badge>
                           )}
                         </div>
                         <div className="flex gap-4 text-sm text-gray-600 mt-1">
-                          <span>Tests: <strong>{item.total_tests}</strong></span>
-                          <span className="text-green-600">Aciertos: <strong>{item.total_aciertos}</strong></span>
-                          <span className="text-red-600">Fallos: <strong>{item.total_fallos}</strong></span>
+                          <span>{t('ranking.tests')}: <strong>{item.total_tests}</strong></span>
+                          <span className="text-green-600">{t('ranking.correct')}: <strong>{item.total_aciertos}</strong></span>
+                          <span className="text-red-600">{t('ranking.incorrect')}: <strong>{item.total_fallos}</strong></span>
                         </div>
                       </div>
 
@@ -135,7 +131,7 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
                         <div className="text-2xl font-bold text-green-600">
                           {parseFloat(item.nota_media).toFixed(2)}
                         </div>
-                        <div className="text-xs text-gray-500">Nota media</div>
+                        <div className="text-xs text-gray-500">{t('ranking.averageScore')}</div>
                       </div>
                     </div>
                   </CardContent>
