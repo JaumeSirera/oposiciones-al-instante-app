@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export default function CrearPsicotecnicos() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -137,15 +139,15 @@ export default function CrearPsicotecnicos() {
       setFormData(prev => ({ ...prev, textoBase: response.data.texto }));
 
       toast({
-        title: "Texto extraído",
-        description: "El texto del documento se ha extraído correctamente",
+        title: t('createPsychotechnics.textExtracted'),
+        description: t('createPsychotechnics.textExtractedDesc'),
       });
     } catch (error: any) {
       console.error('Error:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "Error al extraer el texto del documento",
+        title: t('createPsychotechnics.error'),
+        description: error.message || t('createPsychotechnics.couldNotExtractText'),
       });
       setArchivo(null);
     } finally {
@@ -159,8 +161,8 @@ export default function CrearPsicotecnicos() {
     if (!user?.id) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Debes iniciar sesión"
+        title: t('createPsychotechnics.error'),
+        description: t('createPsychotechnics.mustLogin')
       });
       return;
     }
@@ -168,8 +170,8 @@ export default function CrearPsicotecnicos() {
     if (!formData.textoBase) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes proporcionar un texto o subir un documento"
+        title: t('createPsychotechnics.requiredField'),
+        description: t('createPsychotechnics.mustProvideText')
       });
       return;
     }
@@ -177,8 +179,8 @@ export default function CrearPsicotecnicos() {
     if (!formData.proceso && !useCustomProceso) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes seleccionar un proceso"
+        title: t('createPsychotechnics.requiredField'),
+        description: t('createPsychotechnics.mustSelectProcess')
       });
       return;
     }
@@ -193,8 +195,8 @@ export default function CrearPsicotecnicos() {
     if (seccionesFinal.length === 0) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes seleccionar al menos una sección"
+        title: t('createPsychotechnics.requiredField'),
+        description: t('createPsychotechnics.mustSelectSection')
       });
       return;
     }
@@ -202,8 +204,8 @@ export default function CrearPsicotecnicos() {
     if (temasFinal.length === 0) {
       toast({
         variant: "destructive",
-        title: "Campo requerido",
-        description: "Debes seleccionar al menos un tema"
+        title: t('createPsychotechnics.requiredField'),
+        description: t('createPsychotechnics.mustSelectTopic')
       });
       return;
     }
@@ -454,17 +456,17 @@ export default function CrearPsicotecnicos() {
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver al inicio
+          {t('createPsychotechnics.backToHome')}
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="w-6 h-6 text-primary" />
-              Generar Psicotécnicos
+              {t('createPsychotechnics.title')}
             </CardTitle>
             <CardDescription>
-              Genera preguntas psicotécnicas (series numéricas, verbales, atención, cálculo, espaciales)
+              {t('createPsychotechnics.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
