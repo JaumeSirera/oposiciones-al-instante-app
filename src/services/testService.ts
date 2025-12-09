@@ -328,7 +328,7 @@ class TestService {
         preguntas_falladas: typeof data.preguntas_falladas === 'object' ? data.preguntas_falladas : JSON.parse(data.preguntas_falladas),
       };
 
-      return await this.callAPI('guardar_tests_realizados.php', {
+      return await this.callAPI('guardar_test_realizado.php', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
