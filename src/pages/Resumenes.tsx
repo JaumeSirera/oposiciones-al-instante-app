@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ interface Resumen {
 }
 
 export default function Resumenes() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -47,7 +49,7 @@ export default function Resumenes() {
         }
       );
       
-      if (!response.ok) throw new Error('Error al cargar resúmenes');
+      if (!response.ok) throw new Error(t('summaries.errorLoading'));
       
       const data = await response.json();
       
@@ -56,13 +58,13 @@ export default function Resumenes() {
       } else if (Array.isArray(data)) {
         setResumenes(data);
       } else {
-        throw new Error(data.error || 'Formato de respuesta inválido');
+        throw new Error(data.error || t('summaries.invalidResponse'));
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudieron cargar los resúmenes'
+        title: t('common.error'),
+        description: error.message || t('summaries.couldNotLoad')
       });
       setResumenes([]);
     } finally {
@@ -74,7 +76,7 @@ export default function Resumenes() {
     if (!fecha) return '-';
     const date = new Date(fecha);
     if (isNaN(date.getTime())) return fecha;
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(i18n.language, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -120,19 +122,19 @@ export default function Resumenes() {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver al inicio
+            {t('summaries.backToHome')}
           </Button>
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Resúmenes</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('summaries.mySummaries')}</h1>
               <p className="text-gray-600">
-                {resumenes.length} {resumenes.length === 1 ? 'resumen guardado' : 'resúmenes guardados'}
+                {resumenes.length} {resumenes.length === 1 ? t('summaries.summarySaved') : t('summaries.summariesSaved')}
               </p>
             </div>
             <Button onClick={() => navigate('/crear-resumen')}>
               <FileText className="w-4 h-4 mr-2" />
-              Crear Resumen
+              {t('summaries.create')}
             </Button>
           </div>
         </div>
@@ -144,7 +146,7 @@ export default function Resumenes() {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Buscar por tema, sección o contenido..."
+                  placeholder={t('summaries.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -161,7 +163,7 @@ export default function Resumenes() {
                           value={seccion}
                           className="whitespace-nowrap flex-shrink-0"
                         >
-                          {seccion === 'all' ? 'Todas' : seccion}
+                          {seccion === 'all' ? t('summaries.all') : seccion}
                         </TabsTrigger>
                       ))}
                     </TabsList>
@@ -179,13 +181,13 @@ export default function Resumenes() {
               <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
                 {searchQuery || filterSeccion !== 'all' 
-                  ? 'No se encontraron resúmenes' 
-                  : 'Aún no tienes resúmenes'}
+                  ? t('summaries.noSummariesFound') 
+                  : t('summaries.noSummariesYet')}
               </h3>
               <p className="text-gray-500 mb-4">
                 {searchQuery || filterSeccion !== 'all'
-                  ? 'Intenta con otros términos de búsqueda'
-                  : 'Comienza creando tu primer resumen'}
+                  ? t('summaries.tryOtherTerms')
+                  : t('summaries.startCreating')}
               </p>
               {(searchQuery || filterSeccion !== 'all') && (
                 <Button
@@ -195,7 +197,7 @@ export default function Resumenes() {
                     setFilterSeccion('all');
                   }}
                 >
-                  Limpiar filtros
+                  {t('summaries.clearFilters')}
                 </Button>
               )}
             </CardContent>
@@ -211,7 +213,7 @@ export default function Resumenes() {
                 <CardHeader className="flex-shrink-0">
                   <CardTitle className="flex items-start gap-2">
                     <BookOpen className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="line-clamp-2 break-words">{resumen.tema || 'Sin título'}</span>
+                    <span className="line-clamp-2 break-words">{resumen.tema || t('summaries.noTitle')}</span>
                   </CardTitle>
                   {resumen.seccion && (
                     <CardDescription className="font-medium line-clamp-1">
@@ -221,7 +223,7 @@ export default function Resumenes() {
                 </CardHeader>
                 <CardContent className="flex-1 overflow-hidden">
                   <p className="text-sm text-gray-600 mb-4 line-clamp-3 break-words">
-                    {resumen.resumen || 'Sin contenido'}
+                    {resumen.resumen || t('summaries.noContent')}
                   </p>
                   
                   <div className="space-y-2 text-xs text-gray-500">
