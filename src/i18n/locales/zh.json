@@ -185,7 +185,8 @@
     "no": "否",
     "error": "错误",
     "success": "成功",
-    "week": "周"
+    "week": "周",
+    "translating": "正在翻译..."
   },
   "test": {
     "choosePracticeMode": "选择练习模式",

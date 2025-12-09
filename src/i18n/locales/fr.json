@@ -185,7 +185,8 @@
     "no": "Non",
     "error": "Erreur",
     "success": "Succès",
-    "week": "Semaine"
+    "week": "Semaine",
+    "translating": "Traduction en cours..."
   },
   "test": {
     "choosePracticeMode": "Choisissez le mode de pratique",
