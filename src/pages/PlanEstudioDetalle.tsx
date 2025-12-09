@@ -336,7 +336,7 @@ export default function PlanEstudioDetalle() {
                                   ))}
                                   {semana.temas_semana.length > 12 && (
                                     <Badge variant="outline" className="text-xs">
-                                      +{semana.temas_semana.length - 12} más
+                                      +{semana.temas_semana.length - 12} {t('studyPlans.more')}
                                     </Badge>
                                   )}
                                 </div>
@@ -484,7 +484,7 @@ export default function PlanEstudioDetalle() {
                                         tarea.titulo.toLowerCase().includes('psicotécnico')) && (
                                         <Badge variant="outline" className="mt-2">
                                           <PlayCircle className="mr-1 h-3 w-3" />
-                                          Click para realizar
+                                          {t('studyPlans.clickToTake')}
                                         </Badge>
                                       )}
                                     </div>
@@ -506,16 +506,16 @@ export default function PlanEstudioDetalle() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Este plan aún no tiene contenido generado
+                {t('studyPlans.noPlanContent')}
               </p>
             </CardContent>
           </Card>
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Etapas del Plan</CardTitle>
+              <CardTitle>{t('studyPlans.planStages')}</CardTitle>
               <CardDescription>
-                Sigue tu progreso semana a semana
+                {t('studyPlans.followProgress')}
               </CardDescription>
             </CardHeader>
               <CardContent>
@@ -533,7 +533,7 @@ export default function PlanEstudioDetalle() {
                           <div className="text-left flex-1">
                             <p className="font-semibold text-base">{etapa.titulo}</p>
                             <p className="text-sm text-muted-foreground mt-0.5">
-                              {tareasCompletadas}/{etapa.tareas ? etapa.tareas.length : 0} tareas completadas
+                              {tareasCompletadas}/{etapa.tareas ? etapa.tareas.length : 0} {t('studyPlans.tasksCompleted')}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
@@ -549,7 +549,7 @@ export default function PlanEstudioDetalle() {
                             {/* Temas de la etapa */}
                             {etapa.descripcion && (
                               <div>
-                                <h4 className="font-semibold text-sm mb-3">Temas:</h4>
+                                <h4 className="font-semibold text-sm mb-3">{t('studyPlans.topics')}:</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                   {etapa.descripcion.split(',').slice(0, 12).map((tema: string, idx: number) => {
                                     const temaLimpio = tema.trim();
@@ -565,7 +565,7 @@ export default function PlanEstudioDetalle() {
                                   })}
                                   {etapa.descripcion.split(',').length > 12 && (
                                     <Badge variant="outline" className="text-xs">
-                                      +{etapa.descripcion.split(',').length - 12} más
+                                      +{etapa.descripcion.split(',').length - 12} {t('studyPlans.more')}
                                     </Badge>
                                   )}
                                 </div>
@@ -575,7 +575,7 @@ export default function PlanEstudioDetalle() {
                             {/* Tareas de la etapa */}
                             {etapa.tareas && Array.isArray(etapa.tareas) && etapa.tareas.length > 0 && (
                               <div>
-                                <h4 className="font-semibold text-sm mb-3">Tareas:</h4>
+                                <h4 className="font-semibold text-sm mb-3">{t('studyPlans.tasks')}:</h4>
                                 <div className="space-y-3">
                                    {etapa.tareas.map((tarea) => (
                                     <div
@@ -603,7 +603,7 @@ export default function PlanEstudioDetalle() {
                                           tarea.titulo.toLowerCase().includes('psicotécnico')) && (
                                           <Badge variant="outline" className="mt-2">
                                             <PlayCircle className="mr-1 h-3 w-3" />
-                                            Click para realizar
+                                            {t('studyPlans.clickToTake')}
                                           </Badge>
                                         )}
                                       </div>
