@@ -1,5 +1,5 @@
 <?php
-// /api/generar_preguntas.php (con visibilidad por roles)
+// /api/generar_preguntas.php (con visibilidad por roles y trazabilidad de fuente)
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -94,17 +94,19 @@ function extract_json_array(string $content): ?array {
 
 /**
  * Llama a Google Gemini con JSON schema
+ * Incluye trazabilidad de fuente cuando se genera desde texto
  */
 function generar_lote_preguntas(string $apiKey, int $n, int $id_proceso, string $seccion, string $tema, string $texto = '', string $documento = ''): array {
   $model = "gemini-2.5-flash";
   
   if ($texto !== '') {
-    $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL del siguiente texto. 
+    // Prompt con trazabilidad de fuente
+    $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL del siguiente texto.
 
 IMPORTANTE: Para CADA pregunta, indica la referencia exacta de donde extrajiste la información:
 - Si el texto tiene páginas numeradas, indica el número de página
 - Indica la posición aproximada en el texto (inicio, medio, final)
-- Cita brevemente la frase o sección relevante
+- Cita brevemente la frase o sección relevante (máximo 100 caracteres)
 
 TEXTO:
 $texto
@@ -116,8 +118,8 @@ Devuelve SOLO un array JSON válido sin texto adicional con el siguiente formato
   \"correcta\": \"A\",
   \"fuente\": {
     \"pagina\": \"número de página o null si no aplica\",
-    \"ubicacion\": \"inicio|medio|final del texto\",
-    \"cita\": \"fragmento breve del texto original de donde se extrajo\"
+    \"ubicacion\": \"inicio|medio|final\",
+    \"cita\": \"fragmento breve del texto original\"
   }
 }]";
   } else {
@@ -198,7 +200,7 @@ $tema          = trim($data['tema'] ?? '');
 $seccion       = trim($data['seccion'] ?? '');
 $id_usuario    = intval($data['id_usuario'] ?? 0);
 $num_preguntas = intval($data['num_preguntas'] ?? 5);
-$documento     = trim($data['documento'] ?? ''); // Nombre del documento subido
+$documento     = trim($data['documento'] ?? ''); // Nombre del documento subido (opcional)
 
 // -------- VALIDACIONES ----------
 if (!$id_proceso || !$tema || !$seccion || !$id_usuario) {
@@ -222,7 +224,7 @@ $es_publico = es_publico_segun_rol($rol_usuario);
 
 log_debug_preg("Usuario $id_usuario (rol: $rol_usuario) generará preguntas ".($es_publico ? "PÚBLICAS" : "PRIVADAS"));
 
-// -------- VERIFICAR SI EXISTEN COLUMNAS DE TRAZABILIDAD ----------
+// -------- VERIFICAR SI EXISTEN COLUMNAS ----------
 $tiene_columna_publico = false;
 $tiene_columnas_fuente = false;
 
@@ -231,15 +233,16 @@ if ($check_col && $check_col->num_rows > 0) {
   $tiene_columna_publico = true;
   log_debug_preg("✓ Columna 'es_publico' existe en tabla preguntas");
 } else {
-  log_debug_preg("⚠️ Columna 'es_publico' NO existe");
+  log_debug_preg("⚠️ Columna 'es_publico' NO existe. Debes ejecutar: ALTER TABLE preguntas ADD COLUMN es_publico TINYINT DEFAULT 0");
 }
 
+// Verificar columnas de trazabilidad de fuente
 $check_fuente = $conn->query("SHOW COLUMNS FROM preguntas LIKE 'documento'");
 if ($check_fuente && $check_fuente->num_rows > 0) {
   $tiene_columnas_fuente = true;
   log_debug_preg("✓ Columnas de fuente existen en tabla preguntas");
 } else {
-  log_debug_preg("⚠️ Columnas de fuente NO existen. Ejecutar: ALTER TABLE preguntas ADD COLUMN documento VARCHAR(255), ADD COLUMN pagina VARCHAR(50), ADD COLUMN ubicacion VARCHAR(50), ADD COLUMN cita TEXT");
+  log_debug_preg("⚠️ Columnas de fuente NO existen. Para habilitar trazabilidad ejecutar: ALTER TABLE preguntas ADD COLUMN documento VARCHAR(255), ADD COLUMN pagina VARCHAR(50), ADD COLUMN ubicacion VARCHAR(50), ADD COLUMN cita TEXT");
 }
 
 // -------- GENERACIÓN EN LOTES ----------
@@ -266,34 +269,37 @@ try {
       $ops  = $it['opciones'] ?? [];
       $corr = strtoupper(trim($it['correcta'] ?? ''));
       $corr_txt = isset($ops[$corr]) ? trim($ops[$corr]) : '';
-      
-      // Extraer datos de fuente (solo si hay texto subido)
+
+      // Extraer datos de fuente (solo si hay texto subido y la IA los devuelve)
       $fuente = $it['fuente'] ?? null;
       $pagina_fuente = null;
       $ubicacion_fuente = null;
       $cita_fuente = null;
       
       if ($fuente && $texto !== '') {
-        $pagina_fuente = trim($fuente['pagina'] ?? '') ?: null;
-        $ubicacion_fuente = trim($fuente['ubicacion'] ?? '') ?: null;
-        $cita_fuente = trim($fuente['cita'] ?? '') ?: null;
-        log_debug_preg("Fuente para pregunta: pág=$pagina_fuente, ubic=$ubicacion_fuente, cita=".substr($cita_fuente ?? '', 0, 50));
+        $pagina_fuente = isset($fuente['pagina']) && $fuente['pagina'] !== 'null' ? trim($fuente['pagina']) : null;
+        $ubicacion_fuente = isset($fuente['ubicacion']) ? trim($fuente['ubicacion']) : null;
+        $cita_fuente = isset($fuente['cita']) ? trim($fuente['cita']) : null;
+        log_debug_preg("Fuente extraída: pág=$pagina_fuente, ubic=$ubicacion_fuente, cita=".substr($cita_fuente ?? '', 0, 50));
       }
 
       if ($preg==='' || !is_array($ops) || count($ops)!==4 || $corr_txt==='') {
         throw new Exception('Ítem inválido de IA');
       }
 
-      // INSERT con columnas de fuente si existen Y hay texto subido
+      // INSERT con todas las combinaciones posibles de columnas
       if ($tiene_columnas_fuente && $texto !== '' && $tiene_columna_publico) {
+        // Con fuente + es_publico
         $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)");
         if (!$stmt) throw new Exception("Prepare: ".$conn->error);
         $stmt->bind_param("iissssississs", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
       } elseif ($tiene_columnas_fuente && $texto !== '' && !$tiene_columna_publico) {
+        // Con fuente, sin es_publico
         $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)");
         if (!$stmt) throw new Exception("Prepare: ".$conn->error);
         $stmt->bind_param("iissssssss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
       } elseif ($tiene_columna_publico) {
+        // Solo es_publico (sin fuente o sin texto)
         $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
         if (!$stmt) throw new Exception("Prepare: ".$conn->error);
         $stmt->bind_param("iissssi", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico);
@@ -329,12 +335,13 @@ try {
   }
 
   $conn->commit();
-  log_debug_preg("✅ Commit OK: $total_insertadas preguntas ".($es_publico ? "públicas" : "privadas")." para usuario $id_usuario");
+  log_debug_preg("✅ Commit OK: $total_insertadas preguntas ".($es_publico ? "públicas" : "privadas")." para usuario $id_usuario".($documento ? " desde documento: $documento" : ""));
   echo json_encode([
     'ok'=>true,
     'preguntas'=>$total_insertadas,
     'es_publico'=>$es_publico,
-    'rol'=>$rol_usuario
+    'rol'=>$rol_usuario,
+    'con_trazabilidad'=>($tiene_columnas_fuente && $texto !== '')
   ], JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
   $conn->rollback();
