@@ -47,8 +47,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   const isAdmin = user?.nivel === 'admin';
 
   // Traducción de contenido
-  const { translateQuestion, isTranslating, needsTranslation } = useTranslateContent();
+  const { translateQuestion, translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   const [translatedQuestions, setTranslatedQuestions] = useState<Record<number, TranslatedQuestion>>({});
+  const [translatedExplicacion, setTranslatedExplicacion] = useState<string>('');
 
   const currentQuestion = questions[currentQuestionIndex];
   const currentTranslation = translatedQuestions[currentQuestionIndex];
@@ -99,6 +100,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   // Limpiar traducciones cuando cambia el idioma
   useEffect(() => {
     setTranslatedQuestions({});
+    setTranslatedExplicacion('');
   }, [i18n.language]);
 
   // Cargar comentarios cuando cambia la pregunta
@@ -487,6 +489,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
 
       if (result.success && result.explicacion) {
         setExplicacionProfesor(result.explicacion);
+        // Traducir la explicación si es necesario
+        if (needsTranslation) {
+          const [translated] = await translateTexts([result.explicacion]);
+          setTranslatedExplicacion(translated);
+        } else {
+          setTranslatedExplicacion('');
+        }
       } else {
         toast({ 
           title: 'Error', 
@@ -818,8 +827,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
             <CardContent>
               {explicacionProfesor ? (
                 <div className="bg-white rounded-lg p-4 shadow-sm">
+                  {needsTranslation && translatedExplicacion && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <Languages className="h-4 w-4 text-purple-600" />
+                      <Badge variant="outline" className="text-xs">{i18n.language.toUpperCase()}</Badge>
+                    </div>
+                  )}
                   <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
-                    {explicacionProfesor}
+                    {needsTranslation && translatedExplicacion ? translatedExplicacion : explicacionProfesor}
                   </p>
                 </div>
               ) : (
