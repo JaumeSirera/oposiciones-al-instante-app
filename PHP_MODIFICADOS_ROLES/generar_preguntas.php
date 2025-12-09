@@ -95,17 +95,31 @@ function extract_json_array(string $content): ?array {
 /**
  * Llama a Google Gemini con JSON schema
  */
-function generar_lote_preguntas(string $apiKey, int $n, int $id_proceso, string $seccion, string $tema, string $texto = ''): array {
+function generar_lote_preguntas(string $apiKey, int $n, int $id_proceso, string $seccion, string $tema, string $texto = '', string $documento = ''): array {
   $model = "gemini-2.5-flash";
   
   if ($texto !== '') {
-    $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL del siguiente texto. Devuelve SOLO un array JSON válido sin texto adicional.
+    $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL del siguiente texto. 
+
+IMPORTANTE: Para CADA pregunta, indica la referencia exacta de donde extrajiste la información:
+- Si el texto tiene páginas numeradas, indica el número de página
+- Indica la posición aproximada en el texto (inicio, medio, final)
+- Cita brevemente la frase o sección relevante
 
 TEXTO:
 $texto
 
-Formato requerido:
-[{\"pregunta\":\"texto de la pregunta\",\"opciones\":{\"A\":\"opción A\",\"B\":\"opción B\",\"C\":\"opción C\",\"D\":\"opción D\"},\"correcta\":\"A\"}]";
+Devuelve SOLO un array JSON válido sin texto adicional con el siguiente formato:
+[{
+  \"pregunta\": \"texto de la pregunta\",
+  \"opciones\": {\"A\": \"opción A\", \"B\": \"opción B\", \"C\": \"opción C\", \"D\": \"opción D\"},
+  \"correcta\": \"A\",
+  \"fuente\": {
+    \"pagina\": \"número de página o null si no aplica\",
+    \"ubicacion\": \"inicio|medio|final del texto\",
+    \"cita\": \"fragmento breve del texto original de donde se extrajo\"
+  }
+}]";
   } else {
     $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL para:
 - Proceso ID: $id_proceso
@@ -184,6 +198,7 @@ $tema          = trim($data['tema'] ?? '');
 $seccion       = trim($data['seccion'] ?? '');
 $id_usuario    = intval($data['id_usuario'] ?? 0);
 $num_preguntas = intval($data['num_preguntas'] ?? 5);
+$documento     = trim($data['documento'] ?? ''); // Nombre del documento subido
 
 // -------- VALIDACIONES ----------
 if (!$id_proceso || !$tema || !$seccion || !$id_usuario) {
@@ -207,14 +222,24 @@ $es_publico = es_publico_segun_rol($rol_usuario);
 
 log_debug_preg("Usuario $id_usuario (rol: $rol_usuario) generará preguntas ".($es_publico ? "PÚBLICAS" : "PRIVADAS"));
 
-// -------- VERIFICAR SI EXISTE COLUMNA es_publico ----------
+// -------- VERIFICAR SI EXISTEN COLUMNAS DE TRAZABILIDAD ----------
 $tiene_columna_publico = false;
+$tiene_columnas_fuente = false;
+
 $check_col = $conn->query("SHOW COLUMNS FROM preguntas LIKE 'es_publico'");
 if ($check_col && $check_col->num_rows > 0) {
   $tiene_columna_publico = true;
   log_debug_preg("✓ Columna 'es_publico' existe en tabla preguntas");
 } else {
-  log_debug_preg("⚠️ Columna 'es_publico' NO existe. Debes ejecutar: ALTER TABLE preguntas ADD COLUMN es_publico TINYINT DEFAULT 0");
+  log_debug_preg("⚠️ Columna 'es_publico' NO existe");
+}
+
+$check_fuente = $conn->query("SHOW COLUMNS FROM preguntas LIKE 'documento'");
+if ($check_fuente && $check_fuente->num_rows > 0) {
+  $tiene_columnas_fuente = true;
+  log_debug_preg("✓ Columnas de fuente existen en tabla preguntas");
+} else {
+  log_debug_preg("⚠️ Columnas de fuente NO existen. Ejecutar: ALTER TABLE preguntas ADD COLUMN documento VARCHAR(255), ADD COLUMN pagina VARCHAR(50), ADD COLUMN ubicacion VARCHAR(50), ADD COLUMN cita TEXT");
 }
 
 // -------- GENERACIÓN EN LOTES ----------
@@ -225,7 +250,7 @@ $total_insertadas = 0;
 
 try {
   $db_name = $conn->query("SELECT DATABASE()")->fetch_row()[0];
-  log_debug_preg("BD: $db_name | proceso=$id_proceso seccion=$seccion tema=$tema user=$id_usuario rol=$rol_usuario publico=$es_publico | solicitadas=$num_preguntas");
+  log_debug_preg("BD: $db_name | proceso=$id_proceso seccion=$seccion tema=$tema user=$id_usuario rol=$rol_usuario publico=$es_publico documento=$documento | solicitadas=$num_preguntas");
 } catch (Throwable $e) {
   log_debug_preg("Error BD: ".$e->getMessage());
 }
@@ -234,25 +259,46 @@ $conn->begin_transaction();
 try {
   while ($pendientes > 0) {
     $lote = min($BATCH_MAX, $pendientes);
-    $items = generar_lote_preguntas($GOOGLE_API_KEY, $lote, $id_proceso, $seccion, $tema, $texto);
+    $items = generar_lote_preguntas($GOOGLE_API_KEY, $lote, $id_proceso, $seccion, $tema, $texto, $documento);
 
     foreach ($items as $it) {
       $preg = trim($it['pregunta'] ?? '');
       $ops  = $it['opciones'] ?? [];
       $corr = strtoupper(trim($it['correcta'] ?? ''));
       $corr_txt = isset($ops[$corr]) ? trim($ops[$corr]) : '';
+      
+      // Extraer datos de fuente (solo si hay texto subido)
+      $fuente = $it['fuente'] ?? null;
+      $pagina_fuente = null;
+      $ubicacion_fuente = null;
+      $cita_fuente = null;
+      
+      if ($fuente && $texto !== '') {
+        $pagina_fuente = trim($fuente['pagina'] ?? '') ?: null;
+        $ubicacion_fuente = trim($fuente['ubicacion'] ?? '') ?: null;
+        $cita_fuente = trim($fuente['cita'] ?? '') ?: null;
+        log_debug_preg("Fuente para pregunta: pág=$pagina_fuente, ubic=$ubicacion_fuente, cita=".substr($cita_fuente ?? '', 0, 50));
+      }
 
       if ($preg==='' || !is_array($ops) || count($ops)!==4 || $corr_txt==='') {
         throw new Exception('Ítem inválido de IA');
       }
 
-      // INSERT con o sin columna es_publico
-      if ($tiene_columna_publico) {
+      // INSERT con columnas de fuente si existen Y hay texto subido
+      if ($tiene_columnas_fuente && $texto !== '' && $tiene_columna_publico) {
+        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)");
+        if (!$stmt) throw new Exception("Prepare: ".$conn->error);
+        $stmt->bind_param("iissssississs", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
+      } elseif ($tiene_columnas_fuente && $texto !== '' && !$tiene_columna_publico) {
+        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)");
+        if (!$stmt) throw new Exception("Prepare: ".$conn->error);
+        $stmt->bind_param("iissssssss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
+      } elseif ($tiene_columna_publico) {
         $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
         if (!$stmt) throw new Exception("Prepare: ".$conn->error);
         $stmt->bind_param("iissssi", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico);
       } else {
-        // Sin columna es_publico (mantener compatibilidad)
+        // Sin columnas extra (mantener compatibilidad)
         $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion) VALUES (?, ?, ?, ?, ?, ?, 0)");
         if (!$stmt) throw new Exception("Prepare: ".$conn->error);
         $stmt->bind_param("iissss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt);
