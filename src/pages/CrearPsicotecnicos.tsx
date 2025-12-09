@@ -474,9 +474,9 @@ export default function CrearPsicotecnicos() {
               {/* Documento o Texto Base */}
               <div className="space-y-4">
                 <div>
-                  <Label>Documento o Texto Base *</Label>
+                  <Label>{t('createPsychotechnics.documentOrText')}</Label>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Sube un documento o escribe el texto del cual se generarán las preguntas psicotécnicas
+                    {t('createPsychotechnics.documentOrTextDesc')}
                   </p>
                   
                   {extractingText && (
@@ -489,9 +489,9 @@ export default function CrearPsicotecnicos() {
                           </div>
                         </div>
                         <div className="text-center">
-                          <p className="font-semibold text-lg mb-1">Extrayendo texto del documento</p>
+                          <p className="font-semibold text-lg mb-1">{t('createPsychotechnics.extractingText')}</p>
                           <p className="text-sm text-muted-foreground">
-                            Esto puede tardar unos segundos...
+                            {t('createPsychotechnics.mayTakeFewSeconds')}
                           </p>
                         </div>
                       </div>
@@ -515,10 +515,10 @@ export default function CrearPsicotecnicos() {
                         >
                           <Upload className="h-8 w-8 text-muted-foreground" />
                           <span className="text-sm font-medium">
-                            Subir documento
+                            {t('createPsychotechnics.uploadDocument')}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            PDF, DOC, DOCX o TXT
+                            {t('createPsychotechnics.fileTypes')}
                           </span>
                         </label>
                       </div>
@@ -529,13 +529,13 @@ export default function CrearPsicotecnicos() {
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                           <span className="bg-background px-2 text-muted-foreground">
-                            O escribe el texto
+                            {t('createPsychotechnics.orWriteText')}
                           </span>
                         </div>
                       </div>
 
                       <Textarea
-                        placeholder="Escribe o pega aquí el texto del cual generar las preguntas psicotécnicas..."
+                        placeholder={t('createPsychotechnics.writeOrPasteText')}
                         value={formData.textoBase}
                         onChange={(e) => setFormData({ ...formData, textoBase: e.target.value })}
                         className="min-h-[200px]"
@@ -558,7 +558,7 @@ export default function CrearPsicotecnicos() {
                               <div className="flex items-center gap-2 mt-2">
                                 <div className="h-2 w-2 rounded-full bg-green-600 animate-pulse" />
                                 <p className="text-xs text-green-600 font-medium">
-                                  Texto extraído correctamente ({formData.textoBase.length} caracteres)
+                                  {t('createPsychotechnics.textExtractedCorrectly', { chars: formData.textoBase.length })}
                                 </p>
                               </div>
                             )}
@@ -586,9 +586,9 @@ export default function CrearPsicotecnicos() {
                         <div className="flex items-start gap-3 flex-1">
                           <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm">Texto proporcionado</p>
+                            <p className="font-medium text-sm">{t('createPsychotechnics.textProvided')}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {formData.textoBase.length} caracteres
+                              {formData.textoBase.length} {t('createPsychotechnics.characters')}
                             </p>
                           </div>
                         </div>
@@ -611,7 +611,7 @@ export default function CrearPsicotecnicos() {
 
               {/* Proceso */}
               <div className="space-y-2">
-                <Label htmlFor="proceso">Proceso *</Label>
+                <Label htmlFor="proceso">{t('createPsychotechnics.process')}</Label>
                 <div className="space-y-2">
                   {!useCustomProceso ? (
                     <>
@@ -625,7 +625,7 @@ export default function CrearPsicotecnicos() {
                         disabled={loadingProcesos}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={loadingProcesos ? "Cargando..." : "Selecciona un proceso"} />
+                          <SelectValue placeholder={loadingProcesos ? t('createPsychotechnics.loading') : t('createPsychotechnics.selectProcess')} />
                         </SelectTrigger>
                         <SelectContent>
                           {procesos.map((proceso) => (
@@ -647,14 +647,14 @@ export default function CrearPsicotecnicos() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createPsychotechnics.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
                         id="procesoPersonalizado"
-                        placeholder="Escribe tu propio concepto"
+                        placeholder={t('createPsychotechnics.writeYourConcept')}
                         value={formData.procesoPersonalizado}
                         onChange={(e) => setFormData(prev => ({ ...prev, procesoPersonalizado: e.target.value }))}
                       />
@@ -668,7 +668,7 @@ export default function CrearPsicotecnicos() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createPsychotechnics.backToList')}
                       </Button>
                     </>
                   )}
@@ -677,7 +677,7 @@ export default function CrearPsicotecnicos() {
 
               {/* Sección */}
               <div className="space-y-2">
-                <Label>Sección * (puedes seleccionar varias)</Label>
+                <Label>{t('createPsychotechnics.sections')}</Label>
                 <div className="space-y-2">
                   {!useCustomSeccion ? (
                     <>
@@ -692,10 +692,10 @@ export default function CrearPsicotecnicos() {
                         <SelectTrigger>
                           <SelectValue 
                             placeholder={
-                              loadingSecciones ? "Cargando..." :
-                              !formData.proceso && !useCustomProceso ? "Primero selecciona un proceso" :
-                              secciones.length === 0 ? "No hay secciones disponibles" :
-                              "Selecciona una sección"
+                              loadingSecciones ? t('createPsychotechnics.loading') :
+                              !formData.proceso && !useCustomProceso ? t('createPsychotechnics.firstSelectProcess') :
+                              secciones.length === 0 ? t('createPsychotechnics.noSectionsAvailable') :
+                              t('createPsychotechnics.selectSection')
                             } 
                           />
                         </SelectTrigger>
@@ -733,13 +733,13 @@ export default function CrearPsicotecnicos() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createPsychotechnics.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
-                        placeholder="Escribe tu propia sección"
+                        placeholder={t('createPsychotechnics.writeYourSection')}
                         value={formData.seccionPersonalizada}
                         onChange={(e) => setFormData(prev => ({ ...prev, seccionPersonalizada: e.target.value }))}
                         required
@@ -754,7 +754,7 @@ export default function CrearPsicotecnicos() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createPsychotechnics.backToList')}
                       </Button>
                     </>
                   )}
@@ -763,7 +763,7 @@ export default function CrearPsicotecnicos() {
 
               {/* Temas */}
               <div className="space-y-2">
-                <Label>Tema * (puedes seleccionar varios)</Label>
+                <Label>{t('createPsychotechnics.topics')}</Label>
                 <div className="space-y-2">
                   {!useCustomTema ? (
                     <>
@@ -778,10 +778,10 @@ export default function CrearPsicotecnicos() {
                         <SelectTrigger>
                           <SelectValue 
                             placeholder={
-                              loadingTemas ? "Cargando..." :
-                              seccionesSeleccionadas.length === 0 && !useCustomSeccion ? "Primero selecciona una sección" :
-                              temas.length === 0 ? "No hay temas disponibles" :
-                              "Selecciona un tema"
+                              loadingTemas ? t('createPsychotechnics.loading') :
+                              seccionesSeleccionadas.length === 0 && !useCustomSeccion ? t('createPsychotechnics.firstSelectSection') :
+                              temas.length === 0 ? t('createPsychotechnics.noTopicsAvailable') :
+                              t('createPsychotechnics.selectTopic')
                             } 
                           />
                         </SelectTrigger>
@@ -818,13 +818,13 @@ export default function CrearPsicotecnicos() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createPsychotechnics.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
-                        placeholder="Escribe tu propio tema"
+                        placeholder={t('createPsychotechnics.writeYourTopic')}
                         value={formData.temaPersonalizado}
                         onChange={(e) => setFormData(prev => ({ ...prev, temaPersonalizado: e.target.value }))}
                         required
@@ -839,7 +839,7 @@ export default function CrearPsicotecnicos() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createPsychotechnics.backToList')}
                       </Button>
                     </>
                   )}
@@ -848,7 +848,7 @@ export default function CrearPsicotecnicos() {
 
               {/* Número de preguntas */}
               <div className="space-y-2">
-                <Label htmlFor="numPreguntas">Número de preguntas *</Label>
+                <Label htmlFor="numPreguntas">{t('createPsychotechnics.numberOfQuestions')}</Label>
                 <Input
                   id="numPreguntas"
                   type="number"
@@ -859,7 +859,7 @@ export default function CrearPsicotecnicos() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Entre 1 y 100 preguntas
+                  {t('createPsychotechnics.between1And100')}
                 </p>
               </div>
 
@@ -880,12 +880,12 @@ export default function CrearPsicotecnicos() {
                   </div>
                   {progressInfo.generated !== undefined && (
                     <p className="text-xs text-muted-foreground text-center">
-                      {progressInfo.generated} preguntas generadas hasta ahora
+                      {t('createPsychotechnics.questionsGeneratedSoFar', { count: progressInfo.generated })}
                     </p>
                   )}
                   {progressInfo.fragmentos && (
                     <div className="flex items-center justify-between text-xs bg-primary/10 p-2 rounded">
-                      <span className="text-muted-foreground">Fragmentos de texto procesados:</span>
+                      <span className="text-muted-foreground">{t('createPsychotechnics.fragmentsProcessed')}</span>
                       <span className="font-medium text-primary">
                         {progressInfo.fragmentos.actual}/{progressInfo.fragmentos.total}
                       </span>
@@ -898,7 +898,7 @@ export default function CrearPsicotecnicos() {
                     onClick={handleCancelar}
                     className="w-full mt-2"
                   >
-                    Cancelar generación
+                    {t('createPsychotechnics.cancelGeneration')}
                   </Button>
                 </div>
               )}
@@ -912,12 +912,12 @@ export default function CrearPsicotecnicos() {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generando...
+                      {t('createPsychotechnics.generating')}
                     </>
                   ) : (
                     <>
                       <Brain className="w-4 h-4 mr-2" />
-                      Generar Psicotécnicos
+                      {t('createPsychotechnics.generatePsychotechnics')}
                     </>
                   )}
                 </Button>
@@ -927,7 +927,7 @@ export default function CrearPsicotecnicos() {
                   onClick={() => navigate('/')}
                   disabled={loading}
                 >
-                  Cancelar
+                  {t('createPsychotechnics.cancel')}
                 </Button>
               </div>
             </form>
