@@ -27,6 +27,11 @@ interface Pregunta {
   pregunta: string;
   respuestas: Respuesta[];
   correcta_indice: string;
+  // Campos de trazabilidad de fuente (opcionales)
+  documento?: string;
+  pagina?: string;
+  ubicacion?: string;
+  cita?: string;
 }
 
 interface ProgresoData {

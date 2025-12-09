@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap, FileText, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testService, type Pregunta, type Respuesta } from '@/services/testService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -562,7 +562,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                     <XCircle className="w-6 h-6 text-red-600" />
                   )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="font-semibold mb-2">
                     {selectedAnswer === currentQuestion.correcta_indice ? '¡Correcto!' : 'Incorrecto'}
                   </h3>
@@ -571,6 +571,33 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                       currentQuestion.respuestas.find(r => r.indice === currentQuestion.correcta_indice)?.respuesta
                     }
                   </p>
+                  
+                  {/* Trazabilidad de fuente - solo si hay datos y el usuario acertó */}
+                  {selectedAnswer === currentQuestion.correcta_indice && currentQuestion.documento && (
+                    <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <BookOpen className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-800">Referencia del documento</span>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <p className="flex items-center gap-2">
+                          <FileText className="w-3 h-3" />
+                          <span className="font-medium">Documento:</span> {currentQuestion.documento}
+                        </p>
+                        {currentQuestion.pagina && (
+                          <p><span className="font-medium">Página:</span> {currentQuestion.pagina}</p>
+                        )}
+                        {currentQuestion.ubicacion && (
+                          <p><span className="font-medium">Ubicación:</span> {currentQuestion.ubicacion}</p>
+                        )}
+                        {currentQuestion.cita && (
+                          <div className="mt-2 p-2 bg-gray-50 rounded border-l-2 border-blue-400 italic text-gray-700">
+                            "{currentQuestion.cita}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
