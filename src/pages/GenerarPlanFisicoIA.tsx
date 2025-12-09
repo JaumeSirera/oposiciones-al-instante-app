@@ -145,36 +145,36 @@ export default function GenerarPlanFisicoIA() {
       <div className="container mx-auto p-6 max-w-4xl">
         <Button variant="ghost" onClick={() => navigate('/planes-fisicos')} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
+          {t('common.back')}
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              Generar Plan Físico con IA
+              {t('physicalPlans.generate.title')}
             </CardTitle>
             <CardDescription>
-              La IA creará un plan de entrenamiento personalizado basado en tus objetivos
+              {t('physicalPlans.generate.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="titulo">Título del plan *</Label>
+                <Label htmlFor="titulo">{t('physicalPlans.generate.planTitle')} *</Label>
                 <Input
                   id="titulo"
-                  placeholder="Ej: Preparación Bomberos 2025"
+                  placeholder={t('physicalPlans.generate.planTitlePlaceholder')}
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tipo">Tipo de prueba *</Label>
+                <Label htmlFor="tipo">{t('physicalPlans.generate.testType')} *</Label>
                 <Select value={tipo} onValueChange={setTipo}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona" />
+                    <SelectValue placeholder={t('physicalPlans.generate.selectTestType')} />
                   </SelectTrigger>
                   <SelectContent>
                     {tiposPrueba.map((t) => (
@@ -188,10 +188,10 @@ export default function GenerarPlanFisicoIA() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="descripcion">Descripción / Objetivos</Label>
+              <Label htmlFor="descripcion">{t('physicalPlans.generate.descriptionObjectives')}</Label>
               <Textarea
                 id="descripcion"
-                placeholder="Describe tus objetivos específicos..."
+                placeholder={t('physicalPlans.generate.descriptionPlaceholder')}
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
                 rows={3}
@@ -200,7 +200,7 @@ export default function GenerarPlanFisicoIA() {
 
             <div className="grid md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="semanas">Duración (semanas)</Label>
+                <Label htmlFor="semanas">{t('physicalPlans.generate.durationWeeks')}</Label>
                 <Input
                   id="semanas"
                   type="number"
@@ -212,7 +212,7 @@ export default function GenerarPlanFisicoIA() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dias">Días por semana</Label>
+                <Label htmlFor="dias">{t('physicalPlans.generate.daysPerWeek')}</Label>
                 <Input
                   id="dias"
                   type="number"
@@ -224,22 +224,22 @@ export default function GenerarPlanFisicoIA() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nivel">Nivel físico</Label>
+                <Label htmlFor="nivel">{t('physicalPlans.generate.fitnessLevel')}</Label>
                 <Select value={nivelFisico} onValueChange={setNivelFisico}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="principiante">Principiante</SelectItem>
-                    <SelectItem value="intermedio">Intermedio</SelectItem>
-                    <SelectItem value="avanzado">Avanzado</SelectItem>
+                    <SelectItem value="principiante">{t('physicalPlans.generate.beginner')}</SelectItem>
+                    <SelectItem value="intermedio">{t('physicalPlans.generate.intermediate')}</SelectItem>
+                    <SelectItem value="avanzado">{t('physicalPlans.generate.advanced')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Fecha de inicio</Label>
+              <Label>{t('physicalPlans.generate.startDate')}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -261,9 +261,9 @@ export default function GenerarPlanFisicoIA() {
             <div className="space-y-4 p-4 bg-muted rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Recordatorios por email</Label>
+                  <Label>{t('physicalPlans.generate.emailReminders')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Recibe recordatorios diarios de entrenamiento
+                    {t('physicalPlans.generate.emailRemindersDesc')}
                   </p>
                 </div>
                 <Switch
@@ -274,7 +274,7 @@ export default function GenerarPlanFisicoIA() {
 
               {notificacionesEmail && (
                 <div className="space-y-2">
-                  <Label htmlFor="hora">Hora del recordatorio</Label>
+                  <Label htmlFor="hora">{t('physicalPlans.generate.reminderTime')}</Label>
                   <Input
                     id="hora"
                     type="time"
@@ -294,12 +294,12 @@ export default function GenerarPlanFisicoIA() {
               {generando ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generando plan con IA...
+                  {t('physicalPlans.generate.generating')}
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Generar Plan con IA
+                  {t('physicalPlans.generate.generateButton')}
                 </>
               )}
             </Button>
@@ -313,7 +313,7 @@ export default function GenerarPlanFisicoIA() {
     <div className="container mx-auto p-6 max-w-4xl">
       <Button variant="ghost" onClick={() => setPlanGenerado(null)} className="mb-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Volver al formulario
+        {t('physicalPlans.generate.backToForm')}
       </Button>
 
       <Card className="mb-6">
@@ -323,7 +323,7 @@ export default function GenerarPlanFisicoIA() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="font-semibold mb-1">Descripción</h3>
+            <h3 className="font-semibold mb-1">{t('physicalPlans.detail.description')}</h3>
             <p className="text-muted-foreground">{planGenerado.descripcion}</p>
           </div>
 
@@ -337,15 +337,15 @@ export default function GenerarPlanFisicoIA() {
 
           {planGenerado.resumen && (
             <div className="p-3 bg-muted rounded">
-              <h3 className="font-semibold mb-1">Resumen IA</h3>
+              <h3 className="font-semibold mb-1">{t('physicalPlans.generate.aiSummary')}</h3>
               <p className="text-sm">{planGenerado.resumen}</p>
             </div>
           )}
 
           <div>
-            <h3 className="font-semibold mb-2">Plan de entrenamiento</h3>
+            <h3 className="font-semibold mb-2">{t('physicalPlans.generate.trainingPlan')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {planGenerado.semanas?.length || 0} semanas programadas
+              {planGenerado.semanas?.length || 0} {t('physicalPlans.generate.weeksScheduled')}
             </p>
 
             <div className="space-y-2">
@@ -357,7 +357,7 @@ export default function GenerarPlanFisicoIA() {
               ))}
               {planGenerado.semanas?.length > 3 && (
                 <p className="text-sm text-muted-foreground text-center">
-                  + {planGenerado.semanas.length - 3} semanas más...
+                  + {planGenerado.semanas.length - 3} {t('physicalPlans.generate.moreWeeks')}
                 </p>
               )}
             </div>
@@ -365,16 +365,16 @@ export default function GenerarPlanFisicoIA() {
 
           <div className="flex gap-3 pt-4">
             <Button variant="outline" onClick={() => setPlanGenerado(null)} disabled={loading}>
-              Generar otro
+              {t('physicalPlans.generate.generateAnother')}
             </Button>
             <Button onClick={confirmarYGuardar} disabled={loading} className="flex-1">
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Guardando...
+                  {t('physicalPlans.generate.saving')}
                 </>
               ) : (
-                'Confirmar y Guardar'
+                t('physicalPlans.generate.confirmAndSave')
               )}
             </Button>
           </div>

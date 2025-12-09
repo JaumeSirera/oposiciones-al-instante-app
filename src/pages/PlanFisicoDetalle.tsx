@@ -336,7 +336,7 @@ export default function PlanFisicoDetalle() {
   if (!plan) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
-        <p>No se encontró el plan físico.</p>
+        <p>{t('physicalPlans.detail.notFound')}</p>
       </div>
     );
   }
@@ -347,7 +347,7 @@ export default function PlanFisicoDetalle() {
     <div className="container mx-auto p-6 max-w-5xl">
       <Button variant="ghost" onClick={() => navigate('/planes-fisicos')} className="mb-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Volver
+        {t('physicalPlans.detail.back')}
       </Button>
 
       <Card className="mb-6">
@@ -357,7 +357,7 @@ export default function PlanFisicoDetalle() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="font-semibold mb-1">Descripción</h3>
+            <h3 className="font-semibold mb-1">{t('physicalPlans.detail.description')}</h3>
             <p className="text-muted-foreground">{plan.descripcion || '-'}</p>
           </div>
 
@@ -374,16 +374,16 @@ export default function PlanFisicoDetalle() {
           <Separator />
 
           <div>
-            <h3 className="font-semibold mb-2">Avance total</h3>
+            <h3 className="font-semibold mb-2">{t('physicalPlans.detail.totalProgress')}</h3>
             <Progress value={ratio * 100} className="h-2 mb-2" />
-            <p className="text-sm text-muted-foreground">{Math.round(ratio * 100)}% completado</p>
+            <p className="text-sm text-muted-foreground">{Math.round(ratio * 100)}% {t('physicalPlans.completed')}</p>
           </div>
 
           {resumenIA && (
             <>
               <Separator />
               <div>
-                <h3 className="font-semibold mb-1">Resumen IA</h3>
+                <h3 className="font-semibold mb-1">{t('physicalPlans.detail.aiSummary')}</h3>
                 <p className="text-muted-foreground">{resumenIA}</p>
               </div>
             </>
@@ -393,7 +393,7 @@ export default function PlanFisicoDetalle() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Plan de Entrenamiento (semanas)</CardTitle>
+          <CardTitle>{t('physicalPlans.detail.trainingPlan')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
@@ -497,7 +497,7 @@ export default function PlanFisicoDetalle() {
                         </>
                       ) : (
                         <p className="text-muted-foreground text-center py-4">
-                          Esta semana aún no ha sido generada. Haz clic en "Generar con IA" para crearla.
+                          {t('physicalPlans.detail.weekNotGenerated')}
                         </p>
                       )}
                     </div>
