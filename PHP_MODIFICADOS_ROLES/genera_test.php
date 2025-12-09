@@ -156,19 +156,75 @@ foreach ($pregRows as $pregunta) {
     // si no, iguala por texto limpio.
     $correcta_indice = null;
     $colCorrecta = $pregunta['correcta'];
+    
+    // DEBUG: Log the correcta value
+    error_log("[genera_test] Pregunta ID: $id, correcta raw: " . var_export($colCorrecta, true));
+    
     if ($colCorrecta !== null && $colCorrecta !== '' && is_numeric($colCorrecta)) {
         $correcta_indice = (string)intval($colCorrecta);
+        error_log("[genera_test] correcta es numérica: $correcta_indice");
     } else {
         $textoCorrecto = limpiar((string)$colCorrecta);
+        $textoCorrectoLower = mb_strtolower($textoCorrecto, 'UTF-8');
+        
+        error_log("[genera_test] Buscando coincidencia para: '$textoCorrecto'");
+        
+        // 1. Intento: coincidencia exacta (case-insensitive)
         foreach ($respuestas as $resp) {
-            if (limpiar($resp['respuesta']) === $textoCorrecto) {
+            $respLimpia = limpiar($resp['respuesta']);
+            $respLimpiaLower = mb_strtolower($respLimpia, 'UTF-8');
+            error_log("[genera_test] Comparando con indice {$resp['indice']}: '$respLimpia'");
+            
+            if ($respLimpiaLower === $textoCorrectoLower) {
                 $correcta_indice = $resp['indice'];
+                error_log("[genera_test] ¡Match exacto encontrado! indice: $correcta_indice");
                 break;
             }
         }
-        // fallback: si no ha habido match y hay 1-4 respuestas, asume 1 (mejor que null)
-        if ($correcta_indice === null && count($respuestas) > 0) {
-            $correcta_indice = $respuestas[0]['indice'];
+        
+        // 2. Intento: La respuesta contiene el texto de correcta o viceversa
+        if ($correcta_indice === null && strlen($textoCorrecto) > 5) {
+            foreach ($respuestas as $resp) {
+                $respLimpia = limpiar($resp['respuesta']);
+                $respLimpiaLower = mb_strtolower($respLimpia, 'UTF-8');
+                
+                // Si el texto de correcta está contenido en la respuesta
+                if (mb_strpos($respLimpiaLower, $textoCorrectoLower) !== false) {
+                    $correcta_indice = $resp['indice'];
+                    error_log("[genera_test] Match por contenido (correcta en respuesta): indice $correcta_indice");
+                    break;
+                }
+                // Si la respuesta está contenida en el texto de correcta
+                if (mb_strpos($textoCorrectoLower, $respLimpiaLower) !== false) {
+                    $correcta_indice = $resp['indice'];
+                    error_log("[genera_test] Match por contenido (respuesta en correcta): indice $correcta_indice");
+                    break;
+                }
+            }
+        }
+        
+        // 3. Intento: Similitud por palabras clave (primeras N palabras)
+        if ($correcta_indice === null) {
+            $palabrasCorrecta = array_slice(explode(' ', $textoCorrectoLower), 0, 4);
+            $keywordCorrecta = implode(' ', $palabrasCorrecta);
+            
+            foreach ($respuestas as $resp) {
+                $respLimpia = limpiar($resp['respuesta']);
+                $respLimpiaLower = mb_strtolower($respLimpia, 'UTF-8');
+                
+                if (mb_strpos($respLimpiaLower, $keywordCorrecta) !== false) {
+                    $correcta_indice = $resp['indice'];
+                    error_log("[genera_test] Match por palabras clave: indice $correcta_indice");
+                    break;
+                }
+            }
+        }
+        
+        // 4. NO HAY FALLBACK a primera respuesta - si no hay match, es un error de datos
+        if ($correcta_indice === null) {
+            error_log("[genera_test] ERROR: No se encontró coincidencia para correcta='$textoCorrecto' en pregunta ID: $id");
+            // Marcar como null para indicar problema de datos
+            $correcta_indice = null;
         }
     }
 
