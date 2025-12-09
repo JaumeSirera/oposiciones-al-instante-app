@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap, FileText, BookOpen } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap, FileText, BookOpen, Languages } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testService, type Pregunta, type Respuesta } from '@/services/testService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import type { TestConfig } from './ConfigTest';
 
 interface QuizInterfaceProps {
@@ -17,8 +18,13 @@ interface QuizInterfaceProps {
   onExit: () => void;
 }
 
+interface TranslatedQuestion {
+  pregunta: string;
+  respuestas: string[];
+}
+
 const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExit }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [questions, setQuestions] = useState<Pregunta[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -40,13 +46,60 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   const userId = user?.id;
   const isAdmin = user?.nivel === 'admin';
 
+  // Traducción de contenido
+  const { translateQuestion, isTranslating, needsTranslation } = useTranslateContent();
+  const [translatedQuestions, setTranslatedQuestions] = useState<Record<number, TranslatedQuestion>>({});
+
   const currentQuestion = questions[currentQuestionIndex];
+  const currentTranslation = translatedQuestions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+
+  // Traducir pregunta actual cuando cambia
+  useEffect(() => {
+    if (currentQuestion && needsTranslation && !translatedQuestions[currentQuestionIndex]) {
+      translateCurrentQuestion();
+    }
+  }, [currentQuestionIndex, currentQuestion, needsTranslation, i18n.language]);
+
+  const translateCurrentQuestion = async () => {
+    if (!currentQuestion) return;
+    
+    const translated = await translateQuestion({
+      pregunta: currentQuestion.pregunta,
+      respuestas: currentQuestion.respuestas.map(r => r.respuesta)
+    });
+    
+    setTranslatedQuestions(prev => ({
+      ...prev,
+      [currentQuestionIndex]: translated
+    }));
+  };
+
+  // Obtener texto de pregunta (traducido o original)
+  const getQuestionText = () => {
+    if (needsTranslation && currentTranslation) {
+      return currentTranslation.pregunta;
+    }
+    return currentQuestion?.pregunta || '';
+  };
+
+  // Obtener texto de respuesta (traducido o original)
+  const getAnswerText = (index: number) => {
+    if (needsTranslation && currentTranslation && currentTranslation.respuestas[index]) {
+      return currentTranslation.respuestas[index];
+    }
+    return currentQuestion?.respuestas[index]?.respuesta || '';
+  };
 
   // Cargar preguntas al inicio
   useEffect(() => {
     loadQuestions();
   }, []);
+
+  // Limpiar traducciones cuando cambia el idioma
+  useEffect(() => {
+    setTranslatedQuestions({});
+  }, [i18n.language]);
 
   // Cargar comentarios cuando cambia la pregunta
   useEffect(() => {
@@ -505,13 +558,29 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         {/* Question Card */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-xl leading-relaxed">
-              {currentQuestion.pregunta}
-            </CardTitle>
+            <div className="flex items-start justify-between gap-4">
+              <CardTitle className="text-xl leading-relaxed flex-1">
+                {isTranslating && needsTranslation && !currentTranslation ? (
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Languages className="w-5 h-5" />
+                    {t('common.loading')}
+                  </span>
+                ) : (
+                  getQuestionText()
+                )}
+              </CardTitle>
+              {needsTranslation && (
+                <Badge variant="outline" className="flex items-center gap-1 shrink-0">
+                  <Languages className="w-3 h-3" />
+                  {i18n.language.toUpperCase()}
+                </Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {currentQuestion.respuestas.map((respuesta: Respuesta) => {
+              {currentQuestion.respuestas.map((respuesta: Respuesta, index: number) => {
                 const isSelected = selectedAnswer === respuesta.indice;
                 const isCorrect = respuesta.indice === currentQuestion.correcta_indice;
                 const showResult = showExplanation;
@@ -533,12 +602,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                     variant={isSelected ? "default" : "outline"}
                     className={buttonClass}
                     onClick={() => !showExplanation && handleAnswer(respuesta.indice)}
-                    disabled={showExplanation}
+                    disabled={showExplanation || (isTranslating && needsTranslation && !currentTranslation)}
                   >
                     <span className="font-bold mr-2 text-blue-600">
                       {String.fromCharCode(64 + parseInt(respuesta.indice))}.
                     </span>
-                    <span className="flex-1">{respuesta.respuesta}</span>
+                    <span className="flex-1">{getAnswerText(index)}</span>
                     {showResult && isCorrect && (
                       <CheckCircle className="w-5 h-5 text-green-600 ml-2" />
                     )}
@@ -570,7 +639,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                   </h3>
                   <p className="text-gray-700">
                     {t('quiz.correctAnswerIs')}: {String.fromCharCode(64 + parseInt(currentQuestion.correcta_indice))}. {
-                      currentQuestion.respuestas.find(r => r.indice === currentQuestion.correcta_indice)?.respuesta
+                      needsTranslation && currentTranslation
+                        ? currentTranslation.respuestas[currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice)]
+                        : currentQuestion.respuestas.find(r => r.indice === currentQuestion.correcta_indice)?.respuesta
                     }
                   </p>
                   

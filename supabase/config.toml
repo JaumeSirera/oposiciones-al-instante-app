@@ -35,3 +35,9 @@ verify_jwt = false
 
 [functions.guardar-plan-fisico]
 verify_jwt = false
+
+[functions.translate-content]
+verify_jwt = false
+
+[functions.create-donation-payment]
+verify_jwt = false
