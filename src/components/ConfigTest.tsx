@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,6 +52,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
   initialSecciones,
   autoStart = false
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -155,8 +157,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudieron cargar los procesos',
+        title: t('configTest.error'),
+        description: t('configTest.couldNotLoadProcesses'),
       });
     } finally {
       setLoading(false);
@@ -175,8 +177,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudieron cargar las secciones',
+        title: t('configTest.error'),
+        description: t('configTest.couldNotLoadSections'),
       });
     } finally {
       setLoading(false);
@@ -196,8 +198,6 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
       
       const uniqueTemas = [...new Set(allTemas.flat())].filter(tema => {
         const isPsicoTema = /^(pisco|psico)\s*-\s*/i.test(tema);
-        // Si es modo psicotécnico, solo mostrar temas con prefijo PSICO
-        // Si es modo normal, excluir temas con prefijo PSICO
         return isPsicotecnico ? isPsicoTema : !isPsicoTema;
       });
       
@@ -206,8 +206,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudieron cargar los temas',
+        title: t('configTest.error'),
+        description: t('configTest.couldNotLoadTopics'),
       });
     } finally {
       setLoading(false);
@@ -234,8 +234,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     if (!selectedProceso) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Selecciona un proceso',
+        title: t('configTest.error'),
+        description: t('configTest.selectProcess'),
       });
       return;
     }
@@ -243,8 +243,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     if (selectedSecciones.length === 0) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Selecciona al menos una sección',
+        title: t('configTest.error'),
+        description: t('configTest.selectSection'),
       });
       return;
     }
@@ -252,8 +252,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     if (selectedTemas.length === 0) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Selecciona al menos un tema',
+        title: t('configTest.error'),
+        description: t('configTest.selectTopic'),
       });
       return;
     }
@@ -264,8 +264,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     if (isNaN(numPreguntasInt) || numPreguntasInt <= 0) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Número de preguntas inválido',
+        title: t('configTest.error'),
+        description: t('configTest.invalidQuestions'),
       });
       return;
     }
@@ -273,8 +273,8 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
     if (isNaN(minutosInt) || minutosInt <= 0) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Minutos inválidos',
+        title: t('configTest.error'),
+        description: t('configTest.invalidMinutes'),
       });
       return;
     }
@@ -289,9 +289,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
         const progreso = await testService.recuperarProgreso(user.id, test_key);
         
         if (progreso.ok && progreso.data) {
-          const continuar = window.confirm(
-            'Tienes un test sin finalizar con estos parámetros. ¿Quieres continuar donde lo dejaste?\n\nAceptar: Continuar\nCancelar: Empezar de cero'
-          );
+          const continuar = window.confirm(t('configTest.continueProgress'));
 
           if (!continuar) {
             await testService.eliminarProgreso(user.id, test_key);
@@ -321,10 +319,10 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
         <div className="flex items-center mb-8">
           <Button variant="ghost" onClick={onBack} className="mr-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
+            {t('configTest.back')}
           </Button>
           <h1 className="text-3xl font-bold text-gray-800">
-            {isPsicotecnico ? 'Configurar Test Psicotécnico' : 'Configurar Test'}
+            {isPsicotecnico ? t('configTest.titlePsycho') : t('configTest.title')}
           </h1>
         </div>
 
@@ -332,26 +330,26 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center">
               <BookOpen className="w-6 h-6 mr-2 text-primary" />
-              {isPsicotecnico ? 'Configura tu test psicotécnico' : 'Configura tu test personalizado'}
+              {isPsicotecnico ? t('configTest.configurePsycho') : t('configTest.configureCustom')}
             </CardTitle>
             <CardDescription>
               {isPsicotecnico 
-                ? 'Selecciona el proceso, secciones y temas psicotécnicos para empezar a practicar'
-                : 'Selecciona el proceso, secciones y temas para empezar a practicar'
+                ? t('configTest.selectProcessPsycho')
+                : t('configTest.selectProcess')
               }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Seleccionar Proceso */}
             <div className="space-y-2">
-              <Label htmlFor="proceso">Proceso / Manual</Label>
+              <Label htmlFor="proceso">{t('configTest.processManual')}</Label>
               <Select
                 value={selectedProceso?.toString()}
                 onValueChange={(value) => setSelectedProceso(parseInt(value))}
                 disabled={loading}
               >
                 <SelectTrigger id="proceso">
-                  <SelectValue placeholder="Selecciona un proceso" />
+                  <SelectValue placeholder={t('configTest.selectProcessPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {procesos.map((proceso) => (
@@ -369,7 +367,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                 
                 {/* Secciones */}
                 <div className="space-y-3">
-                  <Label>Secciones (selecciona varias)</Label>
+                  <Label>{t('configTest.sections')}</Label>
                   {loading ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -398,7 +396,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                 
                 {/* Temas */}
                 <div className="space-y-3">
-                  <Label>Temas (de esas secciones)</Label>
+                  <Label>{t('configTest.topics')}</Label>
                   {loading ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -424,7 +422,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                 {/* Configuración */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="numPreguntas">Número de preguntas</Label>
+                    <Label htmlFor="numPreguntas">{t('configTest.numQuestions')}</Label>
                     <Input
                       id="numPreguntas"
                       type="number"
@@ -434,7 +432,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="minutos">Minutos</Label>
+                    <Label htmlFor="minutos">{t('configTest.minutes')}</Label>
                     <Input
                       id="minutos"
                       type="number"
@@ -450,16 +448,16 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                 {/* Filtros de dificultad */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="dificultad">Dificultad</Label>
+                    <Label htmlFor="dificultad">{t('configTest.difficulty')}</Label>
                     <Select value={dificultad} onValueChange={setDificultad}>
                       <SelectTrigger id="dificultad">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="todas">Todas las dificultades</SelectItem>
-                        <SelectItem value="facil">Fácil</SelectItem>
-                        <SelectItem value="media">Media</SelectItem>
-                        <SelectItem value="dificil">Difícil</SelectItem>
+                        <SelectItem value="todas">{t('configTest.allDifficulties')}</SelectItem>
+                        <SelectItem value="facil">{t('configTest.easy')}</SelectItem>
+                        <SelectItem value="media">{t('configTest.medium')}</SelectItem>
+                        <SelectItem value="dificil">{t('configTest.hard')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -467,35 +465,35 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                   {isPsicotecnico && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="tipoPsico">Tipo de Pregunta</Label>
+                        <Label htmlFor="tipoPsico">{t('configTest.questionType')}</Label>
                         <Select value={tipoPsico} onValueChange={setTipoPsico}>
                           <SelectTrigger id="tipoPsico">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="todos">Todos los tipos</SelectItem>
-                            <SelectItem value="numerica">Numérica</SelectItem>
-                            <SelectItem value="verbal">Verbal</SelectItem>
-                            <SelectItem value="abstracta">Abstracta</SelectItem>
-                            <SelectItem value="espacial">Espacial</SelectItem>
-                            <SelectItem value="mecanica">Mecánica</SelectItem>
+                            <SelectItem value="todos">{t('configTest.allTypes')}</SelectItem>
+                            <SelectItem value="numerica">{t('configTest.numeric')}</SelectItem>
+                            <SelectItem value="verbal">{t('configTest.verbal')}</SelectItem>
+                            <SelectItem value="abstracta">{t('configTest.abstract')}</SelectItem>
+                            <SelectItem value="espacial">{t('configTest.spatial')}</SelectItem>
+                            <SelectItem value="mecanica">{t('configTest.mechanical')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="habilidad">Habilidad</Label>
+                        <Label htmlFor="habilidad">{t('configTest.ability')}</Label>
                         <Select value={habilidad} onValueChange={setHabilidad}>
                           <SelectTrigger id="habilidad">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="todas">Todas las habilidades</SelectItem>
-                            <SelectItem value="razonamiento">Razonamiento</SelectItem>
-                            <SelectItem value="memoria">Memoria</SelectItem>
-                            <SelectItem value="atencion">Atención</SelectItem>
-                            <SelectItem value="percepcion">Percepción</SelectItem>
-                            <SelectItem value="calculo">Cálculo</SelectItem>
+                            <SelectItem value="todas">{t('configTest.allAbilities')}</SelectItem>
+                            <SelectItem value="razonamiento">{t('configTest.reasoning')}</SelectItem>
+                            <SelectItem value="memoria">{t('configTest.memory')}</SelectItem>
+                            <SelectItem value="atencion">{t('configTest.attention')}</SelectItem>
+                            <SelectItem value="percepcion">{t('configTest.perception')}</SelectItem>
+                            <SelectItem value="calculo">{t('configTest.calculation')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -510,7 +508,7 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
                   disabled={loading || selectedTemas.length === 0}
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  Comenzar Test
+                  {t('configTest.startTest')}
                 </Button>
               </>
             )}
@@ -521,22 +519,22 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
         <div className="mt-8 bg-white rounded-lg p-6 shadow-lg">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Clock className="w-5 h-5 mr-2 text-primary" />
-            Consejos para el Test
+            {t('configTest.tips')}
           </h2>
           <div className="space-y-2 text-gray-600">
-            <p>• Selecciona múltiples secciones y temas para una práctica más completa</p>
+            <p>• {t('configTest.tipMultipleSections')}</p>
             {tipoTest === 'simulacion' ? (
               <>
-                <p>• <strong>Modo Simulación:</strong> Ver respuestas y explicaciones inmediatamente</p>
-                <p>• El cronómetro se pausa al mostrar las explicaciones</p>
+                <p>• <strong>{t('configTest.simulationMode')}</strong> {t('configTest.simulationDesc')}</p>
+                <p>• {t('configTest.simulationTimer')}</p>
               </>
             ) : (
               <>
-                <p>• <strong>Modo Examen:</strong> Simula condiciones reales con tiempo cronometrado</p>
-                <p>• El cronómetro NO se detiene, finaliza automáticamente al acabar el tiempo</p>
+                <p>• <strong>{t('configTest.examMode')}</strong> {t('configTest.examDesc')}</p>
+                <p>• {t('configTest.examTimer')}</p>
               </>
             )}
-            <p>• Tu progreso se guarda automáticamente para continuar más tarde</p>
+            <p>• {t('configTest.progressSaved')}</p>
           </div>
         </div>
       </div>
