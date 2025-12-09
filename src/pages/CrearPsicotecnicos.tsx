@@ -11,15 +11,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, X, Brain, Upload, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, X, Brain, Upload, FileText, Languages } from 'lucide-react';
 import { testService, type Proceso } from '@/services/testService';
 import { supabase } from '@/lib/supabaseClient';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 
 export default function CrearPsicotecnicos() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   
   const [loading, setLoading] = useState(false);
   const [extractingText, setExtractingText] = useState(false);
@@ -53,6 +55,11 @@ export default function CrearPsicotecnicos() {
   const [loadingProcesos, setLoadingProcesos] = useState(false);
   const [loadingSecciones, setLoadingSecciones] = useState(false);
   const [loadingTemas, setLoadingTemas] = useState(false);
+  
+  // Translated versions
+  const [translatedProcesos, setTranslatedProcesos] = useState<Map<number, string>>(new Map());
+  const [translatedSecciones, setTranslatedSecciones] = useState<Map<string, string>>(new Map());
+  const [translatedTemas, setTranslatedTemas] = useState<Map<string, string>>(new Map());
   
   const [useCustomProceso, setUseCustomProceso] = useState(false);
   const [useCustomSeccion, setUseCustomSeccion] = useState(false);
@@ -117,6 +124,58 @@ export default function CrearPsicotecnicos() {
     };
     loadTemas();
   }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion]);
+
+  // Translate processes when language changes or processes load
+  useEffect(() => {
+    const translateProcesosData = async () => {
+      if (!needsTranslation || procesos.length === 0) {
+        setTranslatedProcesos(new Map());
+        return;
+      }
+      const descriptions = procesos.map(p => p.descripcion);
+      const translated = await translateTexts(descriptions);
+      const newMap = new Map<number, string>();
+      procesos.forEach((p, i) => {
+        newMap.set(p.id, translated[i] || p.descripcion);
+      });
+      setTranslatedProcesos(newMap);
+    };
+    translateProcesosData();
+  }, [procesos, i18n.language, needsTranslation, translateTexts]);
+
+  // Translate sections when language changes or sections load
+  useEffect(() => {
+    const translateSeccionesData = async () => {
+      if (!needsTranslation || secciones.length === 0) {
+        setTranslatedSecciones(new Map());
+        return;
+      }
+      const translated = await translateTexts(secciones);
+      const newMap = new Map<string, string>();
+      secciones.forEach((s, i) => {
+        newMap.set(s, translated[i] || s);
+      });
+      setTranslatedSecciones(newMap);
+    };
+    translateSeccionesData();
+  }, [secciones, i18n.language, needsTranslation, translateTexts]);
+
+  // Translate topics when language changes or topics load
+  useEffect(() => {
+    const translateTemasData = async () => {
+      if (!needsTranslation || temas.length === 0) {
+        setTranslatedTemas(new Map());
+        return;
+      }
+      const translated = await translateTexts(temas);
+      const newMap = new Map<string, string>();
+      temas.forEach((tem, i) => {
+        newMap.set(tem, translated[i] || tem);
+      });
+      setTranslatedTemas(newMap);
+    };
+    translateTemasData();
+  }, [temas, i18n.language, needsTranslation, translateTexts]);
 
   const handleArchivoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -628,9 +687,15 @@ export default function CrearPsicotecnicos() {
                           <SelectValue placeholder={loadingProcesos ? t('createPsychotechnics.loading') : t('createPsychotechnics.selectProcess')} />
                         </SelectTrigger>
                         <SelectContent>
+                          {isTranslating && needsTranslation && (
+                            <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
+                              <Languages className="w-3 h-3 animate-pulse" />
+                              {t('common.translating')}
+                            </div>
+                          )}
                           {procesos.map((proceso) => (
                             <SelectItem key={proceso.id} value={proceso.id.toString()}>
-                              {proceso.descripcion}
+                              {translatedProcesos.get(proceso.id) || proceso.descripcion}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -700,9 +765,15 @@ export default function CrearPsicotecnicos() {
                           />
                         </SelectTrigger>
                         <SelectContent>
+                          {isTranslating && needsTranslation && (
+                            <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
+                              <Languages className="w-3 h-3 animate-pulse" />
+                              {t('common.translating')}
+                            </div>
+                          )}
                           {secciones.filter(s => !seccionesSeleccionadas.includes(s)).map((seccion, index) => (
                             <SelectItem key={index} value={seccion}>
-                              {seccion}
+                              {translatedSecciones.get(seccion) || seccion}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -712,7 +783,7 @@ export default function CrearPsicotecnicos() {
                         <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30">
                           {seccionesSeleccionadas.map((seccion, index) => (
                             <Badge key={index} variant="secondary" className="gap-1">
-                              {seccion}
+                              {translatedSecciones.get(seccion) || seccion}
                               <X 
                                 className="w-3 h-3 cursor-pointer hover:text-destructive" 
                                 onClick={() => setSeccionesSeleccionadas(prev => prev.filter(s => s !== seccion))}
@@ -786,9 +857,15 @@ export default function CrearPsicotecnicos() {
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {temas.filter(t => !temasSeleccionados.includes(t)).map((tema, index) => (
+                          {isTranslating && needsTranslation && (
+                            <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground">
+                              <Languages className="w-3 h-3 animate-pulse" />
+                              {t('common.translating')}
+                            </div>
+                          )}
+                          {temas.filter(tem => !temasSeleccionados.includes(tem)).map((tema, index) => (
                             <SelectItem key={index} value={tema}>
-                              {tema}
+                              {translatedTemas.get(tema) || tema}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -798,10 +875,10 @@ export default function CrearPsicotecnicos() {
                         <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30">
                           {temasSeleccionados.map((tema, index) => (
                             <Badge key={index} variant="secondary" className="gap-1">
-                              {tema}
+                              {translatedTemas.get(tema) || tema}
                               <X 
                                 className="w-3 h-3 cursor-pointer hover:text-destructive" 
-                                onClick={() => setTemasSeleccionados(prev => prev.filter(t => t !== tema))}
+                                onClick={() => setTemasSeleccionados(prev => prev.filter(tem => tem !== tema))}
                               />
                             </Badge>
                           ))}
