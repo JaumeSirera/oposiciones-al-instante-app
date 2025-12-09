@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { Loader2, ArrowLeft, Upload, FileText, Sparkles, X } from 'lucide-react'
 import { testService, type Proceso } from '@/services/testService';
 
 export default function CrearResumen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -117,8 +119,8 @@ export default function CrearResumen() {
       if (!allowedTypes.includes(file.type)) {
         toast({
           variant: "destructive",
-          title: "Archivo no válido",
-          description: "Solo se permiten archivos PDF, TXT, DOC o DOCX"
+          title: t('createSummary.invalidFile'),
+          description: t('createSummary.onlyAllowedFormats')
         });
         return;
       }
@@ -127,8 +129,8 @@ export default function CrearResumen() {
       if (file.size > 20 * 1024 * 1024) {
         toast({
           variant: "destructive",
-          title: "Archivo muy grande",
-          description: "El archivo no debe superar los 20MB"
+          title: t('createSummary.fileTooLarge'),
+          description: t('createSummary.maxFileSize')
         });
         return;
       }
@@ -141,8 +143,8 @@ export default function CrearResumen() {
     if (!formData.resumen) {
       toast({
         variant: "destructive",
-        title: "Contenido requerido",
-        description: "Debes escribir contenido para generar el resumen"
+        title: t('createSummary.contentRequired'),
+        description: t('createSummary.mustWriteContent')
       });
       return;
     }
@@ -150,8 +152,8 @@ export default function CrearResumen() {
     if (!user?.id) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Debes iniciar sesión"
+        title: t('createSummary.error'),
+        description: t('createSummary.mustLogin')
       });
       return;
     }
@@ -165,8 +167,8 @@ export default function CrearResumen() {
     if (!temaFinal) {
       toast({
         variant: "destructive",
-        title: "Campos requeridos",
-        description: "Debes completar al menos el tema"
+        title: t('createSummary.requiredFields'),
+        description: t('createSummary.mustCompleteTopic')
       });
       return;
     }
@@ -203,17 +205,17 @@ export default function CrearResumen() {
         }));
         
         toast({
-          title: "Resumen generado",
-          description: "El resumen ha sido generado con IA. Puedes editarlo antes de guardar."
+          title: t('createSummary.summaryGenerated'),
+          description: t('createSummary.summaryGeneratedDesc')
         });
       } else {
-        throw new Error(data.error || 'Error al generar resumen');
+        throw new Error(data.error || t('createSummary.errorGenerating'));
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudo generar el resumen'
+        title: t('createSummary.error'),
+        description: error.message || t('createSummary.couldNotGenerate')
       });
     } finally {
       setGeneratingAI(false);
@@ -226,8 +228,8 @@ export default function CrearResumen() {
     if (!user?.id) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Debes iniciar sesión"
+        title: t('createSummary.error'),
+        description: t('createSummary.mustLogin')
       });
       return;
     }
@@ -241,8 +243,8 @@ export default function CrearResumen() {
     if (!temaFinal || !formData.resumen) {
       toast({
         variant: "destructive",
-        title: "Campos requeridos",
-        description: "Debes completar al menos el tema y el resumen"
+        title: t('createSummary.requiredFields'),
+        description: t('createSummary.mustCompleteTopicAndSummary')
       });
       return;
     }
@@ -274,18 +276,18 @@ export default function CrearResumen() {
 
       if (data.success || data.id) {
         toast({
-          title: "¡Resumen guardado!",
-          description: "El resumen se ha guardado correctamente"
+          title: t('createSummary.summarySaved'),
+          description: t('createSummary.summarySavedDesc')
         });
         navigate('/resumenes');
       } else {
-        throw new Error(data.error || 'Error al guardar resumen');
+        throw new Error(data.error || t('createSummary.errorSaving'));
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || 'No se pudo guardar el resumen'
+        title: t('createSummary.error'),
+        description: error.message || t('createSummary.couldNotSave')
       });
     } finally {
       setLoading(false);
@@ -301,24 +303,24 @@ export default function CrearResumen() {
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver a resúmenes
+          {t('createSummary.backToSummaries')}
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-6 h-6 text-primary" />
-              Crear Nuevo Resumen
+              {t('createSummary.title')}
             </CardTitle>
             <CardDescription>
-              Sube un archivo o escribe directamente tu contenido. Puedes usar IA para generar el resumen automáticamente.
+              {t('createSummary.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Proceso */}
               <div className="space-y-2">
-                <Label htmlFor="proceso">Proceso</Label>
+                <Label htmlFor="proceso">{t('createSummary.process')}</Label>
                 <div className="space-y-2">
                   {!useCustomProceso ? (
                     <>
@@ -335,7 +337,7 @@ export default function CrearResumen() {
                         disabled={loadingProcesos}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={loadingProcesos ? "Cargando..." : "Selecciona un proceso"} />
+                          <SelectValue placeholder={loadingProcesos ? t('createSummary.loading') : t('createSummary.selectProcess')} />
                         </SelectTrigger>
                         <SelectContent>
                           {procesos.map((proceso) => (
@@ -357,14 +359,14 @@ export default function CrearResumen() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createSummary.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
                         id="procesoPersonalizado"
-                        placeholder="Escribe tu propio concepto"
+                        placeholder={t('createSummary.writeYourConcept')}
                         value={formData.procesoPersonalizado}
                         onChange={(e) => setFormData(prev => ({ ...prev, procesoPersonalizado: e.target.value }))}
                       />
@@ -378,7 +380,7 @@ export default function CrearResumen() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createSummary.backToList')}
                       </Button>
                     </>
                   )}
@@ -387,7 +389,7 @@ export default function CrearResumen() {
 
               {/* Sección */}
               <div className="space-y-2">
-                <Label htmlFor="seccion">Sección (puedes seleccionar varias)</Label>
+                <Label htmlFor="seccion">{t('createSummary.sections')}</Label>
                 <div className="space-y-2">
                   {!useCustomSeccion ? (
                     <>
@@ -402,10 +404,10 @@ export default function CrearResumen() {
                         <SelectTrigger>
                           <SelectValue 
                             placeholder={
-                              loadingSecciones ? "Cargando..." :
-                              !formData.proceso && !useCustomProceso ? "Primero selecciona un proceso" :
-                              secciones.length === 0 ? "No hay secciones disponibles" :
-                              "Selecciona una sección"
+                              loadingSecciones ? t('createSummary.loading') :
+                              !formData.proceso && !useCustomProceso ? t('createSummary.firstSelectProcess') :
+                              secciones.length === 0 ? t('createSummary.noSectionsAvailable') :
+                              t('createSummary.selectSection')
                             } 
                           />
                         </SelectTrigger>
@@ -443,14 +445,14 @@ export default function CrearResumen() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createSummary.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
                         id="seccionPersonalizada"
-                        placeholder="Escribe tu propia sección"
+                        placeholder={t('createSummary.writeYourSection')}
                         value={formData.seccionPersonalizada}
                         onChange={(e) => setFormData(prev => ({ ...prev, seccionPersonalizada: e.target.value }))}
                       />
@@ -464,7 +466,7 @@ export default function CrearResumen() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createSummary.backToList')}
                       </Button>
                     </>
                   )}
@@ -473,7 +475,7 @@ export default function CrearResumen() {
 
               {/* Tema */}
               <div className="space-y-2">
-                <Label htmlFor="tema">Tema * (puedes seleccionar varios)</Label>
+                <Label htmlFor="tema">{t('createSummary.topics')} *</Label>
                 <div className="space-y-2">
                   {!useCustomTema ? (
                     <>
@@ -488,10 +490,10 @@ export default function CrearResumen() {
                         <SelectTrigger>
                           <SelectValue 
                             placeholder={
-                              loadingTemas ? "Cargando..." :
-                              seccionesSeleccionadas.length === 0 && !useCustomSeccion ? "Primero selecciona una sección" :
-                              temas.length === 0 ? "No hay temas disponibles" :
-                              "Selecciona un tema"
+                              loadingTemas ? t('createSummary.loading') :
+                              seccionesSeleccionadas.length === 0 && !useCustomSeccion ? t('createSummary.firstSelectSection') :
+                              temas.length === 0 ? t('createSummary.noTopicsAvailable') :
+                              t('createSummary.selectTopic')
                             } 
                           />
                         </SelectTrigger>
@@ -528,14 +530,14 @@ export default function CrearResumen() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        O escribir concepto personalizado
+                        {t('createSummary.orWriteCustom')}
                       </Button>
                     </>
                   ) : (
                     <>
                       <Input
                         id="temaPersonalizado"
-                        placeholder="Escribe tu propio tema"
+                        placeholder={t('createSummary.writeYourTopic')}
                         value={formData.temaPersonalizado}
                         onChange={(e) => setFormData(prev => ({ ...prev, temaPersonalizado: e.target.value }))}
                         required
@@ -550,7 +552,7 @@ export default function CrearResumen() {
                         }}
                         className="h-auto p-0 text-xs"
                       >
-                        Volver a seleccionar de la lista
+                        {t('createSummary.backToList')}
                       </Button>
                     </>
                   )}
@@ -558,7 +560,7 @@ export default function CrearResumen() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="archivo">Subir Archivo (opcional)</Label>
+                <Label htmlFor="archivo">{t('createSummary.uploadFile')}</Label>
                 <div className="flex items-center gap-4">
                   <Input
                     id="archivo"
@@ -574,23 +576,23 @@ export default function CrearResumen() {
                       size="sm"
                       onClick={() => setArchivo(null)}
                     >
-                      Quitar
+                      {t('createSummary.remove')}
                     </Button>
                   )}
                 </div>
                 {archivo && (
                   <p className="text-sm text-muted-foreground">
-                    Archivo seleccionado: {archivo.name} ({(archivo.size / 1024).toFixed(1)} KB)
+                    {t('createSummary.selectedFile')}: {archivo.name} ({(archivo.size / 1024).toFixed(1)} KB)
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Formatos permitidos: PDF, TXT, DOC, DOCX (máx. 20MB)
+                  {t('createSummary.allowedFormats')}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="resumen">Contenido / Resumen *</Label>
+                  <Label htmlFor="resumen">{t('createSummary.content')} *</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -601,26 +603,26 @@ export default function CrearResumen() {
                     {generatingAI ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generando...
+                        {t('createSummary.generating')}
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4 mr-2" />
-                        Generar con IA
+                        {t('createSummary.generateWithAI')}
                       </>
                     )}
                   </Button>
                 </div>
                 <Textarea
                   id="resumen"
-                  placeholder="Escribe o pega aquí el contenido a resumir..."
+                  placeholder={t('createSummary.writeOrPaste')}
                   value={formData.resumen}
                   onChange={(e) => setFormData(prev => ({ ...prev, resumen: e.target.value }))}
                   className="min-h-[300px]"
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Puedes generar el resumen con IA desde un archivo o desde el texto que escribas aquí
+                  {t('createSummary.canGenerateWithAI')}
                 </p>
               </div>
 
@@ -633,12 +635,12 @@ export default function CrearResumen() {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Guardando...
+                      {t('createSummary.saving')}
                     </>
                   ) : (
                     <>
                       <Upload className="w-4 h-4 mr-2" />
-                      Guardar Resumen
+                      {t('createSummary.saveSummary')}
                     </>
                   )}
                 </Button>
@@ -648,7 +650,7 @@ export default function CrearResumen() {
                   onClick={() => navigate('/resumenes')}
                   disabled={loading}
                 >
-                  Cancelar
+                  {t('createSummary.cancel')}
                 </Button>
               </div>
             </form>
