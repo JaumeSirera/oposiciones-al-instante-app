@@ -185,7 +185,8 @@
     "no": "No",
     "error": "Error",
     "success": "Success",
-    "week": "Week"
+    "week": "Week",
+    "translating": "Translating..."
   },
   "test": {
     "choosePracticeMode": "Choose practice mode",

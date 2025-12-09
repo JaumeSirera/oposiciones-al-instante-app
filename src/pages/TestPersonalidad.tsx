@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Download, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
+import { Loader2, Download, CheckCircle, AlertTriangle, Languages } from 'lucide-react';
 
 type Item = {
   id: number;
@@ -32,9 +34,10 @@ function score0_100(media: number) { return ((media - 1) / 4) * 100; }
 const rango = (s: number) => (s < 35 ? 'Bajo' : s < 65 ? 'Medio' : 'Alto');
 
 export default function TestPersonalidad() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   const user_id = user?.id || null;
   const username = user?.username || null;
 
@@ -42,6 +45,7 @@ export default function TestPersonalidad() {
   const [data, setData] = useState<ApiPayload | null>(null);
   const [respuestas, setRespuestas] = useState<Record<number, number>>({});
   const [guardado, setGuardado] = useState(false);
+  const [translatedItems, setTranslatedItems] = useState<Record<number, string>>({});
 
   const storageKey = useMemo(() => `personalidad_${user_id || 'anon'}_v1`, [user_id]);
 
@@ -80,6 +84,27 @@ export default function TestPersonalidad() {
       } catch {/* noop */}
     }
   }, [respuestas, data, storageKey]);
+
+  // Traducir items cuando cambia el idioma o se cargan los datos
+  useEffect(() => {
+    const translateItems = async () => {
+      if (!data || !needsTranslation) {
+        setTranslatedItems({});
+        return;
+      }
+      
+      const textsToTranslate = data.items.map(item => item.texto);
+      const translated = await translateTexts(textsToTranslate);
+      
+      const translatedMap: Record<number, string> = {};
+      data.items.forEach((item, index) => {
+        translatedMap[item.id] = translated[index];
+      });
+      setTranslatedItems(translatedMap);
+    };
+    
+    translateItems();
+  }, [data, needsTranslation, i18n.language]);
 
   const totalContestados = useMemo(() => Object.keys(respuestas).length, [respuestas]);
 
@@ -264,10 +289,22 @@ export default function TestPersonalidad() {
           </div>
 
           <div className="space-y-6">
+            {needsTranslation && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Languages className="h-4 w-4" />
+                <Badge variant="outline">{i18n.language.toUpperCase()}</Badge>
+                {isTranslating && (
+                  <span className="flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t('common.translating')}
+                  </span>
+                )}
+              </div>
+            )}
             {data.items.map((it) => (
               <div key={it.id} className="space-y-3 pb-4 border-b last:border-0">
                 <p className="font-medium">
-                  {it.id}. {it.texto}
+                  {it.id}. {needsTranslation && translatedItems[it.id] ? translatedItems[it.id] : it.texto}
                 </p>
                 <RadioGroup
                   value={respuestas[it.id]?.toString() || ''}
