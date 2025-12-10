@@ -150,7 +150,7 @@ export default function PlanEstudioDetalle() {
     };
 
     translateContent();
-  }, [planIA, resumenIA, i18n.language, needsTranslation]);
+  }, [planIA, resumenIA, i18n.language, needsTranslation, translateTexts]);
 
   // Efecto para traducir las etapas cuando cambia el idioma
   useEffect(() => {
