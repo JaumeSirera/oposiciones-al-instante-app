@@ -1,4 +1,7 @@
 {
+  "appName": "Prépa Concours",
+  "appNamePart1": "Prépa",
+  "appNamePart2": "Concours",
   "quiz": {
     "loadingQuestions": "Chargement des questions...",
     "noQuestionsFound": "Aucune question trouvée avec les critères sélectionnés",

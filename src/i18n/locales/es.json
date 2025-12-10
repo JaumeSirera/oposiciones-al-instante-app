@@ -1,4 +1,7 @@
 {
+  "appName": "Oposiciones-Test",
+  "appNamePart1": "Oposiciones-",
+  "appNamePart2": "Test",
   "quiz": {
     "loadingQuestions": "Cargando preguntas...",
     "noQuestionsFound": "No se encontraron preguntas con los criterios seleccionados",

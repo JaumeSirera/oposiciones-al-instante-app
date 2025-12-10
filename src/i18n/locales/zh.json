@@ -1,4 +1,7 @@
 {
+  "appName": "公务员备考",
+  "appNamePart1": "公务员",
+  "appNamePart2": "备考",
   "quiz": {
     "loadingQuestions": "正在加载问题...",
     "noQuestionsFound": "未找到符合所选条件的问题",

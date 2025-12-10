@@ -1,4 +1,7 @@
 {
+  "appName": "Civil Service Prep",
+  "appNamePart1": "Civil Service",
+  "appNamePart2": "Prep",
   "quiz": {
     "loadingQuestions": "Loading questions...",
     "noQuestionsFound": "No questions found with the selected criteria",
