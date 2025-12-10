@@ -52,6 +52,7 @@ export default function PlanEstudioDetalle() {
   const [translatedResumen, setTranslatedResumen] = useState<string | null>(null);
   const [translatedPlanIA, setTranslatedPlanIA] = useState<SemanaPlan[] | null>(null);
   const [translatedEtapas, setTranslatedEtapas] = useState<any[] | null>(null);
+  const [translatedDescripcion, setTranslatedDescripcion] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -59,6 +60,19 @@ export default function PlanEstudioDetalle() {
       cargarPlanIA();
     }
   }, [id]);
+
+  // Efecto para traducir la descripción del plan
+  useEffect(() => {
+    const translateDescripcion = async () => {
+      if (!needsTranslation || !detalle?.plan?.descripcion) {
+        setTranslatedDescripcion(detalle?.plan?.descripcion || null);
+        return;
+      }
+      const [translated] = await translateTexts([detalle.plan.descripcion]);
+      setTranslatedDescripcion(translated);
+    };
+    translateDescripcion();
+  }, [detalle?.plan?.descripcion, i18n.language, needsTranslation, translateTexts]);
 
   // Efecto para traducir el contenido cuando cambia el idioma o se carga el plan
   useEffect(() => {
@@ -389,7 +403,7 @@ export default function PlanEstudioDetalle() {
               <div className="flex-1">
                 <CardTitle className="text-3xl mb-2">{plan.titulo}</CardTitle>
                 <CardDescription className="text-base mt-2">
-                  {plan.descripcion || t('studyPlans.noDescription')}
+                  {translatedDescripcion || plan.descripcion || t('studyPlans.noDescription')}
                 </CardDescription>
               </div>
               <Badge className="text-sm px-4 py-1.5 shrink-0">{plan.estado}</Badge>
@@ -601,7 +615,7 @@ export default function PlanEstudioDetalle() {
             </TabsContent>
 
             <TabsContent value="etapas">
-              {etapas.length === 0 ? (
+              {(translatedEtapas || etapas).length === 0 ? (
               <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
