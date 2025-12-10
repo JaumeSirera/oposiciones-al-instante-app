@@ -219,7 +219,7 @@ export default function PlanEstudioDetalle() {
     };
 
     translateEtapas();
-  }, [detalle?.etapas, i18n.language, needsTranslation]);
+  }, [detalle?.etapas, i18n.language, needsTranslation, translateTexts]);
 
   const cargarDetalle = async () => {
     if (!id) return;
