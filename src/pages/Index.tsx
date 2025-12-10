@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/lib/supabaseClient';
 import { ModalPlanEstudio } from '@/components/ModalPlanEstudio';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 
 const BASE_FOTO_URL = 'https://oposiciones-test.com/api/uploads/procesos/';
 const PROXY_FUNCTION = 'php-api-proxy';
@@ -50,12 +51,15 @@ const Index = () => {
   });
   
   const [procesos, setProcesos] = useState<any[]>([]);
+  const [translatedProcesos, setTranslatedProcesos] = useState<any[]>([]);
   const [noticias, setNoticias] = useState<any[]>([]);
   const [rssNoticias, setRssNoticias] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [ccaaTooltip, setCcaaTooltip] = useState<{ nombre: string; x: number; y: number } | null>(null);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [showModalPlan, setShowModalPlan] = useState(false);
+  
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
@@ -122,6 +126,28 @@ const Index = () => {
 
     cargarProcesos();
   }, [user?.id]);
+
+  // Traducir procesos cuando cambia el idioma
+  useEffect(() => {
+    const traducirProcesos = async () => {
+      if (!procesos.length || !needsTranslation) {
+        setTranslatedProcesos(procesos);
+        return;
+      }
+      
+      const descripciones = procesos.map(p => p.descripcion || '');
+      const traducidas = await translateTexts(descripciones);
+      
+      const procesosTraducidos = procesos.map((p, i) => ({
+        ...p,
+        descripcion: traducidas[i] || p.descripcion
+      }));
+      
+      setTranslatedProcesos(procesosTraducidos);
+    };
+    
+    traducirProcesos();
+  }, [procesos, needsTranslation, translateTexts]);
 
   // Cargar noticias
   useEffect(() => {
@@ -356,9 +382,15 @@ const Index = () => {
                 <CardTitle className="text-blue-900">{t('home.yourLastProcesses')}</CardTitle>
               </CardHeader>
               <CardContent>
-                {procesos.length > 0 ? (
+                {isTranslating && needsTranslation && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 p-2 bg-muted rounded">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t('common.translatingContent')}
+                  </div>
+                )}
+                {(translatedProcesos.length > 0 || procesos.length > 0) ? (
                   <div className="space-y-3">
-                    {procesos.map(p => (
+                    {(translatedProcesos.length > 0 ? translatedProcesos : procesos).map(p => (
                       <div
                         key={p.id_proceso}
                         className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 transition-all cursor-pointer border border-blue-200 shadow-sm hover:shadow-md"
