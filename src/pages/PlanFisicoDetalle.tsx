@@ -11,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, Dumbbell, Sparkles, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS, fr, de, pt, zhCN } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 const API_BASE = 'https://oposiciones-test.com/api';
@@ -58,11 +58,17 @@ interface Semana {
   glosario?: { termino: string; significado: string }[];
 }
 
+const dateLocales: Record<string, typeof es> = {
+  es, en: enUS, fr, de, pt, zh: zhCN
+};
+
 export default function PlanFisicoDetalle() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  const currentLocale = dateLocales[i18n.language] || es;
 
   const [plan, setPlan] = useState<any>(null);
   const [planIA, setPlanIA] = useState<Semana[]>([]);
@@ -366,8 +372,8 @@ export default function PlanFisicoDetalle() {
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <span>
-              {format(new Date(plan.fecha_inicio), 'dd/MM/yyyy', { locale: es })} →{' '}
-              {format(new Date(plan.fecha_fin), 'dd/MM/yyyy', { locale: es })}
+              {format(new Date(plan.fecha_inicio), 'dd/MM/yyyy', { locale: currentLocale })} →{' '}
+              {format(new Date(plan.fecha_fin), 'dd/MM/yyyy', { locale: currentLocale })}
             </span>
           </div>
 
@@ -408,9 +414,9 @@ export default function PlanFisicoDetalle() {
                       ? `${semana.titulo || `${t('common.week')} ${semanaN}`} (${format(
                           new Date(semana.fecha_inicio || ''),
                           'dd/MM/yyyy',
-                          { locale: es }
+                          { locale: currentLocale }
                         )} → ${format(new Date(semana.fecha_fin || ''), 'dd/MM/yyyy', {
-                          locale: es,
+                          locale: currentLocale,
                         })})`
                       : `${t('common.week')} ${semanaN} (${t('physicalPlans.detail.notGenerated')})`}
                   </AccordionTrigger>
