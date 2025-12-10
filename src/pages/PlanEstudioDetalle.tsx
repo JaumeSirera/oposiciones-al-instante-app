@@ -62,9 +62,17 @@ export default function PlanEstudioDetalle() {
   // Efecto para traducir el contenido cuando cambia el idioma o se carga el plan
   useEffect(() => {
     const translateContent = async () => {
+      // Si es español o no hay datos, usar originales
       if (!needsTranslation) {
         setTranslatedResumen(resumenIA);
         setTranslatedPlanIA(planIA);
+        return;
+      }
+
+      // Si no hay planIA, no hacer nada
+      if (!planIA || planIA.length === 0) {
+        setTranslatedPlanIA(null);
+        setTranslatedResumen(null);
         return;
       }
 
@@ -72,74 +80,76 @@ export default function PlanEstudioDetalle() {
       if (resumenIA) {
         const [translated] = await translateTexts([resumenIA]);
         setTranslatedResumen(translated);
+      } else {
+        setTranslatedResumen(null);
       }
 
       // Traducir planIA
-      if (planIA && planIA.length > 0) {
-        const allTexts: string[] = [];
-        const textMap: { semana: number; field: string; index?: number }[] = [];
+      const allTexts: string[] = [];
+      const textMap: { semana: number; field: string; index?: number }[] = [];
 
-        planIA.forEach((semana, semIdx) => {
-          // Temas
-          semana.temas_semana?.forEach((tema, tIdx) => {
+      planIA.forEach((semana, semIdx) => {
+        // Temas
+        semana.temas_semana?.forEach((tema, tIdx) => {
+          if (tema) {
             allTexts.push(tema);
             textMap.push({ semana: semIdx, field: 'temas_semana', index: tIdx });
-          });
-          // Objetivos
-          semana.objetivos?.forEach((obj, oIdx) => {
+          }
+        });
+        // Objetivos
+        semana.objetivos?.forEach((obj, oIdx) => {
+          if (obj) {
             allTexts.push(obj);
             textMap.push({ semana: semIdx, field: 'objetivos', index: oIdx });
-          });
-          // Actividades
-          semana.actividades?.forEach((act, aIdx) => {
+          }
+        });
+        // Actividades
+        semana.actividades?.forEach((act, aIdx) => {
+          if (act.tema) {
             allTexts.push(act.tema);
             textMap.push({ semana: semIdx, field: 'actividad_tema', index: aIdx });
+          }
+          if (act.actividad) {
             allTexts.push(act.actividad);
             textMap.push({ semana: semIdx, field: 'actividad_actividad', index: aIdx });
-          });
-          // Notas
-          if (semana.notas) {
-            allTexts.push(semana.notas);
-            textMap.push({ semana: semIdx, field: 'notas' });
+          }
+        });
+        // Notas
+        if (semana.notas) {
+          allTexts.push(semana.notas);
+          textMap.push({ semana: semIdx, field: 'notas' });
+        }
+      });
+
+      if (allTexts.length > 0) {
+        const translations = await translateTexts(allTexts);
+        
+        // Clonar planIA profundamente para evitar mutaciones
+        const translatedPlan: SemanaPlan[] = JSON.parse(JSON.stringify(planIA));
+
+        textMap.forEach((map, idx) => {
+          const sem = translatedPlan[map.semana];
+          if (map.field === 'temas_semana' && map.index !== undefined) {
+            sem.temas_semana[map.index] = translations[idx];
+          } else if (map.field === 'objetivos' && map.index !== undefined) {
+            sem.objetivos[map.index] = translations[idx];
+          } else if (map.field === 'actividad_tema' && map.index !== undefined) {
+            sem.actividades[map.index].tema = translations[idx];
+          } else if (map.field === 'actividad_actividad' && map.index !== undefined) {
+            sem.actividades[map.index].actividad = translations[idx];
+          } else if (map.field === 'notas') {
+            sem.notas = translations[idx];
           }
         });
 
-        if (allTexts.length > 0) {
-          const translations = await translateTexts(allTexts);
-          
-          // Reconstruir el plan con traducciones
-          const translatedPlan = planIA.map((semana, semIdx) => ({
-            ...semana,
-            temas_semana: semana.temas_semana ? [...semana.temas_semana] : [],
-            objetivos: semana.objetivos ? [...semana.objetivos] : [],
-            actividades: semana.actividades ? semana.actividades.map(a => ({ ...a })) : [],
-            notas: semana.notas || ''
-          }));
-
-          textMap.forEach((map, idx) => {
-            const sem = translatedPlan[map.semana];
-            if (map.field === 'temas_semana' && map.index !== undefined) {
-              sem.temas_semana[map.index] = translations[idx];
-            } else if (map.field === 'objetivos' && map.index !== undefined) {
-              sem.objetivos[map.index] = translations[idx];
-            } else if (map.field === 'actividad_tema' && map.index !== undefined) {
-              sem.actividades[map.index].tema = translations[idx];
-            } else if (map.field === 'actividad_actividad' && map.index !== undefined) {
-              sem.actividades[map.index].actividad = translations[idx];
-            } else if (map.field === 'notas') {
-              sem.notas = translations[idx];
-            }
-          });
-
-          setTranslatedPlanIA(translatedPlan);
-        } else {
-          setTranslatedPlanIA(planIA);
-        }
+        setTranslatedPlanIA(translatedPlan);
+      } else {
+        setTranslatedPlanIA(planIA);
       }
     };
 
     translateContent();
-  }, [planIA, resumenIA, i18n.language, needsTranslation, translateTexts]);
+  }, [planIA, resumenIA, i18n.language, needsTranslation]);
 
   const cargarDetalle = async () => {
     if (!id) return;
@@ -403,7 +413,9 @@ export default function PlanEstudioDetalle() {
                 </CardHeader>
                 <CardContent>
                   <Accordion type="single" collapsible className="w-full">
-                    {(translatedPlanIA || planIA) && Array.isArray(translatedPlanIA || planIA) && (translatedPlanIA || planIA)!.map((semana, index) => (
+                    {(() => {
+                      const displayPlan = translatedPlanIA || planIA;
+                      return displayPlan && Array.isArray(displayPlan) && displayPlan.map((semana, index) => (
                       <AccordionItem key={index} value={`semana-${semana.semana}`}>
                         <AccordionTrigger>
                           <div className="flex items-center justify-between w-full pr-4">
@@ -511,7 +523,8 @@ export default function PlanEstudioDetalle() {
                           </div>
                         </AccordionContent>
                       </AccordionItem>
-                    ))}
+                    ));
+                    })()}
                   </Accordion>
                 </CardContent>
               </Card>
