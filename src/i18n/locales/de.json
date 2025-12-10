@@ -304,7 +304,17 @@
     "noNews": "Keine Nachrichten verfügbar.",
     "moreNews": "Mehr Nachrichten",
     "ccaaMap": "Karte der Regionalen Bulletins",
-    "ccaaMapDesc": "Klicken Sie auf eine Region, um ihr offizielles Bulletin zu sehen"
+    "ccaaMapDesc": "Klicken Sie auf eine Region, um ihr offizielles Bulletin zu sehen",
+    "quickActions": "Schnellaktionen",
+    "simulation": "Simulation",
+    "personalityTest": "Persönlichkeitstest",
+    "supportProject": "Projekt unterstützen",
+    "generateTestAdmin": "Test generieren (Admin)",
+    "viewProgress": "Fortschritt anzeigen",
+    "yourInfo": "Ihre Informationen",
+    "user": "Benutzer",
+    "level": "Stufe",
+    "loadingNews": "Lädt neueste Nachrichten..."
   },
   "configTest": {
     "back": "Zurück",
