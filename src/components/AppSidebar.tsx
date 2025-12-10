@@ -122,14 +122,14 @@ export function AppSidebar() {
         <div className="p-4 border-b flex items-center justify-center">
           {open ? (
             <div className="flex items-center gap-2">
-              <img src={logo} alt="Oposiciones Test" className="h-8 w-8" />
+              <img src={logo} alt={t('appName')} className="h-8 w-8" />
               <h2 className="font-bold text-lg">
-                <span className="text-blue-600">Oposiciones-</span>
-                <span className="text-green-600">Test</span>
+                <span className="text-blue-600">{t('appNamePart1')}</span>
+                <span className="text-green-600">{t('appNamePart2')}</span>
               </h2>
             </div>
           ) : (
-            <img src={logo} alt="OT" className="h-8 w-8" />
+            <img src={logo} alt={t('appName')} className="h-8 w-8" />
           )}
         </div>
 

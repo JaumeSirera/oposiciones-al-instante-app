@@ -1,4 +1,7 @@
 {
+  "appName": "Prüfungs-Trainer",
+  "appNamePart1": "Prüfungs-",
+  "appNamePart2": "Trainer",
   "quiz": {
     "loadingQuestions": "Fragen werden geladen...",
     "noQuestionsFound": "Keine Fragen mit den ausgewählten Kriterien gefunden",
