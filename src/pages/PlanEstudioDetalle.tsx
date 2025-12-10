@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { planesService, PlanDetalle } from "@/services/planesService";
+import { useTranslateContent } from "@/hooks/useTranslateContent";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -11,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, BookOpen, Target, PlayCircle, Brain } from "lucide-react";
+import { ArrowLeft, Calendar, BookOpen, Target, PlayCircle, Brain, Loader2 } from "lucide-react";
 
 interface ActividadDia {
   dia: number;
@@ -40,11 +41,16 @@ export default function PlanEstudioDetalle() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   const dateLocale = localeMap[i18n.language] || 'es-ES';
   const [detalle, setDetalle] = useState<PlanDetalle | null>(null);
   const [planIA, setPlanIA] = useState<SemanaPlan[] | null>(null);
   const [resumenIA, setResumenIA] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Estados para traducciones
+  const [translatedResumen, setTranslatedResumen] = useState<string | null>(null);
+  const [translatedPlanIA, setTranslatedPlanIA] = useState<SemanaPlan[] | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -52,6 +58,88 @@ export default function PlanEstudioDetalle() {
       cargarPlanIA();
     }
   }, [id]);
+
+  // Efecto para traducir el contenido cuando cambia el idioma o se carga el plan
+  useEffect(() => {
+    const translateContent = async () => {
+      if (!needsTranslation) {
+        setTranslatedResumen(resumenIA);
+        setTranslatedPlanIA(planIA);
+        return;
+      }
+
+      // Traducir resumen
+      if (resumenIA) {
+        const [translated] = await translateTexts([resumenIA]);
+        setTranslatedResumen(translated);
+      }
+
+      // Traducir planIA
+      if (planIA && planIA.length > 0) {
+        const allTexts: string[] = [];
+        const textMap: { semana: number; field: string; index?: number }[] = [];
+
+        planIA.forEach((semana, semIdx) => {
+          // Temas
+          semana.temas_semana?.forEach((tema, tIdx) => {
+            allTexts.push(tema);
+            textMap.push({ semana: semIdx, field: 'temas_semana', index: tIdx });
+          });
+          // Objetivos
+          semana.objetivos?.forEach((obj, oIdx) => {
+            allTexts.push(obj);
+            textMap.push({ semana: semIdx, field: 'objetivos', index: oIdx });
+          });
+          // Actividades
+          semana.actividades?.forEach((act, aIdx) => {
+            allTexts.push(act.tema);
+            textMap.push({ semana: semIdx, field: 'actividad_tema', index: aIdx });
+            allTexts.push(act.actividad);
+            textMap.push({ semana: semIdx, field: 'actividad_actividad', index: aIdx });
+          });
+          // Notas
+          if (semana.notas) {
+            allTexts.push(semana.notas);
+            textMap.push({ semana: semIdx, field: 'notas' });
+          }
+        });
+
+        if (allTexts.length > 0) {
+          const translations = await translateTexts(allTexts);
+          
+          // Reconstruir el plan con traducciones
+          const translatedPlan = planIA.map((semana, semIdx) => ({
+            ...semana,
+            temas_semana: semana.temas_semana ? [...semana.temas_semana] : [],
+            objetivos: semana.objetivos ? [...semana.objetivos] : [],
+            actividades: semana.actividades ? semana.actividades.map(a => ({ ...a })) : [],
+            notas: semana.notas || ''
+          }));
+
+          textMap.forEach((map, idx) => {
+            const sem = translatedPlan[map.semana];
+            if (map.field === 'temas_semana' && map.index !== undefined) {
+              sem.temas_semana[map.index] = translations[idx];
+            } else if (map.field === 'objetivos' && map.index !== undefined) {
+              sem.objetivos[map.index] = translations[idx];
+            } else if (map.field === 'actividad_tema' && map.index !== undefined) {
+              sem.actividades[map.index].tema = translations[idx];
+            } else if (map.field === 'actividad_actividad' && map.index !== undefined) {
+              sem.actividades[map.index].actividad = translations[idx];
+            } else if (map.field === 'notas') {
+              sem.notas = translations[idx];
+            }
+          });
+
+          setTranslatedPlanIA(translatedPlan);
+        } else {
+          setTranslatedPlanIA(planIA);
+        }
+      }
+    };
+
+    translateContent();
+  }, [planIA, resumenIA, i18n.language, needsTranslation, translateTexts]);
 
   const cargarDetalle = async () => {
     if (!id) return;
@@ -272,9 +360,15 @@ export default function PlanEstudioDetalle() {
               <Progress value={parseFloat(plan.progreso || '0')} className="h-2" />
             </div>
 
-            {resumenIA && (
+            {(translatedResumen || resumenIA) && (
               <div className="mt-6 p-4 bg-primary/5 border border-primary/10 rounded-lg">
-                <p className="text-sm leading-relaxed whitespace-pre-line">{resumenIA}</p>
+                {isTranslating && needsTranslation && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t('common.translating')}
+                  </div>
+                )}
+                <p className="text-sm leading-relaxed whitespace-pre-line">{translatedResumen || resumenIA}</p>
               </div>
             )}
           </CardContent>
@@ -282,6 +376,12 @@ export default function PlanEstudioDetalle() {
 
         {planIA && planIA.length > 0 ? (
           <Tabs defaultValue="plan-ia" className="w-full">
+            {isTranslating && needsTranslation && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t('common.translatingContent')}
+              </div>
+            )}
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="plan-ia">
                 <Brain className="mr-2 h-4 w-4" />
@@ -303,7 +403,7 @@ export default function PlanEstudioDetalle() {
                 </CardHeader>
                 <CardContent>
                   <Accordion type="single" collapsible className="w-full">
-                    {planIA && Array.isArray(planIA) && planIA.map((semana, index) => (
+                    {(translatedPlanIA || planIA) && Array.isArray(translatedPlanIA || planIA) && (translatedPlanIA || planIA)!.map((semana, index) => (
                       <AccordionItem key={index} value={`semana-${semana.semana}`}>
                         <AccordionTrigger>
                           <div className="flex items-center justify-between w-full pr-4">

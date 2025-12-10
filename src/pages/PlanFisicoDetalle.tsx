@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -67,6 +68,7 @@ export default function PlanFisicoDetalle() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   
   const currentLocale = dateLocales[i18n.language] || es;
 
@@ -79,12 +81,128 @@ export default function PlanFisicoDetalle() {
   const [loadingWeek, setLoadingWeek] = useState<number | null>(null);
   const [imgLoading, setImgLoading] = useState<Record<string, boolean>>({});
   const [imgPreview, setImgPreview] = useState<Record<string, { url: string; credit?: string }[]>>({});
+  
+  // Estados para traducciones
+  const [translatedResumen, setTranslatedResumen] = useState<string | null>(null);
+  const [translatedPlanIA, setTranslatedPlanIA] = useState<Semana[]>([]);
 
   useEffect(() => {
     if (id && user) {
       fetchPlan();
     }
   }, [id, user]);
+
+  // Efecto para traducir el contenido cuando cambia el idioma o se carga el plan
+  useEffect(() => {
+    const translateContent = async () => {
+      if (!needsTranslation) {
+        setTranslatedResumen(resumenIA);
+        setTranslatedPlanIA(planIA);
+        return;
+      }
+
+      // Traducir resumen
+      if (resumenIA) {
+        const [translated] = await translateTexts([resumenIA]);
+        setTranslatedResumen(translated);
+      }
+
+      // Traducir planIA
+      if (planIA && planIA.length > 0) {
+        const allTexts: string[] = [];
+        const textMap: { semana: number; field: string; indices?: number[] }[] = [];
+
+        planIA.forEach((semana, semIdx) => {
+          // Titulo
+          if (semana.titulo) {
+            allTexts.push(semana.titulo);
+            textMap.push({ semana: semIdx, field: 'titulo' });
+          }
+          // Resumen
+          if (semana.resumen) {
+            allTexts.push(semana.resumen);
+            textMap.push({ semana: semIdx, field: 'resumen' });
+          }
+          // Glosario
+          semana.glosario?.forEach((g, gIdx) => {
+            allTexts.push(g.termino);
+            textMap.push({ semana: semIdx, field: 'glosario_termino', indices: [gIdx] });
+            allTexts.push(g.significado);
+            textMap.push({ semana: semIdx, field: 'glosario_significado', indices: [gIdx] });
+          });
+          // Sesiones
+          semana.sesiones?.forEach((ses, sIdx) => {
+            ses.bloques?.forEach((bloq, bIdx) => {
+              if (bloq.tipo) {
+                allTexts.push(bloq.tipo);
+                textMap.push({ semana: semIdx, field: 'bloque_tipo', indices: [sIdx, bIdx] });
+              }
+              if (bloq.descripcion) {
+                allTexts.push(bloq.descripcion);
+                textMap.push({ semana: semIdx, field: 'bloque_descripcion', indices: [sIdx, bIdx] });
+              }
+              if (bloq.explicacion_neofita) {
+                allTexts.push(bloq.explicacion_neofita);
+                textMap.push({ semana: semIdx, field: 'bloque_explicacion', indices: [sIdx, bIdx] });
+              }
+              bloq.ejercicios?.forEach((ej, eIdx) => {
+                if (ej.nombre) {
+                  allTexts.push(ej.nombre);
+                  textMap.push({ semana: semIdx, field: 'ejercicio_nombre', indices: [sIdx, bIdx, eIdx] });
+                }
+                if (ej.notas) {
+                  allTexts.push(ej.notas);
+                  textMap.push({ semana: semIdx, field: 'ejercicio_notas', indices: [sIdx, bIdx, eIdx] });
+                }
+                if (ej.explicacion_neofita) {
+                  allTexts.push(ej.explicacion_neofita);
+                  textMap.push({ semana: semIdx, field: 'ejercicio_explicacion', indices: [sIdx, bIdx, eIdx] });
+                }
+              });
+            });
+          });
+        });
+
+        if (allTexts.length > 0) {
+          const translations = await translateTexts(allTexts);
+          
+          // Clonar planIA profundamente
+          const translatedPlan: Semana[] = JSON.parse(JSON.stringify(planIA));
+
+          textMap.forEach((map, idx) => {
+            const sem = translatedPlan[map.semana];
+            if (map.field === 'titulo') {
+              sem.titulo = translations[idx];
+            } else if (map.field === 'resumen') {
+              sem.resumen = translations[idx];
+            } else if (map.field === 'glosario_termino' && map.indices) {
+              sem.glosario![map.indices[0]].termino = translations[idx];
+            } else if (map.field === 'glosario_significado' && map.indices) {
+              sem.glosario![map.indices[0]].significado = translations[idx];
+            } else if (map.field === 'bloque_tipo' && map.indices) {
+              sem.sesiones![map.indices[0]].bloques![map.indices[1]].tipo = translations[idx];
+            } else if (map.field === 'bloque_descripcion' && map.indices) {
+              sem.sesiones![map.indices[0]].bloques![map.indices[1]].descripcion = translations[idx];
+            } else if (map.field === 'bloque_explicacion' && map.indices) {
+              sem.sesiones![map.indices[0]].bloques![map.indices[1]].explicacion_neofita = translations[idx];
+            } else if (map.field === 'ejercicio_nombre' && map.indices) {
+              sem.sesiones![map.indices[0]].bloques![map.indices[1]].ejercicios![map.indices[2]].nombre = translations[idx];
+            } else if (map.field === 'ejercicio_notas' && map.indices) {
+              sem.sesiones![map.indices[0]].bloques![map.indices[1]].ejercicios![map.indices[2]].notas = translations[idx];
+            } else if (map.field === 'ejercicio_explicacion' && map.indices) {
+              sem.sesiones![map.indices[0]].bloques![map.indices[1]].ejercicios![map.indices[2]].explicacion_neofita = translations[idx];
+            }
+          });
+
+          setTranslatedPlanIA(translatedPlan);
+        } else {
+          setTranslatedPlanIA(planIA);
+        }
+      }
+    };
+
+    translateContent();
+  }, [planIA, resumenIA, i18n.language, needsTranslation, translateTexts]);
 
   const fetchPlan = async () => {
     if (!id || !user?.id) return;
@@ -385,12 +503,18 @@ export default function PlanFisicoDetalle() {
             <p className="text-sm text-muted-foreground">{Math.round(ratio * 100)}% {t('physicalPlans.completed')}</p>
           </div>
 
-          {resumenIA && (
+          {(translatedResumen || resumenIA) && (
             <>
               <Separator />
               <div>
                 <h3 className="font-semibold mb-1">{t('physicalPlans.detail.aiSummary')}</h3>
-                <p className="text-muted-foreground">{resumenIA}</p>
+                {isTranslating && needsTranslation && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t('common.translating')}
+                  </div>
+                )}
+                <p className="text-muted-foreground">{translatedResumen || resumenIA}</p>
               </div>
             </>
           )}
@@ -402,9 +526,16 @@ export default function PlanFisicoDetalle() {
           <CardTitle>{t('physicalPlans.detail.trainingPlan')}</CardTitle>
         </CardHeader>
         <CardContent>
+          {isTranslating && needsTranslation && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {t('common.translatingContent')}
+            </div>
+          )}
           <Accordion type="single" collapsible className="w-full">
             {Array.from({ length: totalSemanas }).map((_, idx) => {
-              const semana = planIA[idx] as Semana | undefined;
+              const displayPlan = translatedPlanIA.length > 0 ? translatedPlanIA : planIA;
+              const semana = displayPlan[idx] as Semana | undefined;
               const semanaN = idx + 1;
 
               return (

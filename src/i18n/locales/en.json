@@ -189,7 +189,8 @@
     "error": "Error",
     "success": "Success",
     "week": "Week",
-    "translating": "Translating..."
+    "translating": "Translating...",
+    "translatingContent": "Translating plan content..."
   },
   "test": {
     "choosePracticeMode": "Choose practice mode",
