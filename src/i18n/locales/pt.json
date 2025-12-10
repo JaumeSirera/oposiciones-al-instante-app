@@ -304,7 +304,17 @@
     "noNews": "Nenhuma notícia disponível.",
     "moreNews": "Mais notícias",
     "ccaaMap": "Mapa de Boletins Regionais",
-    "ccaaMapDesc": "Clique em uma região para ver seu boletim oficial"
+    "ccaaMapDesc": "Clique em uma região para ver seu boletim oficial",
+    "quickActions": "Ações rápidas",
+    "simulation": "Simulação",
+    "personalityTest": "Teste de Personalidade",
+    "supportProject": "Apoiar o projeto",
+    "generateTestAdmin": "Gerar Teste (Admin)",
+    "viewProgress": "Ver Progresso",
+    "yourInfo": "Suas informações",
+    "user": "Utilizador",
+    "level": "Nível",
+    "loadingNews": "Carregando últimas notícias..."
   },
   "configTest": {
     "back": "Voltar",

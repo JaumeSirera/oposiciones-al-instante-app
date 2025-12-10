@@ -304,7 +304,17 @@
     "noNews": "暂无新闻。",
     "moreNews": "更多新闻",
     "ccaaMap": "区域公告地图",
-    "ccaaMapDesc": "点击地区查看其官方公告"
+    "ccaaMapDesc": "点击地区查看其官方公告",
+    "quickActions": "快速操作",
+    "simulation": "模拟考试",
+    "personalityTest": "性格测试",
+    "supportProject": "支持项目",
+    "generateTestAdmin": "生成测试（管理员）",
+    "viewProgress": "查看进度",
+    "yourInfo": "您的信息",
+    "user": "用户",
+    "level": "等级",
+    "loadingNews": "正在加载最新消息..."
   },
   "configTest": {
     "back": "返回",

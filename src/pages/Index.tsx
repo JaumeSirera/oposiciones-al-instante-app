@@ -474,7 +474,7 @@ const Index = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-sm">Cargando últimas noticias...</p>
+                  <p className="text-gray-600 text-sm">{t('home.loadingNews')}</p>
                 )}
               </CardContent>
             </Card>
@@ -488,7 +488,7 @@ const Index = () => {
             {/* Acciones rápidas */}
             <Card className="bg-white shadow-md border-orange-100">
               <CardHeader className="bg-gradient-to-r from-orange-50 to-white">
-                <CardTitle className="text-orange-900">Acciones rápidas</CardTitle>
+                <CardTitle className="text-orange-900">{t('home.quickActions')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button 
@@ -496,7 +496,7 @@ const Index = () => {
                   className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <BookOpen className="w-4 h-4 mr-2" />
-                  Iniciar Test
+                  {t('home.startTest')}
                 </Button>
                 
                 <Button 
@@ -504,7 +504,7 @@ const Index = () => {
                   className="w-full justify-start bg-purple-600 hover:bg-purple-700 text-white"
                 >
                   <Clock className="w-4 h-4 mr-2" />
-                  Simulacro
+                  {t('home.simulation')}
                 </Button>
 
                 <Button 
@@ -512,7 +512,7 @@ const Index = () => {
                   className="w-full justify-start bg-green-600 hover:bg-green-700 text-white"
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
-                  Test de Personalidad
+                  {t('home.personalityTest')}
                 </Button>
                 
                 <Button 
@@ -520,7 +520,7 @@ const Index = () => {
                   className="w-full justify-start bg-pink-600 hover:bg-pink-700 text-white"
                 >
                   <Heart className="w-4 h-4 mr-2" />
-                  Apoya el proyecto
+                  {t('home.supportProject')}
                 </Button>
 
                 {isSuperAdmin && (
@@ -528,7 +528,7 @@ const Index = () => {
                     onClick={() => navigate('/crear-test')} 
                     className="w-full justify-start bg-cyan-600 hover:bg-cyan-700 text-white"
                   >
-                    Generar Test (Admin)
+                    {t('home.generateTestAdmin')}
                   </Button>
                 )}
 
@@ -537,7 +537,7 @@ const Index = () => {
                     onClick={() => navigate('/estadisticas')} 
                     className="w-full justify-start bg-orange-600 hover:bg-orange-700 text-white"
                   >
-                    Ver Progreso
+                    {t('home.viewProgress')}
                   </Button>
                 )}
               </CardContent>
@@ -546,15 +546,15 @@ const Index = () => {
             {/* User Info */}
             <Card className="bg-white shadow-md border-blue-100">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="text-blue-900">Tu información</CardTitle>
+                <CardTitle className="text-blue-900">{t('home.yourInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-sm font-semibold text-blue-700">Usuario</p>
+                  <p className="text-sm font-semibold text-blue-700">{t('home.user')}</p>
                   <p className="text-gray-800 font-medium">{user?.username}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-blue-700">Nivel</p>
+                  <p className="text-sm font-semibold text-blue-700">{t('home.level')}</p>
                   <Badge className="bg-blue-600 text-white font-bold">{user?.nivel}</Badge>
                 </div>
               </CardContent>
