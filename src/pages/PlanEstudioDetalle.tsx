@@ -51,6 +51,7 @@ export default function PlanEstudioDetalle() {
   // Estados para traducciones
   const [translatedResumen, setTranslatedResumen] = useState<string | null>(null);
   const [translatedPlanIA, setTranslatedPlanIA] = useState<SemanaPlan[] | null>(null);
+  const [translatedEtapas, setTranslatedEtapas] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -150,6 +151,75 @@ export default function PlanEstudioDetalle() {
 
     translateContent();
   }, [planIA, resumenIA, i18n.language, needsTranslation]);
+
+  // Efecto para traducir las etapas cuando cambia el idioma
+  useEffect(() => {
+    const translateEtapas = async () => {
+      const etapas = detalle?.etapas;
+      
+      if (!needsTranslation) {
+        setTranslatedEtapas(etapas || null);
+        return;
+      }
+
+      if (!etapas || etapas.length === 0) {
+        setTranslatedEtapas(null);
+        return;
+      }
+
+      const allTexts: string[] = [];
+      const textMap: { etapaIdx: number; field: string; tareaIdx?: number }[] = [];
+
+      etapas.forEach((etapa, eIdx) => {
+        // Título y descripción de etapa
+        if (etapa.titulo) {
+          allTexts.push(etapa.titulo);
+          textMap.push({ etapaIdx: eIdx, field: 'etapa_titulo' });
+        }
+        if (etapa.descripcion) {
+          allTexts.push(etapa.descripcion);
+          textMap.push({ etapaIdx: eIdx, field: 'etapa_descripcion' });
+        }
+        // Tareas
+        etapa.tareas?.forEach((tarea, tIdx) => {
+          if (tarea.titulo) {
+            allTexts.push(tarea.titulo);
+            textMap.push({ etapaIdx: eIdx, field: 'tarea_titulo', tareaIdx: tIdx });
+          }
+          if (tarea.descripcion) {
+            allTexts.push(tarea.descripcion);
+            textMap.push({ etapaIdx: eIdx, field: 'tarea_descripcion', tareaIdx: tIdx });
+          }
+        });
+      });
+
+      if (allTexts.length > 0) {
+        const translations = await translateTexts(allTexts);
+        
+        // Clonar etapas profundamente
+        const translatedEtapasList = JSON.parse(JSON.stringify(etapas));
+
+        textMap.forEach((map, idx) => {
+          const etapa = translatedEtapasList[map.etapaIdx];
+          if (map.field === 'etapa_titulo') {
+            etapa.titulo = translations[idx];
+          } else if (map.field === 'etapa_descripcion') {
+            etapa.descripcion = translations[idx];
+          } else if (map.field === 'tarea_titulo' && map.tareaIdx !== undefined) {
+            etapa.tareas[map.tareaIdx].titulo = translations[idx];
+          } else if (map.field === 'tarea_descripcion' && map.tareaIdx !== undefined) {
+            etapa.tareas[map.tareaIdx].descripcion = translations[idx];
+          }
+        });
+
+        setTranslatedEtapas(translatedEtapasList);
+      } else {
+        setTranslatedEtapas(etapas);
+      }
+    };
+
+    translateEtapas();
+  }, [detalle?.etapas, i18n.language, needsTranslation]);
 
   const cargarDetalle = async () => {
     if (!id) return;
@@ -549,8 +619,16 @@ export default function PlanEstudioDetalle() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {isTranslating && needsTranslation && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t('common.translatingContent')}
+                      </div>
+                    )}
                     <Accordion type="single" collapsible className="w-full">
-                      {etapas && Array.isArray(etapas) && etapas.map((etapa) => {
+                      {(() => {
+                        const displayEtapas = translatedEtapas || etapas;
+                        return displayEtapas && Array.isArray(displayEtapas) && displayEtapas.map((etapa) => {
                         const progresoEtapa = etapa.tareas && etapa.tareas.length > 0
                           ? (etapa.tareas.filter(t => t.completada === 1).length / etapa.tareas.length) * 100
                           : 0;
@@ -612,7 +690,8 @@ export default function PlanEstudioDetalle() {
                             </AccordionContent>
                           </AccordionItem>
                         );
-                      })}
+                      });
+                      })()}
                     </Accordion>
                   </CardContent>
                 </Card>
