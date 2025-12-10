@@ -38,7 +38,9 @@ const CCAA_LIST = [
 const Index = () => {
   const { user, isSuperAdmin, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  
+  const isSpanish = i18n.language === 'es' || i18n.language.startsWith('es-');
   
   const [userStats, setUserStats] = useState({
     totalQuestions: 0,
@@ -393,97 +395,101 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Noticias de Oposiciones */}
-            <Card className="bg-white shadow-md border-green-100">
-              <CardHeader className="bg-gradient-to-r from-green-50 to-white">
-                <CardTitle className="text-green-900">{t('home.oppositionNews')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {noticias.length > 0 ? (
-                  <div className="space-y-3">
-                    {noticias.map((n, i) => (
-                      <a
-                        key={i}
-                        href={n.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-white hover:from-green-100 hover:to-green-50 transition-all border border-green-200 shadow-sm hover:shadow-md"
-                      >
-                        {n.image && !failedImages.has(`noticia-${i}`) ? (
-                          <img
-                            src={n.image}
-                            alt={n.title}
-                            className="w-20 h-20 object-cover rounded-lg shadow-sm"
-                            onError={() => setFailedImages(prev => new Set(prev).add(`noticia-${i}`))}
-                          />
-                        ) : (
-                          <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
-                            <BookOpen className="w-8 h-8 text-green-600" />
+            {/* Noticias de Oposiciones - Solo en español */}
+            {isSpanish && (
+              <Card className="bg-white shadow-md border-green-100">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-white">
+                  <CardTitle className="text-green-900">{t('home.oppositionNews')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {noticias.length > 0 ? (
+                    <div className="space-y-3">
+                      {noticias.map((n, i) => (
+                        <a
+                          key={i}
+                          href={n.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-white hover:from-green-100 hover:to-green-50 transition-all border border-green-200 shadow-sm hover:shadow-md"
+                        >
+                          {n.image && !failedImages.has(`noticia-${i}`) ? (
+                            <img
+                              src={n.image}
+                              alt={n.title}
+                              className="w-20 h-20 object-cover rounded-lg shadow-sm"
+                              onError={() => setFailedImages(prev => new Set(prev).add(`noticia-${i}`))}
+                            />
+                          ) : (
+                            <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
+                              <BookOpen className="w-8 h-8 text-green-600" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-green-900 line-clamp-2">{n.title}</h3>
+                            <p className="text-sm text-gray-700 line-clamp-2 mt-1">{n.summary}</p>
+                            <p className="text-xs text-gray-500 mt-1">{n.date}</p>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-green-900 line-clamp-2">{n.title}</h3>
-                          <p className="text-sm text-gray-700 line-clamp-2 mt-1">{n.summary}</p>
-                          <p className="text-xs text-gray-500 mt-1">{n.date}</p>
-                        </div>
-                        <ExternalLink className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600 text-sm">Sin noticias recientes.</p>
-                )}
-              </CardContent>
-            </Card>
+                          <ExternalLink className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm">Sin noticias recientes.</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Últimas Oposiciones (BOE, BOCM, etc) */}
-            <Card className="bg-white shadow-md border-purple-100">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
-                <CardTitle className="text-purple-900">Últimas Oposiciones (BOE, BOCM, etc)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {rssNoticias.length > 0 ? (
-                  <div className="space-y-3">
-                    {rssNoticias.map((n, i) => (
-                      <a
-                        key={i}
-                        href={n.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-white hover:from-purple-100 hover:to-purple-50 transition-all border border-purple-200 shadow-sm hover:shadow-md"
-                      >
-                        {n.image && !failedImages.has(`rss-${i}`) ? (
-                          <img
-                            src={n.image}
-                            alt={n.title}
-                            className="w-20 h-20 object-cover rounded-lg shadow-sm"
-                            onError={() => setFailedImages(prev => new Set(prev).add(`rss-${i}`))}
-                          />
-                        ) : (
-                          <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
-                            <BookOpen className="w-8 h-8 text-purple-600" />
+            {/* Últimas Oposiciones (BOE, BOCM, etc) - Solo en español */}
+            {isSpanish && (
+              <Card className="bg-white shadow-md border-purple-100">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
+                  <CardTitle className="text-purple-900">Últimas Oposiciones (BOE, BOCM, etc)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {rssNoticias.length > 0 ? (
+                    <div className="space-y-3">
+                      {rssNoticias.map((n, i) => (
+                        <a
+                          key={i}
+                          href={n.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-white hover:from-purple-100 hover:to-purple-50 transition-all border border-purple-200 shadow-sm hover:shadow-md"
+                        >
+                          {n.image && !failedImages.has(`rss-${i}`) ? (
+                            <img
+                              src={n.image}
+                              alt={n.title}
+                              className="w-20 h-20 object-cover rounded-lg shadow-sm"
+                              onError={() => setFailedImages(prev => new Set(prev).add(`rss-${i}`))}
+                            />
+                          ) : (
+                            <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
+                              <BookOpen className="w-8 h-8 text-purple-600" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-purple-900 line-clamp-2">{n.title}</h3>
+                            <p className="text-sm text-gray-700 italic line-clamp-2 mt-1">{n.summary}</p>
+                            <p className="text-xs text-gray-500 mt-1">{n.date}</p>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-purple-900 line-clamp-2">{n.title}</h3>
-                          <p className="text-sm text-gray-700 italic line-clamp-2 mt-1">{n.summary}</p>
-                          <p className="text-xs text-gray-500 mt-1">{n.date}</p>
-                        </div>
-                        <ExternalLink className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600 text-sm">{t('home.loadingNews')}</p>
-                )}
-              </CardContent>
-            </Card>
+                          <ExternalLink className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm">{t('home.loadingNews')}</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column */}
           <div className="space-y-6">
-            {/* Mapa CCAA */}
-            {renderMapaCCAA()}
+            {/* Mapa CCAA - Solo en español */}
+            {isSpanish && renderMapaCCAA()}
 
             {/* Acciones rápidas */}
             <Card className="bg-white shadow-md border-orange-100">
