@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,14 +11,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Upload, FileText, Sparkles, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, FileText, Sparkles, X, Languages } from 'lucide-react';
 import { testService, type Proceso } from '@/services/testService';
 
 export default function CrearResumen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { translateTexts, isTranslating } = useTranslateContent();
   
   const [loading, setLoading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
@@ -42,6 +44,11 @@ export default function CrearResumen() {
   const [loadingSecciones, setLoadingSecciones] = useState(false);
   const [loadingTemas, setLoadingTemas] = useState(false);
   
+  // Estados para traducciones
+  const [translatedProcesos, setTranslatedProcesos] = useState<Map<number, string>>(new Map());
+  const [translatedSecciones, setTranslatedSecciones] = useState<Map<string, string>>(new Map());
+  const [translatedTemas, setTranslatedTemas] = useState<Map<string, string>>(new Map());
+  
   // Estados para controlar si usar select o input personalizado
   const [useCustomProceso, setUseCustomProceso] = useState(false);
   const [useCustomSeccion, setUseCustomSeccion] = useState(false);
@@ -54,6 +61,17 @@ export default function CrearResumen() {
       try {
         const data = await testService.getProcesos(user?.id);
         setProcesos(data);
+        
+        // Traducir procesos si no es español
+        if (i18n.language !== 'es' && data.length > 0) {
+          const textos = data.map(p => p.descripcion);
+          const traducciones = await translateTexts(textos);
+          const map = new Map<number, string>();
+          data.forEach((p, idx) => {
+            map.set(p.id, traducciones[idx] || p.descripcion);
+          });
+          setTranslatedProcesos(map);
+        }
       } catch (error) {
         console.error('Error al cargar procesos:', error);
       } finally {
@@ -61,7 +79,7 @@ export default function CrearResumen() {
       }
     };
     loadProcesos();
-  }, [user]);
+  }, [user, i18n.language]);
 
   // Cargar secciones cuando se selecciona un proceso
   useEffect(() => {
@@ -75,7 +93,18 @@ export default function CrearResumen() {
       try {
         const procesoId = parseInt(formData.proceso);
         const data = await testService.getSeccionesYTemas(procesoId);
-        setSecciones(data.secciones || []);
+        const seccionesData = data.secciones || [];
+        setSecciones(seccionesData);
+        
+        // Traducir secciones si no es español
+        if (i18n.language !== 'es' && seccionesData.length > 0) {
+          const traducciones = await translateTexts(seccionesData);
+          const map = new Map<string, string>();
+          seccionesData.forEach((s: string, idx: number) => {
+            map.set(s, traducciones[idx] || s);
+          });
+          setTranslatedSecciones(map);
+        }
       } catch (error) {
         console.error('Error al cargar secciones:', error);
         setSecciones([]);
@@ -84,7 +113,7 @@ export default function CrearResumen() {
       }
     };
     loadSecciones();
-  }, [formData.proceso, useCustomProceso]);
+  }, [formData.proceso, useCustomProceso, i18n.language]);
 
   // Cargar temas cuando se selecciona una sección
   useEffect(() => {
@@ -98,8 +127,18 @@ export default function CrearResumen() {
       try {
         const procesoId = parseInt(formData.proceso);
         // Cargar temas de la primera sección seleccionada
-        const data = await testService.getTemasPorSeccion(procesoId, seccionesSeleccionadas[0]);
-        setTemas(data || []);
+        const temasData = await testService.getTemasPorSeccion(procesoId, seccionesSeleccionadas[0]);
+        setTemas(temasData || []);
+        
+        // Traducir temas si no es español
+        if (i18n.language !== 'es' && temasData && temasData.length > 0) {
+          const traducciones = await translateTexts(temasData);
+          const map = new Map<string, string>();
+          temasData.forEach((tema: string, idx: number) => {
+            map.set(tema, traducciones[idx] || tema);
+          });
+          setTranslatedTemas(map);
+        }
       } catch (error) {
         console.error('Error al cargar temas:', error);
         setTemas([]);
@@ -108,7 +147,7 @@ export default function CrearResumen() {
       }
     };
     loadTemas();
-  }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion]);
+  }, [formData.proceso, seccionesSeleccionadas, useCustomProceso, useCustomSeccion, i18n.language]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -340,9 +379,17 @@ export default function CrearResumen() {
                           <SelectValue placeholder={loadingProcesos ? t('createSummary.loading') : t('createSummary.selectProcess')} />
                         </SelectTrigger>
                         <SelectContent>
+                          {isTranslating && i18n.language !== 'es' && (
+                            <div className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
+                              <Languages className="w-3 h-3 animate-pulse" />
+                              {t('common.translating')}
+                            </div>
+                          )}
                           {procesos.map((proceso) => (
                             <SelectItem key={proceso.id} value={proceso.id.toString()}>
-                              {proceso.descripcion}
+                              {i18n.language !== 'es' && translatedProcesos.get(proceso.id) 
+                                ? translatedProcesos.get(proceso.id) 
+                                : proceso.descripcion}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -412,9 +459,17 @@ export default function CrearResumen() {
                           />
                         </SelectTrigger>
                         <SelectContent>
+                          {isTranslating && i18n.language !== 'es' && (
+                            <div className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
+                              <Languages className="w-3 h-3 animate-pulse" />
+                              {t('common.translating')}
+                            </div>
+                          )}
                           {secciones.filter(s => !seccionesSeleccionadas.includes(s)).map((seccion, index) => (
                             <SelectItem key={index} value={seccion}>
-                              {seccion}
+                              {i18n.language !== 'es' && translatedSecciones.get(seccion) 
+                                ? translatedSecciones.get(seccion) 
+                                : seccion}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -424,7 +479,9 @@ export default function CrearResumen() {
                         <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30">
                           {seccionesSeleccionadas.map((seccion, index) => (
                             <Badge key={index} variant="secondary" className="gap-1">
-                              {seccion}
+                              {i18n.language !== 'es' && translatedSecciones.get(seccion) 
+                                ? translatedSecciones.get(seccion) 
+                                : seccion}
                               <X 
                                 className="w-3 h-3 cursor-pointer hover:text-destructive" 
                                 onClick={() => setSeccionesSeleccionadas(prev => prev.filter(s => s !== seccion))}
@@ -498,9 +555,17 @@ export default function CrearResumen() {
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {temas.filter(t => !temasSeleccionados.includes(t)).map((tema, index) => (
+                          {isTranslating && i18n.language !== 'es' && (
+                            <div className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
+                              <Languages className="w-3 h-3 animate-pulse" />
+                              {t('common.translating')}
+                            </div>
+                          )}
+                          {temas.filter(tema => !temasSeleccionados.includes(tema)).map((tema, index) => (
                             <SelectItem key={index} value={tema}>
-                              {tema}
+                              {i18n.language !== 'es' && translatedTemas.get(tema) 
+                                ? translatedTemas.get(tema) 
+                                : tema}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -510,7 +575,9 @@ export default function CrearResumen() {
                         <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/30">
                           {temasSeleccionados.map((tema, index) => (
                             <Badge key={index} variant="secondary" className="gap-1">
-                              {tema}
+                              {i18n.language !== 'es' && translatedTemas.get(tema) 
+                                ? translatedTemas.get(tema) 
+                                : tema}
                               <X 
                                 className="w-3 h-3 cursor-pointer hover:text-destructive" 
                                 onClick={() => setTemasSeleccionados(prev => prev.filter(t => t !== tema))}
