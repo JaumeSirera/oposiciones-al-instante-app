@@ -189,7 +189,8 @@
     "error": "Error",
     "success": "Éxito",
     "week": "Semana",
-    "translating": "Traduciendo..."
+    "translating": "Traduciendo...",
+    "translatingContent": "Traduciendo contenido del plan..."
   },
   "test": {
     "choosePracticeMode": "Elige el modo de práctica",

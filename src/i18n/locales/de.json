@@ -189,7 +189,8 @@
     "error": "Fehler",
     "success": "Erfolg",
     "week": "Woche",
-    "translating": "Übersetzen..."
+    "translating": "Übersetzen...",
+    "translatingContent": "Planinhalt wird übersetzt..."
   },
   "test": {
     "choosePracticeMode": "Übungsmodus wählen",
