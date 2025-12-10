@@ -31,11 +31,16 @@ interface SemanaPlan {
   notas: string;
 }
 
+const localeMap: Record<string, string> = {
+  es: 'es-ES', en: 'en-US', fr: 'fr-FR', de: 'de-DE', pt: 'pt-PT', zh: 'zh-CN'
+};
+
 export default function PlanEstudioDetalle() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const dateLocale = localeMap[i18n.language] || 'es-ES';
   const [detalle, setDetalle] = useState<PlanDetalle | null>(null);
   const [planIA, setPlanIA] = useState<SemanaPlan[] | null>(null);
   const [resumenIA, setResumenIA] = useState<string | null>(null);
@@ -229,7 +234,7 @@ export default function PlanEstudioDetalle() {
                 <div>
                   <p className="text-sm font-semibold text-muted-foreground mb-1">{t('studyPlans.startDate')}</p>
                   <p className="text-lg font-medium">
-                    {new Date(plan.fecha_inicio).toLocaleDateString('es-ES', {
+                    {new Date(plan.fecha_inicio).toLocaleDateString(dateLocale, {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric'
@@ -243,7 +248,7 @@ export default function PlanEstudioDetalle() {
                 <div>
                   <p className="text-sm font-semibold text-muted-foreground mb-1">{t('studyPlans.endDate')}</p>
                   <p className="text-lg font-medium">
-                    {new Date(plan.fecha_fin).toLocaleDateString('es-ES', {
+                    {new Date(plan.fecha_fin).toLocaleDateString(dateLocale, {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric'
@@ -305,11 +310,11 @@ export default function PlanEstudioDetalle() {
                             <div className="text-left flex-1">
                               <p className="font-semibold text-base">{t('studyPlans.week')} {semana.semana}</p>
                               <p className="text-sm text-muted-foreground mt-0.5">
-                                {new Date(semana.fecha_inicio).toLocaleDateString('es-ES', {
+                                {new Date(semana.fecha_inicio).toLocaleDateString(dateLocale, {
                                   day: '2-digit',
                                   month: '2-digit',
                                   year: 'numeric'
-                                })} - {new Date(semana.fecha_fin).toLocaleDateString('es-ES', {
+                                })} - {new Date(semana.fecha_fin).toLocaleDateString(dateLocale, {
                                   day: '2-digit',
                                   month: '2-digit',
                                   year: 'numeric'
@@ -375,7 +380,7 @@ export default function PlanEstudioDetalle() {
                                     <div key={idx} className="p-4 bg-muted/50 border border-border rounded-lg">
                                       <div className="flex justify-between items-start mb-2">
                                         <p className="font-medium text-sm">
-                                          {t('studyPlans.day')} {actividad.dia} - {new Date(actividad.fecha).toLocaleDateString('es-ES', {
+                                          {t('studyPlans.day')} {actividad.dia} - {new Date(actividad.fecha).toLocaleDateString(dateLocale, {
                                             day: '2-digit',
                                             month: '2-digit',
                                             year: 'numeric'
