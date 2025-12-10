@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
 import { supabase } from '@/lib/supabaseClient';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Calendar as CalendarIcon, Sparkles, ArrowLeft } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Sparkles, ArrowLeft, Languages } from 'lucide-react';
 import { format, addWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -50,13 +51,15 @@ const tiposPrueba = [
 ];
 
 export default function GenerarPlanFisicoIA() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { translateTexts, isTranslating } = useTranslateContent();
 
   const [loading, setLoading] = useState(false);
   const [generando, setGenerando] = useState(false);
   const [planGenerado, setPlanGenerado] = useState<PlanGenerado | null>(null);
+  const [translatedTipos, setTranslatedTipos] = useState<Map<string, string>>(new Map());
 
   const [titulo, setTitulo] = useState('');
   const [tipo, setTipo] = useState('');
@@ -67,6 +70,23 @@ export default function GenerarPlanFisicoIA() {
   const [fechaInicio, setFechaInicio] = useState<Date>(new Date());
   const [notificacionesEmail, setNotificacionesEmail] = useState(true);
   const [horaNotificacion, setHoraNotificacion] = useState('09:00');
+
+  // Traducir tipos de prueba cuando cambie el idioma
+  useEffect(() => {
+    const translateTipos = async () => {
+      if (i18n.language === 'es') {
+        setTranslatedTipos(new Map());
+        return;
+      }
+      const translated = await translateTexts(tiposPrueba);
+      const map = new Map<string, string>();
+      tiposPrueba.forEach((tipo, idx) => {
+        map.set(tipo, translated[idx] || tipo);
+      });
+      setTranslatedTipos(map);
+    };
+    translateTipos();
+  }, [i18n.language, translateTexts]);
 
   const generarPlanConIA = async () => {
     if (!user?.id || !titulo.trim() || !tipo) {
@@ -177,9 +197,17 @@ export default function GenerarPlanFisicoIA() {
                     <SelectValue placeholder={t('physicalPlans.generate.selectTestType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {tiposPrueba.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
+                    {isTranslating && i18n.language !== 'es' && (
+                      <div className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
+                        <Languages className="w-3 h-3 animate-pulse" />
+                        {t('common.translating')}
+                      </div>
+                    )}
+                    {tiposPrueba.map((tipoPrueba) => (
+                      <SelectItem key={tipoPrueba} value={tipoPrueba}>
+                        {i18n.language !== 'es' && translatedTipos.get(tipoPrueba) 
+                          ? translatedTipos.get(tipoPrueba) 
+                          : tipoPrueba}
                       </SelectItem>
                     ))}
                   </SelectContent>
