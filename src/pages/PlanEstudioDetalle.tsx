@@ -712,7 +712,7 @@ export default function PlanEstudioDetalle() {
               )}
             </TabsContent>
           </Tabs>
-        ) : etapas.length === 0 ? (
+        ) : (translatedEtapas || etapas).length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
@@ -730,12 +730,20 @@ export default function PlanEstudioDetalle() {
               </CardDescription>
             </CardHeader>
               <CardContent>
+                {isTranslating && needsTranslation && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t('common.translatingContent')}
+                  </div>
+                )}
                 <Accordion type="single" collapsible className="w-full">
-                  {etapas && Array.isArray(etapas) && etapas.map((etapa) => {
+                  {(() => {
+                    const displayEtapas = translatedEtapas || etapas;
+                    return displayEtapas && Array.isArray(displayEtapas) && displayEtapas.map((etapa) => {
                     const progresoEtapa = etapa.tareas && etapa.tareas.length > 0
-                    ? (etapa.tareas.filter(t => t.completada === 1).length / etapa.tareas.length) * 100
+                    ? (etapa.tareas.filter((t: any) => t.completada === 1).length / etapa.tareas.length) * 100
                     : 0;
-                  const tareasCompletadas = etapa.tareas ? etapa.tareas.filter((t) => t.completada === 1).length : 0;
+                  const tareasCompletadas = etapa.tareas ? etapa.tareas.filter((t: any) => t.completada === 1).length : 0;
 
                   return (
                     <AccordionItem key={etapa.id} value={`etapa-${etapa.id}`}>
@@ -788,7 +796,7 @@ export default function PlanEstudioDetalle() {
                               <div>
                                 <h4 className="font-semibold text-sm mb-3">{t('studyPlans.tasks')}:</h4>
                                 <div className="space-y-3">
-                                   {etapa.tareas.map((tarea) => (
+                                   {etapa.tareas.map((tarea: any) => (
                                     <div
                                       key={tarea.id}
                                       className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
@@ -827,7 +835,8 @@ export default function PlanEstudioDetalle() {
                         </AccordionContent>
                       </AccordionItem>
                   );
-                })}
+                });
+                })()}
               </Accordion>
             </CardContent>
           </Card>
