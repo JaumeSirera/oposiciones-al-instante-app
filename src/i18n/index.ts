@@ -18,6 +18,12 @@ const resources = {
   zh: { translation: zh },
 };
 
+// Update HTML lang attribute when language changes
+const updateHtmlLang = (lng: string) => {
+  document.documentElement.lang = lng;
+  document.documentElement.dir = lng === 'zh' ? 'ltr' : 'ltr'; // All languages are LTR
+};
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -32,5 +38,11 @@ i18n
       caches: ['localStorage'],
     },
   });
+
+// Set initial lang attribute
+updateHtmlLang(i18n.language || 'es');
+
+// Listen for language changes
+i18n.on('languageChanged', updateHtmlLang);
 
 export default i18n;
