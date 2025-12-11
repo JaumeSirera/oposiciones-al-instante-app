@@ -99,16 +99,19 @@ const Landing = () => {
               <MenuLinks />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSelector />
               <Link to="/donacion-publica" onClick={closeMenu}>
-                <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                  <Heart className="w-4 h-4 mr-2" />
-                  {t('landing.menu.supportProject')}
+                <Button variant="outline" size="icon" className="bg-white/10 text-white border-white/20 hover:bg-white/20 sm:w-auto sm:px-4">
+                  <Heart className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('landing.menu.supportProject')}</span>
                 </Button>
               </Link>
               <Link to="/auth" onClick={closeMenu}>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">{t('landing.menu.studentAccess')}</Button>
+                <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white sm:w-auto sm:px-4">
+                  <Users className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('landing.menu.studentAccess')}</span>
+                </Button>
               </Link>
               <button
                 className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-white border border-white/20 hover:bg-white/10"
