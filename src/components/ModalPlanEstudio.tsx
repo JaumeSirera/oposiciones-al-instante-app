@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface ModalPlanEstudioProps {
   open: boolean;
@@ -17,6 +17,7 @@ interface ModalPlanEstudioProps {
 
 export function ModalPlanEstudio({ open, onOpenChange }: ModalPlanEstudioProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleManual = () => {
     onOpenChange(false);
@@ -32,9 +33,9 @@ export function ModalPlanEstudio({ open, onOpenChange }: ModalPlanEstudioProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Crear Plan de Estudio</DialogTitle>
+          <DialogTitle className="text-2xl">{t('plans.study.create')}</DialogTitle>
           <DialogDescription>
-            Elige cómo quieres crear tu plan personalizado
+            {t('studyPlans.chooseHowToCreate')}
           </DialogDescription>
         </DialogHeader>
 
@@ -46,9 +47,9 @@ export function ModalPlanEstudio({ open, onOpenChange }: ModalPlanEstudioProps) 
           >
             <Sparkles className="h-8 w-8" />
             <div className="text-center">
-              <div className="font-bold text-lg">Generación con IA</div>
+              <div className="font-bold text-lg">{t('plans.study.generateAI')}</div>
               <div className="text-xs opacity-90 font-normal">
-                La IA creará un plan completo automáticamente
+                {t('studyPlans.aiWillCreatePlan')}
               </div>
             </div>
           </Button>
@@ -60,9 +61,9 @@ export function ModalPlanEstudio({ open, onOpenChange }: ModalPlanEstudioProps) 
           >
             <Calendar className="h-8 w-8" />
             <div className="text-center">
-              <div className="font-bold text-lg">Creación Manual</div>
+              <div className="font-bold text-lg">{t('plans.study.manual')}</div>
               <div className="text-xs opacity-90 font-normal">
-                Personaliza cada detalle de tu plan
+                {t('studyPlans.customizeEveryDetail')}
               </div>
             </div>
           </Button>
