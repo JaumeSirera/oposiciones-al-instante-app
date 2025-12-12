@@ -33,7 +33,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 
 export function AppSidebar() {
-  const { open } = useSidebar();
+  const { open, isMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const { isSuperAdmin, isAdmin } = useAuth();
   const { t } = useTranslation();
@@ -143,7 +143,15 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild isActive={active}>
-                        <NavLink to={item.url} end={item.url === "/"}>
+                        <NavLink
+                          to={item.url}
+                          end={item.url === "/"}
+                          onClick={() => {
+                            if (isMobile) {
+                              setOpenMobile(false);
+                            }
+                          }}
+                        >
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
                         </NavLink>
