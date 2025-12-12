@@ -14,7 +14,10 @@ require_once 'config.php';
 
 // -------- LOGS ----------
 function log_debug_preg($msg) {
-  @file_put_contents(__DIR__.'/log_preguntas.txt', date('Y-m-d H:i:s').' | '.$msg.PHP_EOL, FILE_APPEND);
+  $line = date('Y-m-d H:i:s') . ' | ' . $msg;
+  @file_put_contents(__DIR__.'/log_preguntas.txt', $line . PHP_EOL, FILE_APPEND);
+  // También enviamos al error_log del servidor para depuración en hosting
+  @error_log('[generar_preguntas] ' . $line);
 }
 function log_gemini_raw_preguntas($arr) {
   @file_put_contents(__DIR__.'/error_gemini_preguntas.log', json_encode($arr, JSON_UNESCAPED_UNICODE).PHP_EOL, FILE_APPEND);
