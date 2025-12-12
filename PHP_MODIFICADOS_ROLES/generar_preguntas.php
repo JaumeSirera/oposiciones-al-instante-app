@@ -145,13 +145,11 @@ function enviar_sse($type, $data) {
 }
 
 /**
- * Llama a Google Gemini para generar preguntas
+ * Construye el prompt para generar preguntas
  */
-function generar_lote_preguntas(string $apiKey, int $n, int $id_proceso, string $seccion, string $tema, string $texto = '', string $documento = ''): array {
-  $model = "gemini-2.5-flash";
-  
+function construir_prompt_preguntas(int $n, int $id_proceso, string $seccion, string $tema, string $texto = ''): string {
   if ($texto !== '') {
-    $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL del siguiente texto.
+    return "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL del siguiente texto.
 
 IMPORTANTE: Para CADA pregunta, indica la referencia exacta de donde extrajiste la información:
 - Si el texto tiene páginas numeradas, indica el número de página
@@ -173,7 +171,7 @@ Devuelve SOLO un array JSON válido sin texto adicional con el siguiente formato
   }
 }]";
   } else {
-    $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL para:
+    return "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL para:
 - Proceso ID: $id_proceso
 - Sección: $seccion
 - Tema: $tema
@@ -183,7 +181,14 @@ IMPORTANTE: Devuelve SOLO un array JSON válido, sin texto antes ni después, si
 Formato exacto requerido:
 [{\"pregunta\":\"texto de la pregunta\",\"opciones\":{\"A\":\"opción A\",\"B\":\"opción B\",\"C\":\"opción C\",\"D\":\"opción D\"},\"correcta\":\"A\"}]";
   }
+}
 
+/**
+ * Llama a Google Gemini para generar preguntas
+ */
+function llamar_gemini(string $apiKey, string $prompt): array {
+  $model = "gemini-2.5-flash";
+  
   $payload = [
     "contents" => [
       ["parts" => [["text" => $prompt]]]
@@ -212,42 +217,126 @@ Formato exacto requerido:
   $latencyMs = (int)round((microtime(true)-$t0)*1000);
   curl_close($ch);
 
-  if ($res === false) {
-    $err = curl_error($ch);
-    log_gemini_raw_preguntas([
-      'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-      'model'=>$model, 'batch'=>$n, 'curl_error'=>$err
-    ]);
-    throw new Exception("Error llamando a Google Gemini: $err");
+  log_gemini_raw_preguntas([
+    'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
+    'model'=>$model, 'provider'=>'gemini'
+  ]);
+
+  if ($res === false || $httpCode === 429 || $httpCode !== 200) {
+    return ['error' => true, 'code' => $httpCode, 'quota_exceeded' => ($httpCode === 429)];
   }
 
   $j = json_decode($res, true);
   $content = $j['candidates'][0]['content']['parts'][0]['text'] ?? '';
-  $finish  = $j['candidates'][0]['finishReason'] ?? '';
+  
+  $items = extract_json_array($content);
+  if (!is_array($items)) {
+    return ['error' => true, 'parse_error' => true];
+  }
+  
+  return ['error' => false, 'items' => $items];
+}
+
+/**
+ * Llama a OpenAI como fallback
+ */
+function llamar_openai(string $prompt): array {
+  $openai_key = defined('OPENAI_API_KEY') ? OPENAI_API_KEY : '';
+  if (empty($openai_key)) {
+    log_debug_preg("OpenAI API key no configurada");
+    return ['error' => true, 'no_key' => true];
+  }
+  
+  $payload = [
+    "model" => "gpt-4o-mini",
+    "messages" => [
+      ["role" => "system", "content" => "Eres un experto en oposiciones españolas. Genera preguntas tipo test con exactamente 4 opciones (A, B, C, D)."],
+      ["role" => "user", "content" => $prompt]
+    ],
+    "temperature" => 0.35,
+    "max_tokens" => 4000,
+    "response_format" => ["type" => "json_object"]
+  ];
+  
+  $t0 = microtime(true);
+  $ch = curl_init('https://api.openai.com/v1/chat/completions');
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+      'Content-Type: application/json',
+      'Authorization: Bearer ' . $openai_key
+    ],
+    CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+    CURLOPT_TIMEOUT => 120,
+    CURLOPT_CONNECTTIMEOUT => 30
+  ]);
+  
+  $res = curl_exec($ch);
+  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  $latencyMs = (int)round((microtime(true)-$t0)*1000);
+  $curlError = curl_error($ch);
+  curl_close($ch);
   
   log_gemini_raw_preguntas([
     'ts'=>date('c'),'http_code'=>$httpCode,'latency_ms'=>$latencyMs,
-    'model'=>$model, 'batch'=>$n,
-    'finish_reason'=>$finish,
-    'content_length'=>strlen($content),
-    'content_preview'=>substr($content, 0, 500)
+    'provider'=>'openai', 'curl_error'=>$curlError
   ]);
-
-  if ($httpCode === 429) {
-    throw new Exception('Cuota de Gemini excedida. Intenta más tarde.');
+  
+  if ($res === false || $httpCode !== 200) {
+    log_debug_preg("OpenAI falló: HTTP $httpCode, error: $curlError");
+    return ['error' => true, 'code' => $httpCode];
   }
   
-  if ($httpCode !== 200) {
-    $errorMsg = $j['error']['message'] ?? 'Error desconocido de API';
-    throw new Exception("Error de Gemini ($httpCode): $errorMsg");
-  }
-
+  $j = json_decode($res, true);
+  $content = $j['choices'][0]['message']['content'] ?? '';
+  
   $items = extract_json_array($content);
   if (!is_array($items)) {
-    log_debug_preg("❌ No se pudo parsear JSON. Content: ".substr($content, 0, 1000));
-    throw new Exception('Respuesta inválida de Gemini (no JSON parseable).');
+    // OpenAI a veces devuelve {"preguntas": [...]}
+    $parsed = json_decode($content, true);
+    if (isset($parsed['preguntas']) && is_array($parsed['preguntas'])) {
+      $items = $parsed['preguntas'];
+    } else {
+      return ['error' => true, 'parse_error' => true];
+    }
   }
-  return $items;
+  
+  return ['error' => false, 'items' => $items];
+}
+
+/**
+ * Genera preguntas con fallback automático Gemini -> OpenAI
+ */
+function generar_lote_preguntas(string $apiKey, int $n, int $id_proceso, string $seccion, string $tema, string $texto = '', string $documento = ''): array {
+  $prompt = construir_prompt_preguntas($n, $id_proceso, $seccion, $tema, $texto);
+  
+  // Intentar con Gemini primero
+  log_debug_preg("Intentando con Gemini para $n preguntas...");
+  $result = llamar_gemini($apiKey, $prompt);
+  
+  if (!$result['error']) {
+    log_debug_preg("✓ Gemini OK: " . count($result['items']) . " preguntas");
+    return $result['items'];
+  }
+  
+  // Si Gemini falla (429 cuota o error), intentar OpenAI
+  $reason = $result['quota_exceeded'] ?? false ? 'cuota excedida' : 'error';
+  log_debug_preg("Gemini falló ($reason), intentando OpenAI...");
+  
+  $result = llamar_openai($prompt);
+  
+  if (!$result['error']) {
+    log_debug_preg("✓ OpenAI OK: " . count($result['items']) . " preguntas");
+    return $result['items'];
+  }
+  
+  // Ambos fallaron
+  if ($result['no_key'] ?? false) {
+    throw new Exception('Gemini no disponible y OpenAI no está configurado. Intenta más tarde.');
+  }
+  
+  throw new Exception('Error generando preguntas. Ambos proveedores fallaron. Intenta más tarde.');
 }
 
 /**
