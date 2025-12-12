@@ -93,6 +93,23 @@ function extract_json_array(string $content): ?array {
 }
 
 /**
+ * Valida si una respuesta es válida (contiene al menos una letra o número)
+ * Rechaza respuestas que solo contienen caracteres especiales como ".", ")", "(", "-", etc.
+ * Permite: letras, números, decimales (3.14, 2,5), porcentajes (50%), etc.
+ */
+function es_respuesta_valida($s): bool {
+  $s = trim($s ?? '');
+  if ($s === '') return false;
+  
+  // Si tiene al menos una letra o dígito, es válida
+  if (preg_match('/[a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ]/u', $s)) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Llama a Google Gemini con JSON schema
  * Incluye trazabilidad de fuente cuando se genera desde texto
  */
@@ -315,13 +332,37 @@ try {
       $id_preg = $conn->insert_id;
       $stmt->close();
 
+      // Validar y filtrar respuestas antes de insertar
+      $respuestas_validas = [];
+      $respuestas_invalidas = [];
+      
       foreach ($ops as $letra => $textoResp) {
         $idx = $map[strtoupper($letra)] ?? 0;
         if ($idx < 1 || $idx > 4) continue;
+        
+        $textoRespTrimmed = trim($textoResp);
+        if (es_respuesta_valida($textoRespTrimmed)) {
+          $respuestas_validas[$letra] = ['idx' => $idx, 'texto' => $textoRespTrimmed];
+        } else {
+          $respuestas_invalidas[] = $textoRespTrimmed;
+          log_debug_preg("⚠️ Respuesta inválida filtrada para pregunta $id_preg: '$textoRespTrimmed'");
+        }
+      }
+      
+      // Si quedaron menos de 2 respuestas válidas, eliminar la pregunta y saltar
+      if (count($respuestas_validas) < 2) {
+        log_debug_preg("❌ Pregunta $id_preg eliminada: solo ".count($respuestas_validas)." respuestas válidas");
+        $conn->query("DELETE FROM preguntas WHERE id = $id_preg");
+        $total_insertadas--;
+        continue;
+      }
+      
+      // Insertar solo respuestas válidas
+      foreach ($respuestas_validas as $letra => $data) {
         $stmt2 = $conn->prepare("INSERT INTO respuestas (id_pregunta, indice, respuesta) VALUES (?, ?, ?)");
         if (!$stmt2) throw new Exception("Prepare resp: ".$conn->error);
-        $idx_str = (string)$idx;
-        $stmt2->bind_param("iss", $id_preg, $idx_str, $textoResp);
+        $idx_str = (string)$data['idx'];
+        $stmt2->bind_param("iss", $id_preg, $idx_str, $data['texto']);
         $stmt2->execute();
         if ($stmt2->error) throw new Exception("Execute resp: ".$stmt2->error);
         $stmt2->close();
