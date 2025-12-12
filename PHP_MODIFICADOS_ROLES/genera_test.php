@@ -22,6 +22,24 @@ function param($k, $def=null) {
     return $_GET[$k] ?? $_POST[$k] ?? $def;
 }
 
+/**
+ * Valida si una respuesta es válida (no solo caracteres especiales)
+ * Permite: letras, números, decimales (3.14, 2,5), porcentajes (50%), etc.
+ * Rechaza: solo puntuación como ".", ")", "(", "-", etc.
+ */
+function es_respuesta_valida($s) {
+    $s = trim($s ?? '');
+    if ($s === '') return false;
+    
+    // Si tiene al menos una letra o dígito, es válida
+    if (preg_match('/[a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ]/u', $s)) {
+        return true;
+    }
+    
+    // Si es solo caracteres especiales (puntuación, paréntesis, etc.), es inválida
+    return false;
+}
+
 /* ------------------ input ------------------ */
 $proceso_id   = intval(param('proceso_id', 0));
 $seccionesRaw = param('secciones', '');
@@ -145,15 +163,24 @@ foreach ($pregRows as $pregunta) {
 
     $respuestas = [];
     while ($r = $rres->fetch_assoc()) {
-        $respuestas[] = [
-            'indice'    => (string)$r['indice'],
-            'respuesta' => limpiar($r['respuesta'])
-        ];
+        $respLimpia = limpiar($r['respuesta']);
+        // Filtrar respuestas que son solo caracteres especiales
+        if (es_respuesta_valida($respLimpia)) {
+            $respuestas[] = [
+                'indice'    => (string)$r['indice'],
+                'respuesta' => $respLimpia
+            ];
+        } else {
+            error_log("[genera_test] Respuesta inválida filtrada en pregunta $id: '$respLimpia'");
+        }
     }
     $stmt2->close();
-
-    // Detectar correcta_indice: si la columna 'correcta' es numérica, úsala,
-    // si no, iguala por texto limpio.
+    
+    // Si no quedan respuestas válidas, saltar esta pregunta
+    if (count($respuestas) < 2) {
+        error_log("[genera_test] Pregunta $id saltada: menos de 2 respuestas válidas");
+        continue;
+    }
     $correcta_indice = null;
     $colCorrecta = $pregunta['correcta'];
     
