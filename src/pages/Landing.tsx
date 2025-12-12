@@ -123,11 +123,18 @@ const Landing = () => {
             </div>
 
             {openMenu && (
-              <div className="md:hidden absolute left-0 right-0 top-full mt-3 rounded-xl bg-black/75 backdrop-blur border border-white/10 p-4 shadow-xl">
-                <div className="flex flex-col gap-3 text-center">
-                  <MenuLinks />
+              <>
+                <div 
+                  className="md:hidden fixed inset-0 z-40" 
+                  onClick={closeMenu}
+                  aria-hidden
+                />
+                <div className="md:hidden absolute left-0 right-0 top-full mt-3 rounded-xl bg-black/95 backdrop-blur border border-white/10 p-4 shadow-xl z-50">
+                  <div className="flex flex-col gap-3 text-center">
+                    <MenuLinks />
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </nav>
         </header>
