@@ -1,13 +1,14 @@
 <?php
 /**
  * Script para limpiar respuestas inválidas de la base de datos
- * Elimina respuestas que solo contienen caracteres especiales (., ), (, -, etc.)
+ * Elimina:
+ *   - Respuestas en tabla 'respuestas' que solo contienen caracteres especiales
+ *   - Preguntas con campo 'correcta' inválido (vacío o solo caracteres especiales)
  * Preserva respuestas con letras, números y decimales válidos
  * 
  * USO: 
  *   - Modo simulación (ver qué se eliminaría): limpiar_respuestas_invalidas.php
- *   - Modo ejecución real: limpiar_respuestas_invalidas.php?ejecutar=1
- *   - Con clave de seguridad: limpiar_respuestas_invalidas.php?ejecutar=1&clave=TU_CLAVE
+ *   - Modo ejecución real: limpiar_respuestas_invalidas.php?ejecutar=1&clave=TU_CLAVE
  */
 
 header('Content-Type: text/html; charset=utf-8');
@@ -67,6 +68,7 @@ echo '<!DOCTYPE html>
 <div class="container">';
 
 echo '<h1>🧹 Limpieza de Respuestas Inválidas</h1>';
+echo '<p>Limpia respuestas de tabla respuestas y campo correcta de tabla preguntas</p>';
 
 if (!$ejecutar) {
     echo '<div class="info">
@@ -99,10 +101,26 @@ while ($row = $result->fetch_assoc()) {
     }
 }
 
+// ========== BUSCAR PREGUNTAS CON CAMPO CORRECTA INVÁLIDO ==========
+$query_correcta = "SELECT id, pregunta, correcta, id_proceso, tema FROM preguntas ORDER BY id DESC";
+$result_correcta = $conn->query($query_correcta);
+
+$preguntas_correcta_invalida = [];
+$total_preguntas = 0;
+
+if ($result_correcta) {
+    while ($row = $result_correcta->fetch_assoc()) {
+        $total_preguntas++;
+        if (!es_respuesta_valida($row['correcta'])) {
+            $preguntas_correcta_invalida[] = $row;
+        }
+    }
+}
+
 echo '<div class="info">
     <strong>📊 Estadísticas:</strong><br>
-    Total de respuestas analizadas: <strong>' . number_format($total) . '</strong><br>
-    Respuestas inválidas encontradas: <strong style="color: ' . (count($invalidas) > 0 ? 'red' : 'green') . '">' . count($invalidas) . '</strong>
+    <u>Tabla respuestas:</u> ' . number_format($total) . ' analizadas, <strong style="color: ' . (count($invalidas) > 0 ? 'red' : 'green') . '">' . count($invalidas) . '</strong> inválidas<br>
+    <u>Campo correcta:</u> ' . number_format($total_preguntas) . ' preguntas analizadas, <strong style="color: ' . (count($preguntas_correcta_invalida) > 0 ? 'red' : 'green') . '">' . count($preguntas_correcta_invalida) . '</strong> con correcta inválida
 </div>';
 
 if (count($invalidas) > 0) {
@@ -168,8 +186,70 @@ if (count($invalidas) > 0) {
     }
 } else {
     echo '<div class="success">
-        <strong>✅ Base de datos limpia</strong><br>
-        No se encontraron respuestas inválidas.
+        <strong>✅ Tabla respuestas limpia</strong><br>
+        No se encontraron respuestas inválidas en tabla respuestas.
+    </div>';
+}
+
+// ========== SECCIÓN: PREGUNTAS CON CORRECTA INVÁLIDA ==========
+if (count($preguntas_correcta_invalida) > 0) {
+    echo '<h2>🚫 Preguntas con Campo "correcta" Inválido</h2>';
+    echo '<p>Estas preguntas serán eliminadas junto con sus respuestas asociadas:</p>';
+    echo '<table>
+        <tr>
+            <th>ID Pregunta</th>
+            <th>Pregunta (extracto)</th>
+            <th>Correcta</th>
+            <th>Proceso</th>
+            <th>Tema</th>
+        </tr>';
+    
+    foreach ($preguntas_correcta_invalida as $p) {
+        $preguntaCorta = mb_substr($p['pregunta'] ?? 'N/A', 0, 60) . '...';
+        $correctaEscapada = htmlspecialchars($p['correcta'] ?? '');
+        echo '<tr class="invalid">
+            <td>' . $p['id'] . '</td>
+            <td>' . htmlspecialchars($preguntaCorta) . '</td>
+            <td><code>' . $correctaEscapada . '</code></td>
+            <td>' . $p['id_proceso'] . '</td>
+            <td>' . htmlspecialchars(mb_substr($p['tema'] ?? '', 0, 30)) . '</td>
+        </tr>';
+    }
+    echo '</table>';
+    
+    if ($ejecutar) {
+        echo '<h3>🗑️ Eliminando preguntas con correcta inválida...</h3>';
+        
+        $eliminadas_preg = 0;
+        $errores_preg = 0;
+        
+        foreach ($preguntas_correcta_invalida as $p) {
+            $id = $p['id'];
+            
+            // Primero eliminar respuestas asociadas
+            $conn->query("DELETE FROM respuestas WHERE id_pregunta = $id");
+            
+            // Luego eliminar la pregunta
+            if ($conn->query("DELETE FROM preguntas WHERE id = $id")) {
+                $eliminadas_preg++;
+            } else {
+                $errores_preg++;
+                echo '<div class="error">❌ Error eliminando pregunta ID ' . $id . ': ' . $conn->error . '</div>';
+            }
+        }
+        
+        echo '<div class="success">
+            <strong>✅ Limpieza de preguntas completada</strong><br>
+            Preguntas eliminadas: <strong>' . $eliminadas_preg . '</strong><br>
+            Errores: <strong>' . $errores_preg . '</strong>
+        </div>';
+        
+        error_log("[limpiar_respuestas] Preguntas con correcta inválida: $eliminadas_preg eliminadas, $errores_preg errores");
+    }
+} else {
+    echo '<div class="success">
+        <strong>✅ Campo correcta limpio</strong><br>
+        No se encontraron preguntas con campo "correcta" inválido.
     </div>';
 }
 
