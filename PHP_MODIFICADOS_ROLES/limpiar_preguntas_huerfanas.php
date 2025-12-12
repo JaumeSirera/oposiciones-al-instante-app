@@ -1,7 +1,9 @@
 <?php
 /**
  * Script para detectar y eliminar preguntas huérfanas
- * Elimina preguntas que tienen menos de 2 respuestas válidas
+ * Elimina preguntas que:
+ *   - Tienen menos de 2 respuestas válidas en tabla respuestas
+ *   - Tienen el campo 'correcta' inválido (vacío o solo caracteres especiales)
  * 
  * USO: 
  *   - Modo simulación (ver qué se eliminaría): limpiar_preguntas_huerfanas.php
@@ -67,7 +69,7 @@ echo '<!DOCTYPE html>
 <div class="container">';
 
 echo '<h1>🧹 Limpieza de Preguntas Huérfanas</h1>';
-echo '<p>Detecta preguntas con menos de 2 respuestas válidas (inutilizables para tests)</p>';
+echo '<p>Detecta preguntas con menos de 2 respuestas válidas o con campo "correcta" inválido</p>';
 
 if (!$ejecutar) {
     echo '<div class="info">
@@ -77,8 +79,8 @@ if (!$ejecutar) {
     </div>';
 }
 
-// Buscar todas las preguntas con sus respuestas
-$query = "SELECT p.id, p.pregunta, p.id_proceso, p.tema, p.seccion,
+// Buscar todas las preguntas con sus respuestas y campo correcta
+$query = "SELECT p.id, p.pregunta, p.correcta, p.id_proceso, p.tema, p.seccion,
           (SELECT COUNT(*) FROM respuestas r WHERE r.id_pregunta = p.id) as total_respuestas
           FROM preguntas p
           ORDER BY p.id DESC";
@@ -114,10 +116,22 @@ while ($row = $result->fetch_assoc()) {
         }
     }
     
-    // Si tiene menos de 2 respuestas válidas, es huérfana
+    // Verificar si el campo correcta es válido
+    $correcta_valida = es_respuesta_valida($row['correcta']);
+    $motivo_huerfana = '';
+    
+    // Si tiene menos de 2 respuestas válidas O correcta es inválida, es huérfana
     if ($respuestas_validas < 2) {
+        $motivo_huerfana = 'Menos de 2 respuestas válidas';
+    } elseif (!$correcta_valida) {
+        $motivo_huerfana = 'Campo "correcta" inválido';
+    }
+    
+    if ($motivo_huerfana !== '') {
         $row['respuestas_validas'] = $respuestas_validas;
         $row['respuestas_invalidas'] = $respuestas_invalidas;
+        $row['correcta_valida'] = $correcta_valida;
+        $row['motivo'] = $motivo_huerfana;
         $huerfanas[] = $row;
     }
 }
@@ -130,31 +144,29 @@ echo '<div class="info">
 
 if (count($huerfanas) > 0) {
     echo '<h2>🚫 Preguntas Huérfanas Encontradas</h2>';
-    echo '<p>Estas preguntas tienen menos de 2 respuestas válidas y no pueden usarse en tests:</p>';
+    echo '<p>Estas preguntas tienen problemas y no pueden usarse en tests:</p>';
     echo '<table>
         <tr>
             <th>ID</th>
             <th>Pregunta (extracto)</th>
+            <th>Correcta</th>
             <th>Proceso</th>
-            <th>Tema</th>
             <th>Resp. Válidas</th>
-            <th>Resp. Inválidas</th>
+            <th>Motivo</th>
         </tr>';
     
     foreach ($huerfanas as $h) {
-        $preguntaCorta = mb_substr($h['pregunta'] ?? 'N/A', 0, 60) . '...';
-        $badgeClass = 'badge-' . $h['respuestas_validas'];
-        $invalidasStr = implode(', ', array_map(function($r) { 
-            return '<code>' . htmlspecialchars($r) . '</code>'; 
-        }, $h['respuestas_invalidas']));
+        $preguntaCorta = mb_substr($h['pregunta'] ?? 'N/A', 0, 50) . '...';
+        $correctaCorta = mb_substr($h['correcta'] ?? 'N/A', 0, 30);
+        $badgeClass = $h['correcta_valida'] ? '' : 'badge-0';
         
         echo '<tr class="orphan">
             <td>' . $h['id'] . '</td>
             <td>' . htmlspecialchars($preguntaCorta) . '</td>
+            <td><code class="' . $badgeClass . '">' . htmlspecialchars($correctaCorta) . '</code></td>
             <td>' . $h['id_proceso'] . '</td>
-            <td>' . htmlspecialchars(mb_substr($h['tema'] ?? '', 0, 30)) . '</td>
-            <td><span class="badge ' . $badgeClass . '">' . $h['respuestas_validas'] . '</span></td>
-            <td>' . ($invalidasStr ?: '-') . '</td>
+            <td><span class="badge badge-' . min($h['respuestas_validas'], 1) . '">' . $h['respuestas_validas'] . '</span></td>
+            <td>' . htmlspecialchars($h['motivo']) . '</td>
         </tr>';
     }
     echo '</table>';
