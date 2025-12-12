@@ -400,6 +400,8 @@ if ($use_streaming && $texto !== '' && mb_strlen($texto) > 5000) {
   
   $conn->begin_transaction();
   
+  $fragmentos_fallidos = [];
+  
   try {
     foreach ($fragmentos as $idx => $fragmento) {
       $fragmento_num = $idx + 1;
@@ -410,30 +412,49 @@ if ($use_streaming && $texto !== '' && mb_strlen($texto) > 5000) {
         'total' => $total_fragmentos
       ]);
       
-      try {
-        $items = generar_lote_preguntas($GOOGLE_API_KEY, $preguntas_por_fragmento, $id_proceso, $seccion, $tema, $fragmento, $documento);
-        
-        foreach ($items as $it) {
-          if (insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $fragmento)) {
-            $total_insertadas++;
+      // Intentar hasta 2 veces por fragmento
+      $reintentos = 2;
+      $exito = false;
+      
+      for ($intento = 1; $intento <= $reintentos && !$exito; $intento++) {
+        try {
+          $items = generar_lote_preguntas($GOOGLE_API_KEY, $preguntas_por_fragmento, $id_proceso, $seccion, $tema, $fragmento, $documento);
+          
+          foreach ($items as $it) {
+            if (insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $fragmento)) {
+              $total_insertadas++;
+            }
+          }
+          
+          $fragmentos_procesados++;
+          $exito = true;
+          
+          enviar_sse('chunk_complete', [
+            'current' => $fragmento_num,
+            'total' => $total_fragmentos,
+            'totalGenerated' => $total_insertadas
+          ]);
+          
+        } catch (Exception $e) {
+          log_debug_preg("Intento $intento fragmento $fragmento_num falló: " . $e->getMessage());
+          
+          if ($intento < $reintentos) {
+            enviar_sse('progress', [
+              'message' => "Reintentando fragmento $fragmento_num...",
+              'current' => $fragmento_num,
+              'total' => $total_fragmentos
+            ]);
+            usleep(1000000); // Esperar 1 segundo antes de reintentar
+          } else {
+            // Después de todos los reintentos, continuar con el siguiente fragmento
+            $fragmentos_fallidos[] = $fragmento_num;
+            enviar_sse('chunk_warning', [
+              'message' => "Fragmento $fragmento_num omitido tras $reintentos intentos",
+              'current' => $fragmento_num,
+              'total' => $total_fragmentos
+            ]);
           }
         }
-        
-        $fragmentos_procesados++;
-        
-        enviar_sse('chunk_complete', [
-          'current' => $fragmento_num,
-          'total' => $total_fragmentos,
-          'totalGenerated' => $total_insertadas
-        ]);
-        
-      } catch (Exception $e) {
-        log_debug_preg("Error en fragmento $fragmento_num: " . $e->getMessage());
-        enviar_sse('error', [
-          'error' => "Error en el fragmento $fragmento_num: " . $e->getMessage() . ". Por favor, intenta con un texto diferente o más corto."
-        ]);
-        $conn->rollback();
-        exit;
       }
       
       if ($fragmento_num < $total_fragmentos) {
@@ -441,17 +462,31 @@ if ($use_streaming && $texto !== '' && mb_strlen($texto) > 5000) {
       }
     }
     
-    $conn->commit();
-    log_debug_preg("✅ Streaming completado: $total_insertadas preguntas en $fragmentos_procesados fragmentos");
-    
-    enviar_sse('complete', [
-      'ok' => true,
-      'generadas' => $total_insertadas,
-      'chunks_procesados' => $fragmentos_procesados,
-      'total_chunks' => $total_fragmentos,
-      'es_publico' => $es_publico,
-      'rol' => $rol_usuario
-    ]);
+    // Hacer commit si se generó al menos una pregunta
+    if ($total_insertadas > 0) {
+      $conn->commit();
+      log_debug_preg("✅ Streaming completado: $total_insertadas preguntas en $fragmentos_procesados fragmentos (fallidos: ".count($fragmentos_fallidos).")");
+      
+      $mensaje_warning = '';
+      if (count($fragmentos_fallidos) > 0) {
+        $mensaje_warning = "Algunos fragmentos no pudieron procesarse: " . implode(', ', $fragmentos_fallidos);
+      }
+      
+      enviar_sse('complete', [
+        'ok' => true,
+        'generadas' => $total_insertadas,
+        'chunks_procesados' => $fragmentos_procesados,
+        'total_chunks' => $total_fragmentos,
+        'chunks_fallidos' => count($fragmentos_fallidos),
+        'es_publico' => $es_publico,
+        'rol' => $rol_usuario,
+        'warning' => $mensaje_warning
+      ]);
+    } else {
+      $conn->rollback();
+      log_debug_preg("❌ ROLLBACK: No se pudo generar ninguna pregunta");
+      enviar_sse('error', ['error' => 'No se pudo generar ninguna pregunta. Intenta con un texto diferente.']);
+    }
     
   } catch (Exception $e) {
     $conn->rollback();
@@ -477,16 +512,38 @@ if ($texto !== '' && mb_strlen($texto) > 6000) {
   
   $conn->begin_transaction();
   
+  $fragmentos_fallidos = [];
+  
   try {
     foreach ($fragmentos as $idx => $fragmento) {
-      $items = generar_lote_preguntas($GOOGLE_API_KEY, $preguntas_por_fragmento, $id_proceso, $seccion, $tema, $fragmento, $documento);
+      $fragmento_num = $idx + 1;
       
-      foreach ($items as $it) {
-        if (insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $fragmento)) {
-          $total_insertadas++;
+      // Intentar hasta 2 veces por fragmento
+      $reintentos = 2;
+      $exito = false;
+      
+      for ($intento = 1; $intento <= $reintentos && !$exito; $intento++) {
+        try {
+          $items = generar_lote_preguntas($GOOGLE_API_KEY, $preguntas_por_fragmento, $id_proceso, $seccion, $tema, $fragmento, $documento);
+          
+          foreach ($items as $it) {
+            if (insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $fragmento)) {
+              $total_insertadas++;
+            }
+            
+            if ($total_insertadas >= $num_preguntas) break 3;
+          }
+          
+          $exito = true;
+          
+        } catch (Exception $e) {
+          log_debug_preg("Intento $intento fragmento $fragmento_num falló: " . $e->getMessage());
+          if ($intento < $reintentos) {
+            usleep(1000000); // Esperar 1 segundo antes de reintentar
+          } else {
+            $fragmentos_fallidos[] = $fragmento_num;
+          }
         }
-        
-        if ($total_insertadas >= $num_preguntas) break 2;
       }
       
       if ($idx < $total_fragmentos - 1) {
@@ -494,16 +551,24 @@ if ($texto !== '' && mb_strlen($texto) > 6000) {
       }
     }
     
-    $conn->commit();
-    log_debug_preg("✅ Commit OK: $total_insertadas preguntas de $total_fragmentos fragmentos");
-    echo json_encode([
-      'ok'=>true,
-      'generadas'=>$total_insertadas,
-      'preguntas'=>$total_insertadas,
-      'es_publico'=>$es_publico,
-      'rol'=>$rol_usuario,
-      'fragmentos'=>$total_fragmentos
-    ], JSON_UNESCAPED_UNICODE);
+    if ($total_insertadas > 0) {
+      $conn->commit();
+      log_debug_preg("✅ Commit OK: $total_insertadas preguntas de $total_fragmentos fragmentos (fallidos: ".count($fragmentos_fallidos).")");
+      echo json_encode([
+        'ok'=>true,
+        'generadas'=>$total_insertadas,
+        'preguntas'=>$total_insertadas,
+        'es_publico'=>$es_publico,
+        'rol'=>$rol_usuario,
+        'fragmentos'=>$total_fragmentos,
+        'fragmentos_fallidos'=>count($fragmentos_fallidos)
+      ], JSON_UNESCAPED_UNICODE);
+    } else {
+      $conn->rollback();
+      log_debug_preg("❌ ROLLBACK: No se pudo generar ninguna pregunta");
+      http_response_code(500);
+      echo json_encode(['ok'=>false,'error'=>'No se pudo generar ninguna pregunta. Intenta con un texto diferente o más corto.'], JSON_UNESCAPED_UNICODE);
+    }
     
   } catch (Exception $e) {
     $conn->rollback();
