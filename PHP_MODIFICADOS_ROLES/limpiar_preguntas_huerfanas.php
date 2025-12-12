@@ -8,11 +8,14 @@
  * USO: 
  *   - Modo simulación (ver qué se eliminaría): limpiar_preguntas_huerfanas.php
  *   - Modo ejecución real: limpiar_preguntas_huerfanas.php?ejecutar=1&clave=TU_CLAVE
+ *   - Con límite de procesamiento: limpiar_preguntas_huerfanas.php?limite=1000
+ *   - Continuar desde ID: limpiar_preguntas_huerfanas.php?desde=12345
  */
 
 header('Content-Type: text/html; charset=utf-8');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+set_time_limit(300); // 5 minutos máximo
 
 require 'db.php';
 
@@ -21,6 +24,8 @@ $CLAVE_SEGURIDAD = 'limpiar2024';
 
 $ejecutar = isset($_GET['ejecutar']) && $_GET['ejecutar'] == '1';
 $clave = $_GET['clave'] ?? '';
+$limite = isset($_GET['limite']) ? intval($_GET['limite']) : 0; // 0 = sin límite
+$desde_id = isset($_GET['desde']) ? intval($_GET['desde']) : 0;
 
 // Verificar clave si se va a ejecutar
 if ($ejecutar && $clave !== $CLAVE_SEGURIDAD) {
@@ -45,6 +50,7 @@ echo '<!DOCTYPE html>
 <html>
 <head>
     <title>Limpieza de Preguntas Huérfanas</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -57,15 +63,22 @@ echo '<!DOCTYPE html>
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background: #f5f5f5; }
         .orphan { background: #ffebee; }
-        .btn { display: inline-block; padding: 10px 20px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+        .btn { display: inline-block; padding: 10px 20px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; margin-right: 10px; }
         .btn-danger { background: #d32f2f; }
+        .btn-success { background: #388e3c; }
         code { background: #eee; padding: 2px 6px; border-radius: 3px; }
         .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
         .badge-0 { background: #f44336; color: white; }
         .badge-1 { background: #ff9800; color: white; }
-        .progress-container { background: #e0e0e0; border-radius: 4px; height: 24px; margin: 10px 0; overflow: hidden; }
-        .progress-bar { background: linear-gradient(90deg, #4caf50, #8bc34a); height: 100%; transition: width 0.1s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; }
-        .status { padding: 10px; background: #fff9c4; border-radius: 4px; margin: 10px 0; font-family: monospace; }
+        .progress-log { background: #263238; color: #b0bec5; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; margin: 15px 0; }
+        .progress-log .line { margin: 2px 0; }
+        .progress-log .ok { color: #4caf50; }
+        .progress-log .warn { color: #ff9800; }
+        .progress-log .err { color: #f44336; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-box { background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-box .number { font-size: 24px; font-weight: bold; color: #1976d2; }
+        .stat-box .label { font-size: 12px; color: #666; }
     </style>
 </head>
 <body>
@@ -82,67 +95,69 @@ if (!$ejecutar) {
     </div>';
 }
 
-// Forzar output buffering para mostrar progreso en tiempo real
-if (ob_get_level()) ob_end_flush();
-ob_implicit_flush(true);
-
-// Primero contar total de preguntas
+// Contar total de preguntas
 $countQuery = "SELECT COUNT(*) as total FROM preguntas";
+if ($desde_id > 0) {
+    $countQuery = "SELECT COUNT(*) as total FROM preguntas WHERE id >= $desde_id";
+}
 $countResult = $conn->query($countQuery);
 $totalCount = $countResult ? $countResult->fetch_assoc()['total'] : 0;
 
-echo '<div class="info" id="progress-info">
-    <strong>🔍 Analizando preguntas...</strong><br>
-    <div class="progress-container">
-        <div class="progress-bar" id="progress-bar" style="width: 0%">0%</div>
-    </div>
-    <div class="status" id="status">Iniciando análisis de ' . number_format($totalCount) . ' preguntas...</div>
-</div>';
+$procesarCount = ($limite > 0) ? min($limite, $totalCount) : $totalCount;
 
-// Script para actualizar progreso
-echo '<script>
-function updateProgress(current, total, message) {
-    var pct = Math.round((current / total) * 100);
-    document.getElementById("progress-bar").style.width = pct + "%";
-    document.getElementById("progress-bar").innerText = pct + "%";
-    document.getElementById("status").innerText = message;
+echo '<div class="info">
+    <strong>📋 Configuración:</strong><br>
+    Total de preguntas en BD: <strong>' . number_format($totalCount) . '</strong>';
+if ($desde_id > 0) {
+    echo '<br>Procesando desde ID: <strong>' . $desde_id . '</strong>';
 }
-</script>';
+if ($limite > 0) {
+    echo '<br>Límite de procesamiento: <strong>' . number_format($limite) . '</strong> preguntas';
+}
+echo '</div>';
 
-// Flush inicial
-if (function_exists('flush')) { flush(); }
-if (function_exists('ob_flush') && ob_get_level()) { @ob_flush(); }
+echo '<div class="progress-log" id="log">';
+echo '<div class="line">🚀 Iniciando análisis...</div>';
 
-// Buscar todas las preguntas con sus respuestas y campo correcta
-$query = "SELECT p.id, p.pregunta, p.correcta, p.id_proceso, p.tema, p.seccion,
-          (SELECT COUNT(*) FROM respuestas r WHERE r.id_pregunta = p.id) as total_respuestas
-          FROM preguntas p
-          ORDER BY p.id DESC";
+$inicio = microtime(true);
+
+// Buscar preguntas
+$query = "SELECT p.id, p.pregunta, p.correcta, p.id_proceso, p.tema, p.seccion
+          FROM preguntas p";
+if ($desde_id > 0) {
+    $query .= " WHERE p.id >= $desde_id";
+}
+$query .= " ORDER BY p.id ASC";
+if ($limite > 0) {
+    $query .= " LIMIT $limite";
+}
 
 $result = $conn->query($query);
 
 if (!$result) {
-    echo '<div class="error">❌ Error en consulta: ' . $conn->error . '</div>';
+    echo '<div class="line err">❌ Error en consulta: ' . $conn->error . '</div>';
+    echo '</div>';
     exit;
 }
 
 $huerfanas = [];
 $total_preguntas = 0;
-$update_interval = max(1, intval($totalCount / 100)); // Actualizar cada 1%
+$ultimo_id = 0;
+$log_interval = max(100, intval($procesarCount / 20)); // Log cada 5%
 
 while ($row = $result->fetch_assoc()) {
     $total_preguntas++;
     $id_pregunta = $row['id'];
+    $ultimo_id = $id_pregunta;
     
-    // Mostrar progreso cada 1% o cada 50 preguntas
-    if ($total_preguntas % $update_interval == 0 || $total_preguntas <= 5) {
-        $preguntaCorta = mb_substr($row['pregunta'] ?? '', 0, 40);
-        echo '<script>updateProgress(' . $total_preguntas . ', ' . $totalCount . ', "Pregunta #' . $total_preguntas . '/' . $totalCount . ' (ID: ' . $id_pregunta . ') - ' . addslashes($preguntaCorta) . '...");</script>';
-        if (function_exists('flush')) { flush(); }
-        if (function_exists('ob_flush') && ob_get_level()) { @ob_flush(); }
+    // Mostrar log cada cierto intervalo
+    if ($total_preguntas % $log_interval == 0) {
+        $pct = round(($total_preguntas / $procesarCount) * 100);
+        $tiempo = round(microtime(true) - $inicio, 1);
+        echo '<div class="line ok">[' . $pct . '%] Procesadas ' . number_format($total_preguntas) . ' preguntas (ID: ' . $id_pregunta . ') - ' . $tiempo . 's</div>';
     }
     
-    // Obtener respuestas de esta pregunta y contar válidas
+    // Obtener respuestas y contar válidas
     $query_resp = "SELECT respuesta FROM respuestas WHERE id_pregunta = $id_pregunta";
     $result_resp = $conn->query($query_resp);
     
@@ -163,7 +178,6 @@ while ($row = $result->fetch_assoc()) {
     $correcta_valida = es_respuesta_valida($row['correcta']);
     $motivo_huerfana = '';
     
-    // Si tiene menos de 2 respuestas válidas O correcta es inválida, es huérfana
     if ($respuestas_validas < 2) {
         $motivo_huerfana = 'Menos de 2 respuestas válidas';
     } elseif (!$correcta_valida) {
@@ -179,22 +193,44 @@ while ($row = $result->fetch_assoc()) {
     }
 }
 
-// Ocultar barra de progreso y mostrar completado
-echo '<script>
-document.getElementById("progress-bar").style.width = "100%";
-document.getElementById("progress-bar").innerText = "100%";
-document.getElementById("status").innerText = "✅ Análisis completado: ' . $total_preguntas . ' preguntas procesadas, ' . count($huerfanas) . ' huérfanas encontradas";
-</script>';
-if (function_exists('flush')) { flush(); }
+$tiempo_total = round(microtime(true) - $inicio, 2);
+echo '<div class="line ok">✅ Análisis completado en ' . $tiempo_total . ' segundos</div>';
+echo '</div>';
 
-echo '<div class="info">
-    <strong>📊 Estadísticas:</strong><br>
-    Total de preguntas analizadas: <strong>' . number_format($total_preguntas) . '</strong><br>
-    Preguntas huérfanas encontradas: <strong style="color: ' . (count($huerfanas) > 0 ? 'red' : 'green') . '">' . count($huerfanas) . '</strong>
+// Estadísticas
+echo '<div class="stats-grid">
+    <div class="stat-box">
+        <div class="number">' . number_format($total_preguntas) . '</div>
+        <div class="label">Preguntas analizadas</div>
+    </div>
+    <div class="stat-box">
+        <div class="number" style="color: ' . (count($huerfanas) > 0 ? '#d32f2f' : '#388e3c') . '">' . count($huerfanas) . '</div>
+        <div class="label">Huérfanas encontradas</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">' . $tiempo_total . 's</div>
+        <div class="label">Tiempo de análisis</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">' . round($total_preguntas / max(1, $tiempo_total)) . '</div>
+        <div class="label">Preguntas/segundo</div>
+    </div>
 </div>';
 
+// Si hay más preguntas por procesar, mostrar botón para continuar
+if ($limite > 0 && $total_preguntas >= $limite) {
+    $siguiente_id = $ultimo_id + 1;
+    echo '<div class="warning">
+        <strong>⏳ Procesamiento parcial</strong><br>
+        Se procesaron ' . number_format($limite) . ' preguntas. Puede haber más pendientes.<br>
+        <a href="?limite=' . $limite . '&desde=' . $siguiente_id . '" class="btn btn-success">
+            ➡️ Continuar desde ID ' . $siguiente_id . '
+        </a>
+    </div>';
+}
+
 if (count($huerfanas) > 0) {
-    echo '<h2>🚫 Preguntas Huérfanas Encontradas</h2>';
+    echo '<h2>🚫 Preguntas Huérfanas Encontradas (' . count($huerfanas) . ')</h2>';
     echo '<p>Estas preguntas tienen problemas y no pueden usarse en tests:</p>';
     echo '<table>
         <tr>
@@ -224,6 +260,7 @@ if (count($huerfanas) > 0) {
     
     if ($ejecutar) {
         echo '<h2>🗑️ Ejecutando Limpieza...</h2>';
+        echo '<div class="progress-log">';
         
         $eliminadas = 0;
         $errores = 0;
@@ -231,19 +268,20 @@ if (count($huerfanas) > 0) {
         foreach ($huerfanas as $h) {
             $id = $h['id'];
             
-            // Primero eliminar respuestas asociadas
             $deleteResp = "DELETE FROM respuestas WHERE id_pregunta = $id";
             $conn->query($deleteResp);
             
-            // Luego eliminar la pregunta
             $deletePreg = "DELETE FROM preguntas WHERE id = $id";
             if ($conn->query($deletePreg)) {
                 $eliminadas++;
+                echo '<div class="line ok">✓ Eliminada pregunta ID ' . $id . '</div>';
             } else {
                 $errores++;
-                echo '<div class="error">❌ Error eliminando pregunta ID ' . $id . ': ' . $conn->error . '</div>';
+                echo '<div class="line err">✗ Error ID ' . $id . ': ' . $conn->error . '</div>';
             }
         }
+        
+        echo '</div>';
         
         echo '<div class="success">
             <strong>✅ Limpieza Completada</strong><br>
@@ -256,7 +294,7 @@ if (count($huerfanas) > 0) {
         echo '<div class="warning">
             <strong>⚠️ Acción Requerida</strong><br>
             Se encontraron ' . count($huerfanas) . ' preguntas huérfanas que serán eliminadas junto con sus respuestas.<br>
-            <a href="?ejecutar=1&clave=' . $CLAVE_SEGURIDAD . '" class="btn btn-danger" 
+            <a href="?ejecutar=1&clave=' . $CLAVE_SEGURIDAD . ($limite > 0 ? '&limite=' . $limite : '') . ($desde_id > 0 ? '&desde=' . $desde_id : '') . '" class="btn btn-danger" 
                onclick="return confirm(\'¿Estás seguro de eliminar ' . count($huerfanas) . ' preguntas huérfanas y sus respuestas?\')">
                 🗑️ Ejecutar Limpieza
             </a>
@@ -265,7 +303,7 @@ if (count($huerfanas) > 0) {
 } else {
     echo '<div class="success">
         <strong>✅ Base de datos limpia</strong><br>
-        No se encontraron preguntas huérfanas. Todas las preguntas tienen al menos 2 respuestas válidas.
+        No se encontraron preguntas huérfanas en este lote. Todas las preguntas tienen al menos 2 respuestas válidas.
     </div>';
 }
 
