@@ -301,7 +301,14 @@ try {
       }
 
       if ($preg==='' || !is_array($ops) || count($ops)!==4 || $corr_txt==='') {
-        throw new Exception('Ítem inválido de IA');
+        log_debug_preg("⚠️ Ítem inválido: pregunta vacía o formato incorrecto");
+        continue; // Saltar este ítem en vez de abortar todo
+      }
+      
+      // Validar que el campo correcta sea válido (no solo caracteres especiales)
+      if (!es_respuesta_valida($corr_txt)) {
+        log_debug_preg("⚠️ Pregunta descartada: campo 'correcta' inválido: '$corr_txt'");
+        continue; // Saltar esta pregunta
       }
 
       // INSERT con todas las combinaciones posibles de columnas
