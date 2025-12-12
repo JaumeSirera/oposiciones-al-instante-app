@@ -63,6 +63,9 @@ echo '<!DOCTYPE html>
         .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
         .badge-0 { background: #f44336; color: white; }
         .badge-1 { background: #ff9800; color: white; }
+        .progress-container { background: #e0e0e0; border-radius: 4px; height: 24px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(90deg, #4caf50, #8bc34a); height: 100%; transition: width 0.1s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; }
+        .status { padding: 10px; background: #fff9c4; border-radius: 4px; margin: 10px 0; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -79,6 +82,37 @@ if (!$ejecutar) {
     </div>';
 }
 
+// Forzar output buffering para mostrar progreso en tiempo real
+if (ob_get_level()) ob_end_flush();
+ob_implicit_flush(true);
+
+// Primero contar total de preguntas
+$countQuery = "SELECT COUNT(*) as total FROM preguntas";
+$countResult = $conn->query($countQuery);
+$totalCount = $countResult ? $countResult->fetch_assoc()['total'] : 0;
+
+echo '<div class="info" id="progress-info">
+    <strong>🔍 Analizando preguntas...</strong><br>
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar" style="width: 0%">0%</div>
+    </div>
+    <div class="status" id="status">Iniciando análisis de ' . number_format($totalCount) . ' preguntas...</div>
+</div>';
+
+// Script para actualizar progreso
+echo '<script>
+function updateProgress(current, total, message) {
+    var pct = Math.round((current / total) * 100);
+    document.getElementById("progress-bar").style.width = pct + "%";
+    document.getElementById("progress-bar").innerText = pct + "%";
+    document.getElementById("status").innerText = message;
+}
+</script>';
+
+// Flush inicial
+if (function_exists('flush')) { flush(); }
+if (function_exists('ob_flush') && ob_get_level()) { @ob_flush(); }
+
 // Buscar todas las preguntas con sus respuestas y campo correcta
 $query = "SELECT p.id, p.pregunta, p.correcta, p.id_proceso, p.tema, p.seccion,
           (SELECT COUNT(*) FROM respuestas r WHERE r.id_pregunta = p.id) as total_respuestas
@@ -94,10 +128,19 @@ if (!$result) {
 
 $huerfanas = [];
 $total_preguntas = 0;
+$update_interval = max(1, intval($totalCount / 100)); // Actualizar cada 1%
 
 while ($row = $result->fetch_assoc()) {
     $total_preguntas++;
     $id_pregunta = $row['id'];
+    
+    // Mostrar progreso cada 1% o cada 50 preguntas
+    if ($total_preguntas % $update_interval == 0 || $total_preguntas <= 5) {
+        $preguntaCorta = mb_substr($row['pregunta'] ?? '', 0, 40);
+        echo '<script>updateProgress(' . $total_preguntas . ', ' . $totalCount . ', "Pregunta #' . $total_preguntas . '/' . $totalCount . ' (ID: ' . $id_pregunta . ') - ' . addslashes($preguntaCorta) . '...");</script>';
+        if (function_exists('flush')) { flush(); }
+        if (function_exists('ob_flush') && ob_get_level()) { @ob_flush(); }
+    }
     
     // Obtener respuestas de esta pregunta y contar válidas
     $query_resp = "SELECT respuesta FROM respuestas WHERE id_pregunta = $id_pregunta";
@@ -135,6 +178,14 @@ while ($row = $result->fetch_assoc()) {
         $huerfanas[] = $row;
     }
 }
+
+// Ocultar barra de progreso y mostrar completado
+echo '<script>
+document.getElementById("progress-bar").style.width = "100%";
+document.getElementById("progress-bar").innerText = "100%";
+document.getElementById("status").innerText = "✅ Análisis completado: ' . $total_preguntas . ' preguntas procesadas, ' . count($huerfanas) . ' huérfanas encontradas";
+</script>';
+if (function_exists('flush')) { flush(); }
 
 echo '<div class="info">
     <strong>📊 Estadísticas:</strong><br>
