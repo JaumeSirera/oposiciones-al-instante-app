@@ -1,9 +1,8 @@
 <?php
-// /api/generar_preguntas.php (con visibilidad por roles y trazabilidad de fuente)
+// /api/generar_preguntas.php (con división de texto largo, SSE y trazabilidad)
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Content-Type: application/json; charset=utf-8");
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit(); }
 
 ini_set('display_errors', 1);
@@ -33,9 +32,6 @@ function google_key_or_fail(): string {
   return $k;
 }
 
-/**
- * Obtiene el rol del usuario desde la BD
- */
 function obtener_rol_usuario($conn, $id_usuario): string {
   $stmt = $conn->prepare("SELECT nivel FROM accounts WHERE id = ?");
   if (!$stmt) {
@@ -53,34 +49,20 @@ function obtener_rol_usuario($conn, $id_usuario): string {
   return $rol;
 }
 
-/**
- * Determina si las preguntas deben ser públicas según el rol
- */
 function es_publico_segun_rol(string $rol): int {
-  // SA genera preguntas públicas (visibles para todos)
   if ($rol === 'sa') return 1;
-  
-  // admin genera preguntas privadas (solo visibles para él)
   if ($rol === 'admin') return 0;
-  
-  // Por defecto, privado
   return 0;
 }
 
-/**
- * Limpia y extrae JSON array
- */
 function extract_json_array(string $content): ?array {
-  // 1. Limpiar backticks y markdown
   $content = preg_replace('/^```[a-zA-Z]*\s*/', '', trim($content));
   $content = preg_replace('/\s*```$/', '', $content);
   $content = trim($content);
   
-  // 2. Intento directo
   $arr = json_decode($content, true);
   if (is_array($arr)) return $arr;
   
-  // 3. Buscar array entre corchetes
   $first = strpos($content, '[');
   $last  = strrpos($content, ']');
   if ($first !== false && $last !== false && $last > $first) {
@@ -92,32 +74,83 @@ function extract_json_array(string $content): ?array {
   return null;
 }
 
-/**
- * Valida si una respuesta es válida (contiene al menos una letra o número)
- * Rechaza respuestas que solo contienen caracteres especiales como ".", ")", "(", "-", etc.
- * Permite: letras, números, decimales (3.14, 2,5), porcentajes (50%), etc.
- */
 function es_respuesta_valida($s): bool {
   $s = trim($s ?? '');
   if ($s === '') return false;
-  
-  // Si tiene al menos una letra o dígito, es válida
   if (preg_match('/[a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ]/u', $s)) {
     return true;
   }
-  
   return false;
 }
 
 /**
- * Llama a Google Gemini con JSON schema
- * Incluye trazabilidad de fuente cuando se genera desde texto
+ * Divide texto largo en fragmentos manejables
+ */
+function dividir_texto_en_fragmentos(string $texto, int $max_chars = 5000): array {
+  $texto = trim($texto);
+  if (mb_strlen($texto) <= $max_chars) {
+    return [$texto];
+  }
+  
+  $fragmentos = [];
+  $parrafos = preg_split('/\n{2,}/', $texto);
+  $fragmento_actual = '';
+  
+  foreach ($parrafos as $parrafo) {
+    $parrafo = trim($parrafo);
+    if (empty($parrafo)) continue;
+    
+    if (mb_strlen($fragmento_actual) + mb_strlen($parrafo) + 2 <= $max_chars) {
+      $fragmento_actual .= ($fragmento_actual ? "\n\n" : '') . $parrafo;
+    } else {
+      if (!empty($fragmento_actual)) {
+        $fragmentos[] = $fragmento_actual;
+      }
+      
+      if (mb_strlen($parrafo) > $max_chars) {
+        $oraciones = preg_split('/(?<=[.!?])\s+/', $parrafo);
+        $sub_fragmento = '';
+        foreach ($oraciones as $oracion) {
+          if (mb_strlen($sub_fragmento) + mb_strlen($oracion) + 1 <= $max_chars) {
+            $sub_fragmento .= ($sub_fragmento ? ' ' : '') . $oracion;
+          } else {
+            if (!empty($sub_fragmento)) {
+              $fragmentos[] = $sub_fragmento;
+            }
+            $sub_fragmento = $oracion;
+          }
+        }
+        $fragmento_actual = $sub_fragmento;
+      } else {
+        $fragmento_actual = $parrafo;
+      }
+    }
+  }
+  
+  if (!empty($fragmento_actual)) {
+    $fragmentos[] = $fragmento_actual;
+  }
+  
+  return $fragmentos;
+}
+
+/**
+ * Envía evento SSE
+ */
+function enviar_sse($type, $data) {
+  $event = array_merge(['type' => $type], $data);
+  echo "data: " . json_encode($event, JSON_UNESCAPED_UNICODE) . "\n\n";
+  @ob_flush();
+  @flush();
+}
+
+/**
+ * Llama a Google Gemini para generar preguntas
  */
 function generar_lote_preguntas(string $apiKey, int $n, int $id_proceso, string $seccion, string $tema, string $texto = '', string $documento = ''): array {
   $model = "gemini-2.5-flash";
   
   if ($texto !== '') {
-    // Prompt con trazabilidad de fuente
     $prompt = "Genera EXACTAMENTE $n preguntas tipo test de oposición en ESPAÑOL del siguiente texto.
 
 IMPORTANTE: Para CADA pregunta, indica la referencia exacta de donde extrajiste la información:
@@ -171,12 +204,13 @@ Formato exacto requerido:
     CURLOPT_POST => true,
     CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
     CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
-    CURLOPT_TIMEOUT => 90
+    CURLOPT_TIMEOUT => 120
   ]);
   
   $res = curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   $latencyMs = (int)round((microtime(true)-$t0)*1000);
+  curl_close($ch);
 
   if ($res === false) {
     $err = curl_error($ch);
@@ -196,9 +230,17 @@ Formato exacto requerido:
     'model'=>$model, 'batch'=>$n,
     'finish_reason'=>$finish,
     'content_length'=>strlen($content),
-    'content_preview'=>substr($content, 0, 500),
-    'full_response'=>$res
+    'content_preview'=>substr($content, 0, 500)
   ]);
+
+  if ($httpCode === 429) {
+    throw new Exception('Cuota de Gemini excedida. Intenta más tarde.');
+  }
+  
+  if ($httpCode !== 200) {
+    $errorMsg = $j['error']['message'] ?? 'Error desconocido de API';
+    throw new Exception("Error de Gemini ($httpCode): $errorMsg");
+  }
 
   $items = extract_json_array($content);
   if (!is_array($items)) {
@@ -206,6 +248,90 @@ Formato exacto requerido:
     throw new Exception('Respuesta inválida de Gemini (no JSON parseable).');
   }
   return $items;
+}
+
+/**
+ * Inserta una pregunta en la BD
+ */
+function insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $texto_origen) {
+  global $map;
+  
+  $preg = trim($it['pregunta'] ?? '');
+  $ops  = $it['opciones'] ?? [];
+  $corr = strtoupper(trim($it['correcta'] ?? ''));
+  $corr_txt = isset($ops[$corr]) ? trim($ops[$corr]) : '';
+
+  $fuente = $it['fuente'] ?? null;
+  $pagina_fuente = null;
+  $ubicacion_fuente = null;
+  $cita_fuente = null;
+  
+  if ($fuente && $texto_origen !== '') {
+    $pagina_fuente = isset($fuente['pagina']) && $fuente['pagina'] !== 'null' ? trim($fuente['pagina']) : null;
+    $ubicacion_fuente = isset($fuente['ubicacion']) ? trim($fuente['ubicacion']) : null;
+    $cita_fuente = isset($fuente['cita']) ? trim($fuente['cita']) : null;
+  }
+
+  if ($preg==='' || !is_array($ops) || count($ops) < 3 || $corr_txt==='') {
+    return false;
+  }
+  
+  if (!es_respuesta_valida($corr_txt)) {
+    return false;
+  }
+
+  // INSERT con todas las combinaciones posibles de columnas
+  if ($tiene_columnas_fuente && $texto_origen !== '' && $tiene_columna_publico) {
+    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)");
+    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
+    $stmt->bind_param("iissssississs", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
+  } elseif ($tiene_columnas_fuente && $texto_origen !== '' && !$tiene_columna_publico) {
+    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)");
+    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
+    $stmt->bind_param("iissssssss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
+  } elseif ($tiene_columna_publico) {
+    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
+    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
+    $stmt->bind_param("iissssi", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico);
+  } else {
+    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion) VALUES (?, ?, ?, ?, ?, ?, 0)");
+    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
+    $stmt->bind_param("iissss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt);
+  }
+  
+  $stmt->execute();
+  if ($stmt->error) throw new Exception("Execute: ".$stmt->error);
+  $id_preg = $conn->insert_id;
+  $stmt->close();
+
+  // Validar y filtrar respuestas
+  $respuestas_validas = [];
+  foreach ($ops as $letra => $textoResp) {
+    $idx = $map[strtoupper($letra)] ?? 0;
+    if ($idx < 1 || $idx > 4) continue;
+    
+    $textoRespTrimmed = trim($textoResp);
+    if (es_respuesta_valida($textoRespTrimmed)) {
+      $respuestas_validas[$letra] = ['idx' => $idx, 'texto' => $textoRespTrimmed];
+    }
+  }
+  
+  if (count($respuestas_validas) < 2) {
+    $conn->query("DELETE FROM preguntas WHERE id = $id_preg");
+    return false;
+  }
+  
+  foreach ($respuestas_validas as $letra => $data) {
+    $stmt2 = $conn->prepare("INSERT INTO respuestas (id_pregunta, indice, respuesta) VALUES (?, ?, ?)");
+    if (!$stmt2) throw new Exception("Prepare resp: ".$conn->error);
+    $idx_str = (string)$data['idx'];
+    $stmt2->bind_param("iss", $id_preg, $idx_str, $data['texto']);
+    $stmt2->execute();
+    if ($stmt2->error) throw new Exception("Execute resp: ".$stmt2->error);
+    $stmt2->close();
+  }
+
+  return true;
 }
 
 // -------- INPUT ----------
@@ -217,17 +343,14 @@ $tema          = trim($data['tema'] ?? '');
 $seccion       = trim($data['seccion'] ?? '');
 $id_usuario    = intval($data['id_usuario'] ?? 0);
 $num_preguntas = intval($data['num_preguntas'] ?? 5);
-$documento     = trim($data['documento'] ?? ''); // Nombre del documento subido (opcional)
+$documento     = trim($data['documento'] ?? '');
+$use_streaming = isset($data['use_streaming']) && $data['use_streaming'] === true;
 
 // -------- VALIDACIONES ----------
 if (!$id_proceso || !$tema || !$seccion || !$id_usuario) {
+  header("Content-Type: application/json; charset=utf-8");
   http_response_code(400);
   echo json_encode(['ok'=>false,'error'=>'Faltan datos requeridos'], JSON_UNESCAPED_UNICODE);
-  exit;
-}
-if ($texto !== '' && mb_strlen($texto) > 7000) {
-  http_response_code(400);
-  echo json_encode(['ok'=>false,'error'=>'Texto demasiado largo'], JSON_UNESCAPED_UNICODE);
   exit;
 }
 if ($num_preguntas < 1) $num_preguntas = 1;
@@ -241,36 +364,165 @@ $es_publico = es_publico_segun_rol($rol_usuario);
 
 log_debug_preg("Usuario $id_usuario (rol: $rol_usuario) generará preguntas ".($es_publico ? "PÚBLICAS" : "PRIVADAS"));
 
-// -------- VERIFICAR SI EXISTEN COLUMNAS ----------
+// -------- VERIFICAR COLUMNAS ----------
 $tiene_columna_publico = false;
 $tiene_columnas_fuente = false;
 
 $check_col = $conn->query("SHOW COLUMNS FROM preguntas LIKE 'es_publico'");
-if ($check_col && $check_col->num_rows > 0) {
-  $tiene_columna_publico = true;
-  log_debug_preg("✓ Columna 'es_publico' existe en tabla preguntas");
-} else {
-  log_debug_preg("⚠️ Columna 'es_publico' NO existe. Debes ejecutar: ALTER TABLE preguntas ADD COLUMN es_publico TINYINT DEFAULT 0");
-}
+if ($check_col && $check_col->num_rows > 0) $tiene_columna_publico = true;
 
-// Verificar columnas de trazabilidad de fuente
 $check_fuente = $conn->query("SHOW COLUMNS FROM preguntas LIKE 'documento'");
-if ($check_fuente && $check_fuente->num_rows > 0) {
-  $tiene_columnas_fuente = true;
-  log_debug_preg("✓ Columnas de fuente existen en tabla preguntas");
-} else {
-  log_debug_preg("⚠️ Columnas de fuente NO existen. Para habilitar trazabilidad ejecutar: ALTER TABLE preguntas ADD COLUMN documento VARCHAR(255), ADD COLUMN pagina VARCHAR(50), ADD COLUMN ubicacion VARCHAR(50), ADD COLUMN cita TEXT");
+if ($check_fuente && $check_fuente->num_rows > 0) $tiene_columnas_fuente = true;
+
+$map = ['A'=>1,'B'=>2,'C'=>3,'D'=>4];
+
+// -------- MODO STREAMING PARA TEXTOS LARGOS ----------
+if ($use_streaming && $texto !== '' && mb_strlen($texto) > 5000) {
+  header("Content-Type: text/event-stream");
+  header("Cache-Control: no-cache");
+  header("Connection: keep-alive");
+  header("X-Accel-Buffering: no");
+  
+  $fragmentos = dividir_texto_en_fragmentos($texto, 5000);
+  $total_fragmentos = count($fragmentos);
+  $preguntas_por_fragmento = max(3, intval(ceil($num_preguntas / $total_fragmentos)));
+  
+  log_debug_preg("STREAMING: Texto dividido en $total_fragmentos fragmentos, ~$preguntas_por_fragmento preguntas/fragmento");
+  
+  enviar_sse('progress', [
+    'message' => "Procesando texto en $total_fragmentos fragmentos...",
+    'current' => 0,
+    'total' => $total_fragmentos
+  ]);
+  
+  $total_insertadas = 0;
+  $fragmentos_procesados = 0;
+  
+  $conn->begin_transaction();
+  
+  try {
+    foreach ($fragmentos as $idx => $fragmento) {
+      $fragmento_num = $idx + 1;
+      
+      enviar_sse('progress', [
+        'message' => "Generando preguntas del fragmento $fragmento_num de $total_fragmentos...",
+        'current' => $fragmento_num,
+        'total' => $total_fragmentos
+      ]);
+      
+      try {
+        $items = generar_lote_preguntas($GOOGLE_API_KEY, $preguntas_por_fragmento, $id_proceso, $seccion, $tema, $fragmento, $documento);
+        
+        foreach ($items as $it) {
+          if (insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $fragmento)) {
+            $total_insertadas++;
+          }
+        }
+        
+        $fragmentos_procesados++;
+        
+        enviar_sse('chunk_complete', [
+          'current' => $fragmento_num,
+          'total' => $total_fragmentos,
+          'totalGenerated' => $total_insertadas
+        ]);
+        
+      } catch (Exception $e) {
+        log_debug_preg("Error en fragmento $fragmento_num: " . $e->getMessage());
+        enviar_sse('error', [
+          'error' => "Error en el fragmento $fragmento_num: " . $e->getMessage() . ". Por favor, intenta con un texto diferente o más corto."
+        ]);
+        $conn->rollback();
+        exit;
+      }
+      
+      if ($fragmento_num < $total_fragmentos) {
+        usleep(500000);
+      }
+    }
+    
+    $conn->commit();
+    log_debug_preg("✅ Streaming completado: $total_insertadas preguntas en $fragmentos_procesados fragmentos");
+    
+    enviar_sse('complete', [
+      'ok' => true,
+      'generadas' => $total_insertadas,
+      'chunks_procesados' => $fragmentos_procesados,
+      'total_chunks' => $total_fragmentos,
+      'es_publico' => $es_publico,
+      'rol' => $rol_usuario
+    ]);
+    
+  } catch (Exception $e) {
+    $conn->rollback();
+    log_debug_preg("❌ ROLLBACK streaming: " . $e->getMessage());
+    enviar_sse('error', ['error' => $e->getMessage()]);
+  }
+  
+  exit;
 }
 
-// -------- GENERACIÓN EN LOTES ----------
+// -------- MODO NORMAL (textos cortos o sin texto) ----------
+header("Content-Type: application/json; charset=utf-8");
+
+// Si hay texto largo pero no se pidió streaming, dividir igualmente
+if ($texto !== '' && mb_strlen($texto) > 6000) {
+  $fragmentos = dividir_texto_en_fragmentos($texto, 5000);
+  $total_fragmentos = count($fragmentos);
+  $preguntas_por_fragmento = max(3, intval(ceil($num_preguntas / $total_fragmentos)));
+  
+  log_debug_preg("NORMAL: Texto dividido en $total_fragmentos fragmentos, ~$preguntas_por_fragmento preguntas/fragmento");
+  
+  $total_insertadas = 0;
+  
+  $conn->begin_transaction();
+  
+  try {
+    foreach ($fragmentos as $idx => $fragmento) {
+      $items = generar_lote_preguntas($GOOGLE_API_KEY, $preguntas_por_fragmento, $id_proceso, $seccion, $tema, $fragmento, $documento);
+      
+      foreach ($items as $it) {
+        if (insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $fragmento)) {
+          $total_insertadas++;
+        }
+        
+        if ($total_insertadas >= $num_preguntas) break 2;
+      }
+      
+      if ($idx < $total_fragmentos - 1) {
+        usleep(500000);
+      }
+    }
+    
+    $conn->commit();
+    log_debug_preg("✅ Commit OK: $total_insertadas preguntas de $total_fragmentos fragmentos");
+    echo json_encode([
+      'ok'=>true,
+      'generadas'=>$total_insertadas,
+      'preguntas'=>$total_insertadas,
+      'es_publico'=>$es_publico,
+      'rol'=>$rol_usuario,
+      'fragmentos'=>$total_fragmentos
+    ], JSON_UNESCAPED_UNICODE);
+    
+  } catch (Exception $e) {
+    $conn->rollback();
+    log_debug_preg("❌ ROLLBACK: ".$e->getMessage());
+    http_response_code(500);
+    echo json_encode(['ok'=>false,'error'=>$e->getMessage()], JSON_UNESCAPED_UNICODE);
+  }
+  
+  exit;
+}
+
+// -------- MODO NORMAL (textos cortos) ----------
 $BATCH_MAX = 12;
 $pendientes = $num_preguntas;
-$map = ['A'=>1,'B'=>2,'C'=>3,'D'=>4];
 $total_insertadas = 0;
 
 try {
   $db_name = $conn->query("SELECT DATABASE()")->fetch_row()[0];
-  log_debug_preg("BD: $db_name | proceso=$id_proceso seccion=$seccion tema=$tema user=$id_usuario rol=$rol_usuario publico=$es_publico documento=$documento | solicitadas=$num_preguntas");
+  log_debug_preg("BD: $db_name | proceso=$id_proceso seccion=$seccion tema=$tema user=$id_usuario rol=$rol_usuario publico=$es_publico | solicitadas=$num_preguntas");
 } catch (Throwable $e) {
   log_debug_preg("Error BD: ".$e->getMessage());
 }
@@ -282,100 +534,10 @@ try {
     $items = generar_lote_preguntas($GOOGLE_API_KEY, $lote, $id_proceso, $seccion, $tema, $texto, $documento);
 
     foreach ($items as $it) {
-      $preg = trim($it['pregunta'] ?? '');
-      $ops  = $it['opciones'] ?? [];
-      $corr = strtoupper(trim($it['correcta'] ?? ''));
-      $corr_txt = isset($ops[$corr]) ? trim($ops[$corr]) : '';
-
-      // Extraer datos de fuente (solo si hay texto subido y la IA los devuelve)
-      $fuente = $it['fuente'] ?? null;
-      $pagina_fuente = null;
-      $ubicacion_fuente = null;
-      $cita_fuente = null;
-      
-      if ($fuente && $texto !== '') {
-        $pagina_fuente = isset($fuente['pagina']) && $fuente['pagina'] !== 'null' ? trim($fuente['pagina']) : null;
-        $ubicacion_fuente = isset($fuente['ubicacion']) ? trim($fuente['ubicacion']) : null;
-        $cita_fuente = isset($fuente['cita']) ? trim($fuente['cita']) : null;
-        log_debug_preg("Fuente extraída: pág=$pagina_fuente, ubic=$ubicacion_fuente, cita=".substr($cita_fuente ?? '', 0, 50));
-      }
-
-      if ($preg==='' || !is_array($ops) || count($ops)!==4 || $corr_txt==='') {
-        log_debug_preg("⚠️ Ítem inválido: pregunta vacía o formato incorrecto");
-        continue; // Saltar este ítem en vez de abortar todo
+      if (insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $texto)) {
+        $total_insertadas++;
       }
       
-      // Validar que el campo correcta sea válido (no solo caracteres especiales)
-      if (!es_respuesta_valida($corr_txt)) {
-        log_debug_preg("⚠️ Pregunta descartada: campo 'correcta' inválido: '$corr_txt'");
-        continue; // Saltar esta pregunta
-      }
-
-      // INSERT con todas las combinaciones posibles de columnas
-      if ($tiene_columnas_fuente && $texto !== '' && $tiene_columna_publico) {
-        // Con fuente + es_publico
-        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)");
-        if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-        $stmt->bind_param("iissssississs", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
-      } elseif ($tiene_columnas_fuente && $texto !== '' && !$tiene_columna_publico) {
-        // Con fuente, sin es_publico
-        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)");
-        if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-        $stmt->bind_param("iissssssss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
-      } elseif ($tiene_columna_publico) {
-        // Solo es_publico (sin fuente o sin texto)
-        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
-        if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-        $stmt->bind_param("iissssi", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico);
-      } else {
-        // Sin columnas extra (mantener compatibilidad)
-        $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion) VALUES (?, ?, ?, ?, ?, ?, 0)");
-        if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-        $stmt->bind_param("iissss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt);
-      }
-      
-      $stmt->execute();
-      if ($stmt->error) throw new Exception("Execute: ".$stmt->error);
-      $id_preg = $conn->insert_id;
-      $stmt->close();
-
-      // Validar y filtrar respuestas antes de insertar
-      $respuestas_validas = [];
-      $respuestas_invalidas = [];
-      
-      foreach ($ops as $letra => $textoResp) {
-        $idx = $map[strtoupper($letra)] ?? 0;
-        if ($idx < 1 || $idx > 4) continue;
-        
-        $textoRespTrimmed = trim($textoResp);
-        if (es_respuesta_valida($textoRespTrimmed)) {
-          $respuestas_validas[$letra] = ['idx' => $idx, 'texto' => $textoRespTrimmed];
-        } else {
-          $respuestas_invalidas[] = $textoRespTrimmed;
-          log_debug_preg("⚠️ Respuesta inválida filtrada para pregunta $id_preg: '$textoRespTrimmed'");
-        }
-      }
-      
-      // Si quedaron menos de 2 respuestas válidas, eliminar la pregunta y saltar
-      if (count($respuestas_validas) < 2) {
-        log_debug_preg("❌ Pregunta $id_preg eliminada: solo ".count($respuestas_validas)." respuestas válidas");
-        $conn->query("DELETE FROM preguntas WHERE id = $id_preg");
-        $total_insertadas--;
-        continue;
-      }
-      
-      // Insertar solo respuestas válidas
-      foreach ($respuestas_validas as $letra => $data) {
-        $stmt2 = $conn->prepare("INSERT INTO respuestas (id_pregunta, indice, respuesta) VALUES (?, ?, ?)");
-        if (!$stmt2) throw new Exception("Prepare resp: ".$conn->error);
-        $idx_str = (string)$data['idx'];
-        $stmt2->bind_param("iss", $id_preg, $idx_str, $data['texto']);
-        $stmt2->execute();
-        if ($stmt2->error) throw new Exception("Execute resp: ".$stmt2->error);
-        $stmt2->close();
-      }
-
-      $total_insertadas++;
       if ($total_insertadas >= $num_preguntas) break;
     }
 
@@ -383,9 +545,10 @@ try {
   }
 
   $conn->commit();
-  log_debug_preg("✅ Commit OK: $total_insertadas preguntas ".($es_publico ? "públicas" : "privadas")." para usuario $id_usuario".($documento ? " desde documento: $documento" : ""));
+  log_debug_preg("✅ Commit OK: $total_insertadas preguntas ".($es_publico ? "públicas" : "privadas")." para usuario $id_usuario");
   echo json_encode([
     'ok'=>true,
+    'generadas'=>$total_insertadas,
     'preguntas'=>$total_insertadas,
     'es_publico'=>$es_publico,
     'rol'=>$rol_usuario,
