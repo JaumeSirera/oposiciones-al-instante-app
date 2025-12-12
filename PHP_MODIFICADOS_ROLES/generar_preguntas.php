@@ -347,7 +347,7 @@ function generar_lote_preguntas(string $apiKey, int $n, int $id_proceso, string 
  */
 function insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion, $es_publico, $documento, $tiene_columnas_fuente, $tiene_columna_publico, $texto_origen) {
   global $map;
-  
+
   $preg = trim($it['pregunta'] ?? '');
   $ops  = $it['opciones'] ?? [];
   $corr = strtoupper(trim($it['correcta'] ?? ''));
@@ -357,72 +357,88 @@ function insertar_pregunta($conn, $it, $id_usuario, $id_proceso, $tema, $seccion
   $pagina_fuente = null;
   $ubicacion_fuente = null;
   $cita_fuente = null;
-  
+
   if ($fuente && $texto_origen !== '') {
     $pagina_fuente = isset($fuente['pagina']) && $fuente['pagina'] !== 'null' ? trim($fuente['pagina']) : null;
     $ubicacion_fuente = isset($fuente['ubicacion']) ? trim($fuente['ubicacion']) : null;
     $cita_fuente = isset($fuente['cita']) ? trim($fuente['cita']) : null;
   }
 
-  if ($preg==='' || !is_array($ops) || count($ops) < 3 || $corr_txt==='') {
+  if ($preg === '' || !is_array($ops) || count($ops) < 3 || $corr_txt === '') {
+    log_debug_preg("Descartada pregunta por datos incompletos (pregunta vacía/opciones <3/correcta vacía)");
     return false;
   }
-  
+
   if (!es_respuesta_valida($corr_txt)) {
+    log_debug_preg("Descartada pregunta por respuesta correcta inválida: '$corr_txt'");
     return false;
   }
 
   // INSERT con todas las combinaciones posibles de columnas
-  if ($tiene_columnas_fuente && $texto_origen !== '' && $tiene_columna_publico) {
-    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)");
-    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-    $stmt->bind_param("iissssississs", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
-  } elseif ($tiene_columnas_fuente && $texto_origen !== '' && !$tiene_columna_publico) {
-    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)");
-    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-    $stmt->bind_param("iissssssss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
-  } elseif ($tiene_columna_publico) {
-    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
-    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-    $stmt->bind_param("iissssi", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico);
-  } else {
-    $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion) VALUES (?, ?, ?, ?, ?, ?, 0)");
-    if (!$stmt) throw new Exception("Prepare: ".$conn->error);
-    $stmt->bind_param("iissss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt);
+  try {
+    if ($tiene_columnas_fuente && $texto_origen !== '' && $tiene_columna_publico) {
+      // id_usuario, id_proceso, tema, seccion, pregunta, correcta, es_publico, documento, pagina, ubicacion, cita
+      $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)");
+      if (!$stmt) throw new Exception("Prepare: " . $conn->error);
+      $stmt->bind_param("iisssssisss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
+    } elseif ($tiene_columnas_fuente && $texto_origen !== '' && !$tiene_columna_publico) {
+      $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, documento, pagina, ubicacion, cita) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)");
+      if (!$stmt) throw new Exception("Prepare: " . $conn->error);
+      $stmt->bind_param("iissssssss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $documento, $pagina_fuente, $ubicacion_fuente, $cita_fuente);
+    } elseif ($tiene_columna_publico) {
+      $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion, es_publico) VALUES (?, ?, ?, ?, ?, ?, 0, ?)");
+      if (!$stmt) throw new Exception("Prepare: " . $conn->error);
+      $stmt->bind_param("iissssi", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt, $es_publico);
+    } else {
+      $stmt = $conn->prepare("INSERT INTO preguntas (id_usuario, id_proceso, tema, seccion, pregunta, correcta, valoracion) VALUES (?, ?, ?, ?, ?, ?, 0)");
+      if (!$stmt) throw new Exception("Prepare: " . $conn->error);
+      $stmt->bind_param("iissss", $id_usuario, $id_proceso, $tema, $seccion, $preg, $corr_txt);
+    }
+
+    $stmt->execute();
+    if ($stmt->error) throw new Exception("Execute: " . $stmt->error);
+    $id_preg = $conn->insert_id;
+    $stmt->close();
+  } catch (Exception $e) {
+    log_debug_preg("Error insertando pregunta en BD: " . $e->getMessage());
+    return false;
   }
-  
-  $stmt->execute();
-  if ($stmt->error) throw new Exception("Execute: ".$stmt->error);
-  $id_preg = $conn->insert_id;
-  $stmt->close();
 
   // Validar y filtrar respuestas
   $respuestas_validas = [];
   foreach ($ops as $letra => $textoResp) {
     $idx = $map[strtoupper($letra)] ?? 0;
     if ($idx < 1 || $idx > 4) continue;
-    
+
     $textoRespTrimmed = trim($textoResp);
     if (es_respuesta_valida($textoRespTrimmed)) {
       $respuestas_validas[$letra] = ['idx' => $idx, 'texto' => $textoRespTrimmed];
     }
   }
-  
+
   if (count($respuestas_validas) < 2) {
     $conn->query("DELETE FROM preguntas WHERE id = $id_preg");
+    log_debug_preg("Pregunta $id_preg eliminada por tener menos de 2 respuestas válidas");
     return false;
   }
-  
-  foreach ($respuestas_validas as $letra => $data) {
-    $stmt2 = $conn->prepare("INSERT INTO respuestas (id_pregunta, indice, respuesta) VALUES (?, ?, ?)");
-    if (!$stmt2) throw new Exception("Prepare resp: ".$conn->error);
-    $idx_str = (string)$data['idx'];
-    $stmt2->bind_param("iss", $id_preg, $idx_str, $data['texto']);
-    $stmt2->execute();
-    if ($stmt2->error) throw new Exception("Execute resp: ".$stmt2->error);
-    $stmt2->close();
+
+  try {
+    foreach ($respuestas_validas as $letra => $data) {
+      $stmt2 = $conn->prepare("INSERT INTO respuestas (id_pregunta, indice, respuesta) VALUES (?, ?, ?)");
+      if (!$stmt2) throw new Exception("Prepare resp: " . $conn->error);
+      $idx_str = (string)$data['idx'];
+      $stmt2->bind_param("iss", $id_preg, $idx_str, $data['texto']);
+      $stmt2->execute();
+      if ($stmt2->error) throw new Exception("Execute resp: " . $stmt2->error);
+      $stmt2->close();
+    }
+  } catch (Exception $e) {
+    $conn->query("DELETE FROM preguntas WHERE id = $id_preg");
+    log_debug_preg("Error insertando respuestas para pregunta $id_preg: " . $e->getMessage());
+    return false;
   }
 
+  log_debug_preg("Pregunta $id_preg insertada correctamente con " . count($respuestas_validas) . " respuestas válidas");
   return true;
 }
 
