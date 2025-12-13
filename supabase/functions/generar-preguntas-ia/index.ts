@@ -80,7 +80,11 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
 - "ubicacion": dónde está la respuesta en el texto (inicio, medio, final)  
 - "cita": copia textual del fragmento donde aparece la información de la respuesta correcta` : ''}`;
 
-    console.log(`[generar-preguntas-ia] Generando ${num_preguntas} preguntas...`);
+    // Calcular tokens necesarios: ~200 tokens por pregunta con trazabilidad, ~150 sin
+    const tokensPerQuestion = tieneTexto ? 250 : 180;
+    const calculatedTokens = Math.min(16000, Math.max(4096, num_preguntas * tokensPerQuestion));
+    
+    console.log(`[generar-preguntas-ia] Generando ${num_preguntas} preguntas con max_tokens=${calculatedTokens}...`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -94,7 +98,7 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
           { role: "system", content: systemPrompt },
           { role: "user", content: promptBase },
         ],
-        max_tokens: 4096,
+        max_tokens: calculatedTokens,
         temperature: 0.7,
       }),
     });
