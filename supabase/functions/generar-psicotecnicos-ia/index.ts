@@ -142,15 +142,9 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
         cleanContent = cleanContent.replace(/^```\s*/, "").replace(/\s*```$/, "");
       }
       
-      // Sanitizar caracteres de control que rompen JSON.parse
+      // Eliminar caracteres de control problemáticos (excepto espacios normales)
       cleanContent = cleanContent
-        .replace(/[\x00-\x1F\x7F]/g, (char) => {
-          // Mantener newlines y tabs escapados
-          if (char === '\n') return '\\n';
-          if (char === '\r') return '\\r';
-          if (char === '\t') return '\\t';
-          return ''; // Eliminar otros caracteres de control
-        });
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Eliminar control chars excepto \t \n \r
       
       parsed = JSON.parse(cleanContent);
     } catch (parseError) {
