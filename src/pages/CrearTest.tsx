@@ -243,14 +243,7 @@ export default function CrearTest() {
       return;
     }
 
-    if (!formData.textoBase) {
-      toast({
-        variant: "destructive",
-        title: t('createTest.requiredField'),
-        description: t('createTest.mustProvideText')
-      });
-      return;
-    }
+    // Texto es opcional - si no hay texto, se generan preguntas basadas en tema/sección
 
     if (!formData.proceso && !useCustomProceso) {
       toast({
