@@ -13,6 +13,16 @@ serve(async (req) => {
   try {
     const { id_proceso, seccion, tema, num_preguntas, texto, documento } = await req.json();
 
+    // Asegurar prefijo PSICO - en el tema
+    const ensurePsicoPrefix = (label: string): string => {
+      if (!label) return "PSICO - General";
+      if (label.toUpperCase().startsWith("PSICO - ")) return label;
+      if (label.toUpperCase().startsWith("PSICO -")) return "PSICO - " + label.substring(7).trim();
+      return "PSICO - " + label;
+    };
+    
+    const tema_db = ensurePsicoPrefix(tema || "");
+
     if (!id_proceso || !num_preguntas) {
       return new Response(
         JSON.stringify({ error: "Faltan parámetros requeridos" }),
@@ -35,7 +45,7 @@ serve(async (req) => {
 
 Las preguntas deben ser de tipo psicotécnico: series numéricas, series de letras, analogías, razonamiento lógico, problemas matemáticos, etc.`
       : `Genera exactamente ${num_preguntas} preguntas psicotécnicas sobre:
-- Tema: ${tema || "Razonamiento general"}
+- Tema: ${tema_db}
 - Sección: ${seccion || "Psicotécnicos"}
 
 Tipos de preguntas a incluir:
@@ -189,10 +199,10 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
       cita: tieneTexto ? (p.cita || "") : null,
     }));
 
-    console.log(`[generar-psicotecnicos-ia] Generados ${resultado.length} psicotécnicos`);
+    console.log(`[generar-psicotecnicos-ia] Generados ${resultado.length} psicotécnicos con tema: ${tema_db}`);
 
     return new Response(
-      JSON.stringify({ success: true, preguntas: resultado }),
+      JSON.stringify({ success: true, preguntas: resultado, tema: tema_db }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
