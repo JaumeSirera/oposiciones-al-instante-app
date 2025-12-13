@@ -53,6 +53,8 @@ export default function PlanEstudioDetalle() {
   const [translatedPlanIA, setTranslatedPlanIA] = useState<SemanaPlan[] | null>(null);
   const [translatedEtapas, setTranslatedEtapas] = useState<any[] | null>(null);
   const [translatedDescripcion, setTranslatedDescripcion] = useState<string | null>(null);
+  const [translatedTitulo, setTranslatedTitulo] = useState<string | null>(null);
+  const [translatedEstado, setTranslatedEstado] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -61,18 +63,38 @@ export default function PlanEstudioDetalle() {
     }
   }, [id]);
 
-  // Efecto para traducir la descripción del plan
+  // Efecto para traducir el título y descripción del plan
   useEffect(() => {
-    const translateDescripcion = async () => {
-      if (!needsTranslation || !detalle?.plan?.descripcion) {
-        setTranslatedDescripcion(detalle?.plan?.descripcion || null);
+    const translatePlanInfo = async () => {
+      if (!detalle?.plan) {
+        setTranslatedTitulo(null);
+        setTranslatedDescripcion(null);
+        setTranslatedEstado(null);
         return;
       }
-      const [translated] = await translateTexts([detalle.plan.descripcion]);
-      setTranslatedDescripcion(translated);
+      
+      if (!needsTranslation) {
+        setTranslatedTitulo(detalle.plan.titulo || null);
+        setTranslatedDescripcion(detalle.plan.descripcion || null);
+        setTranslatedEstado(detalle.plan.estado || null);
+        return;
+      }
+      
+      const textsToTranslate: string[] = [];
+      if (detalle.plan.titulo) textsToTranslate.push(detalle.plan.titulo);
+      if (detalle.plan.descripcion) textsToTranslate.push(detalle.plan.descripcion);
+      if (detalle.plan.estado) textsToTranslate.push(detalle.plan.estado);
+      
+      if (textsToTranslate.length > 0) {
+        const translations = await translateTexts(textsToTranslate);
+        let idx = 0;
+        if (detalle.plan.titulo) setTranslatedTitulo(translations[idx++]);
+        if (detalle.plan.descripcion) setTranslatedDescripcion(translations[idx++]);
+        if (detalle.plan.estado) setTranslatedEstado(translations[idx++]);
+      }
     };
-    translateDescripcion();
-  }, [detalle?.plan?.descripcion, i18n.language, needsTranslation, translateTexts]);
+    translatePlanInfo();
+  }, [detalle?.plan?.titulo, detalle?.plan?.descripcion, detalle?.plan?.estado, i18n.language, needsTranslation, translateTexts]);
 
   // Efecto para traducir el contenido cuando cambia el idioma o se carga el plan
   useEffect(() => {
@@ -401,12 +423,12 @@ export default function PlanEstudioDetalle() {
           <CardHeader>
             <div className="flex justify-between items-start gap-4">
               <div className="flex-1">
-                <CardTitle className="text-3xl mb-2">{plan.titulo}</CardTitle>
+                <CardTitle className="text-3xl mb-2">{translatedTitulo || plan.titulo}</CardTitle>
                 <CardDescription className="text-base mt-2">
                   {translatedDescripcion || plan.descripcion || t('studyPlans.noDescription')}
                 </CardDescription>
               </div>
-              <Badge className="text-sm px-4 py-1.5 shrink-0">{plan.estado}</Badge>
+              <Badge className="text-sm px-4 py-1.5 shrink-0">{translatedEstado || plan.estado}</Badge>
             </div>
           </CardHeader>
           <CardContent>
