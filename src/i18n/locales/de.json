@@ -41,7 +41,8 @@
     "page": "Seite",
     "location": "Standort",
     "enableAudio": "Audio aktivieren",
-    "disableAudio": "Audio deaktivieren"
+    "disableAudio": "Audio deaktivieren",
+    "listenAnswer": "Antwort anhören"
   },
   "landing": {
     "title": "KI-Agent für Prüfungen | Tests und Zusammenfassungen",

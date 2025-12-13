@@ -632,24 +632,39 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 }
 
                 return (
-                  <Button
-                    key={respuesta.indice}
-                    variant={isSelected ? "default" : "outline"}
-                    className={buttonClass}
-                    onClick={() => !showExplanation && handleAnswer(respuesta.indice)}
-                    disabled={showExplanation || (isTranslating && needsTranslation && !currentTranslation)}
-                  >
-                    <span className="font-bold mr-2 text-blue-600">
-                      {String.fromCharCode(64 + parseInt(respuesta.indice))}.
-                    </span>
-                    <span className="flex-1">{getAnswerText(index)}</span>
-                    {showResult && isCorrect && (
-                      <CheckCircle className="w-5 h-5 text-green-600 ml-2" />
+                  <div key={respuesta.indice} className="flex items-center gap-2">
+                    <Button
+                      variant={isSelected ? "default" : "outline"}
+                      className={buttonClass}
+                      onClick={() => !showExplanation && handleAnswer(respuesta.indice)}
+                      disabled={showExplanation || (isTranslating && needsTranslation && !currentTranslation)}
+                    >
+                      <span className="font-bold mr-2 text-blue-600">
+                        {String.fromCharCode(64 + parseInt(respuesta.indice))}.
+                      </span>
+                      <span className="flex-1">{getAnswerText(index)}</span>
+                      {showResult && isCorrect && (
+                        <CheckCircle className="w-5 h-5 text-green-600 ml-2" />
+                      )}
+                      {showResult && isSelected && !isCorrect && (
+                        <XCircle className="w-5 h-5 text-red-600 ml-2" />
+                      )}
+                    </Button>
+                    {isSupported && isEnabled && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          speak(getAnswerText(index));
+                        }}
+                        title={t('quiz.listenAnswer')}
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </Button>
                     )}
-                    {showResult && isSelected && !isCorrect && (
-                      <XCircle className="w-5 h-5 text-red-600 ml-2" />
-                    )}
-                  </Button>
+                  </div>
                 );
               })}
             </div>

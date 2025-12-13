@@ -41,7 +41,8 @@
     "page": "Página",
     "location": "Localização",
     "enableAudio": "Ativar áudio",
-    "disableAudio": "Desativar áudio"
+    "disableAudio": "Desativar áudio",
+    "listenAnswer": "Ouvir resposta"
   },
   "landing": {
     "title": "Agente IA para Concursos | Testes e Resumos",
