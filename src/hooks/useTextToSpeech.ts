@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface UseTextToSpeechReturn {
   speak: (text: string) => void;
@@ -9,7 +10,17 @@ interface UseTextToSpeechReturn {
   isSupported: boolean;
 }
 
+const langMap: Record<string, string> = {
+  es: 'es-ES',
+  en: 'en-US',
+  fr: 'fr-FR',
+  pt: 'pt-BR',
+  de: 'de-DE',
+  zh: 'zh-CN',
+};
+
 export function useTextToSpeech(): UseTextToSpeechReturn {
+  const { i18n } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isEnabled, setIsEnabled] = useState(() => {
     const saved = localStorage.getItem('tts_enabled');
@@ -41,23 +52,8 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
-    // Detectar idioma del texto (básico)
-    const detectLanguage = (t: string): string => {
-      // Caracteres chinos
-      if (/[\u4e00-\u9fff]/.test(t)) return 'zh-CN';
-      // Caracteres alemanes
-      if (/[äöüßÄÖÜ]/.test(t)) return 'de-DE';
-      // Palabras francesas comunes
-      if (/\b(le|la|les|un|une|des|est|sont|avec|pour|dans)\b/i.test(t)) return 'fr-FR';
-      // Palabras portuguesas
-      if (/\b(não|sim|você|para|com|como|quando|porque)\b/i.test(t)) return 'pt-BR';
-      // Palabras inglesas
-      if (/\b(the|is|are|was|were|have|has|been|with|this|that)\b/i.test(t)) return 'en-US';
-      // Por defecto español
-      return 'es-ES';
-    };
-
-    utterance.lang = detectLanguage(text);
+    // Usar idioma de i18n
+    utterance.lang = langMap[i18n.language] || 'es-ES';
     utterance.rate = 0.9;
     utterance.pitch = 1;
     utterance.volume = 1;
@@ -67,7 +63,7 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     utterance.onerror = () => setIsPlaying(false);
 
     window.speechSynthesis.speak(utterance);
-  }, [isSupported, isEnabled]);
+  }, [isSupported, isEnabled, i18n.language]);
 
   const stop = useCallback(() => {
     if (!isSupported) return;
