@@ -97,11 +97,14 @@ export default function ResumenDetalle() {
     const translateContent = async () => {
       if (!detalle) return;
       
+      const resumenTexto = detalle.resumen || '';
+      const shouldTranslateResumen = resumenTexto.length > 0 && resumenTexto.length < 4000;
+      
       if (!needsTranslation) {
         setTranslatedContent({
           tema: detalle.tema,
           seccion: detalle.seccion,
-          resumen: detalle.resumen,
+          resumen: resumenTexto,
         });
         return;
       }
@@ -109,14 +112,14 @@ export default function ResumenDetalle() {
       const textsToTranslate = [
         detalle.tema || '',
         detalle.seccion || '',
-        detalle.resumen || '',
+        shouldTranslateResumen ? resumenTexto : '',
       ];
 
       const translated = await translateTexts(textsToTranslate);
       setTranslatedContent({
         tema: translated[0] || detalle.tema,
         seccion: translated[1] || detalle.seccion,
-        resumen: translated[2] || detalle.resumen,
+        resumen: shouldTranslateResumen ? (translated[2] || resumenTexto) : resumenTexto,
       });
     };
 
