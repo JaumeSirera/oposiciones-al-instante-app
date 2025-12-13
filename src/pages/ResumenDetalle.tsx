@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Separator } from '@/components/ui/separator';
 import { Loader2, ArrowLeft, Brain, FileText, Calendar, Volume2, VolumeX } from 'lucide-react';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { useToast } from '@/hooks/use-toast';
 
 interface Detalle {
@@ -36,8 +37,14 @@ export default function ResumenDetalle() {
   const [techLoading, setTechLoading] = useState(false);
   const [techSaving, setTechSaving] = useState(false);
   const [techGenerating, setTechGenerating] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState<{
+    tema?: string;
+    seccion?: string;
+    resumen?: string;
+  }>({});
 
   const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech(i18n.language);
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -78,6 +85,37 @@ export default function ResumenDetalle() {
       setLoading(false);
     }
   }, [id, navigate, toast, t]);
+
+  // Traducir contenido cuando cambia el idioma o se carga el detalle
+  useEffect(() => {
+    const translateContent = async () => {
+      if (!detalle) return;
+      
+      if (!needsTranslation) {
+        setTranslatedContent({
+          tema: detalle.tema,
+          seccion: detalle.seccion,
+          resumen: detalle.resumen,
+        });
+        return;
+      }
+
+      const textsToTranslate = [
+        detalle.tema || '',
+        detalle.seccion || '',
+        detalle.resumen || '',
+      ];
+
+      const translated = await translateTexts(textsToTranslate);
+      setTranslatedContent({
+        tema: translated[0] || detalle.tema,
+        seccion: translated[1] || detalle.seccion,
+        resumen: translated[2] || detalle.resumen,
+      });
+    };
+
+    translateContent();
+  }, [detalle, needsTranslation, translateTexts, i18n.language]);
 
   const cargarTecnica = useCallback(async () => {
     if (!id) return;
@@ -271,7 +309,7 @@ export default function ResumenDetalle() {
             <div className="flex items-start justify-between gap-2">
               <CardTitle className="flex items-start gap-2">
                 <FileText className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
-                <span>{detalle.tema || t('summaryDetail.noTopic')}</span>
+                <span>{isTranslating ? t('common.translating') : (translatedContent.tema || detalle.tema || t('summaryDetail.noTopic'))}</span>
               </CardTitle>
               {isSupported && (
                 <div className="flex gap-2">
@@ -283,11 +321,11 @@ export default function ResumenDetalle() {
                   >
                     {isEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                   </Button>
-                  {isEnabled && detalle.resumen && (
+                  {isEnabled && (translatedContent.resumen || detalle.resumen) && (
                     <Button
                       variant={isPlaying ? "secondary" : "default"}
                       size="sm"
-                      onClick={() => isPlaying ? stop() : speak(detalle.resumen || '')}
+                      onClick={() => isPlaying ? stop() : speak(translatedContent.resumen || detalle.resumen || '')}
                     >
                       {isPlaying ? t('quiz.stop') : t('quiz.listen')}
                     </Button>
@@ -297,16 +335,23 @@ export default function ResumenDetalle() {
             </div>
             {detalle.seccion && (
               <CardDescription className="text-base font-medium">
-                {detalle.seccion}
+                {isTranslating ? t('common.translating') : (translatedContent.seccion || detalle.seccion)}
               </CardDescription>
             )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <h3 className="font-semibold text-sm text-muted-foreground mb-2">{t('summaryDetail.summary')}:</h3>
-              <p className="text-base leading-relaxed whitespace-pre-wrap">
-                {detalle.resumen || t('summaryDetail.noContent')}
-              </p>
+              {isTranslating ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('common.translating')}
+                </div>
+              ) : (
+                <p className="text-base leading-relaxed whitespace-pre-wrap">
+                  {translatedContent.resumen || detalle.resumen || t('summaryDetail.noContent')}
+                </p>
+              )}
             </div>
 
             <Separator />
