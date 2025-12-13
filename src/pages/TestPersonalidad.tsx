@@ -11,7 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
-import { Loader2, Download, CheckCircle, AlertTriangle, Languages } from 'lucide-react';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { Loader2, Download, CheckCircle, AlertTriangle, Languages, Volume2, VolumeX } from 'lucide-react';
 
 type Item = {
   id: number;
@@ -38,6 +39,7 @@ export default function TestPersonalidad() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech(i18n.language);
   const user_id = user?.id || null;
   const username = user?.username || null;
 
@@ -46,6 +48,7 @@ export default function TestPersonalidad() {
   const [respuestas, setRespuestas] = useState<Record<number, number>>({});
   const [guardado, setGuardado] = useState(false);
   const [translatedItems, setTranslatedItems] = useState<Record<number, string>>({});
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
   const storageKey = useMemo(() => `personalidad_${user_id || 'anon'}_v1`, [user_id]);
 
@@ -108,8 +111,24 @@ export default function TestPersonalidad() {
 
   const totalContestados = useMemo(() => Object.keys(respuestas).length, [respuestas]);
 
-  const onElegir = (itemId: number, val: number) => {
+  // Leer ítem automáticamente cuando el audio está habilitado
+  useEffect(() => {
+    if (isEnabled && data && data.items[currentItemIndex] && !cargando) {
+      const item = data.items[currentItemIndex];
+      const textToRead = needsTranslation && translatedItems[item.id] 
+        ? translatedItems[item.id] 
+        : item.texto;
+      speak(textToRead);
+    }
+    return () => stop();
+  }, [currentItemIndex, isEnabled, data, translatedItems, needsTranslation, cargando]);
+
+  const onElegir = (itemId: number, val: number, index: number) => {
     setRespuestas(prev => ({ ...prev, [itemId]: val }));
+    // Avanzar al siguiente ítem para leer automáticamente
+    if (data && index < data.items.length - 1) {
+      setCurrentItemIndex(index + 1);
+    }
   };
 
   const resultado = useMemo(() => {
@@ -274,10 +293,29 @@ export default function TestPersonalidad() {
     <div className="container mx-auto py-8 px-4 max-w-5xl">
       <Card>
         <CardHeader>
-          <CardTitle>{t('personality.title')}</CardTitle>
-          <CardDescription>
-            {t('personality.instructions')}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{t('personality.title')}</CardTitle>
+              <CardDescription>
+                {t('personality.instructions')}
+              </CardDescription>
+            </div>
+            {isSupported && (
+              <Button
+                variant={isEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={toggleEnabled}
+                className="flex items-center gap-1"
+                title={isEnabled ? t('quiz.disableAudio') : t('quiz.enableAudio')}
+              >
+                {isEnabled ? (
+                  <Volume2 className={`w-4 h-4 ${isPlaying ? 'animate-pulse' : ''}`} />
+                ) : (
+                  <VolumeX className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -301,14 +339,14 @@ export default function TestPersonalidad() {
                 )}
               </div>
             )}
-            {data.items.map((it) => (
+            {data.items.map((it, index) => (
               <div key={it.id} className="space-y-3 pb-4 border-b last:border-0">
                 <p className="font-medium">
                   {it.id}. {needsTranslation && translatedItems[it.id] ? translatedItems[it.id] : it.texto}
                 </p>
                 <RadioGroup
                   value={respuestas[it.id]?.toString() || ''}
-                  onValueChange={(val) => onElegir(it.id, Number(val))}
+                  onValueChange={(val) => onElegir(it.id, Number(val), index)}
                   className="flex gap-4"
                 >
                   {legend.map((opt) => (
