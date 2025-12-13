@@ -5,36 +5,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MAX_DIRECT_TRANSLATE = 2500; // Traducir directamente si es menor
-const SUMMARIZE_THRESHOLD = 2500;  // Resumir si es mayor
+const MAX_DIRECT_TRANSLATE = 2500;
+const SUMMARIZE_THRESHOLD = 2500;
 
-async function translateOrSummarize(text: string, targetLangName: string, apiKey: string, shouldSummarize: boolean): Promise<string> {
+// Valida que la respuesta no contenga el prompt de la IA
+function isValidTranslation(result: string, originalText: string): boolean {
+  const promptIndicators = [
+    'RULES:',
+    '- Translate accurately',
+    '- Preserve formatting',
+    'Return ONLY the translated',
+    'Spanish text to summarize',
+    'You are a professional translator',
+    'Create a summary of approximately'
+  ];
+  
+  // Si contiene indicadores del prompt, no es válida
+  for (const indicator of promptIndicators) {
+    if (result.includes(indicator)) {
+      return false;
+    }
+  }
+  
+  // Si la respuesta es demasiado corta comparada con el original (menos del 20%), sospechosa
+  if (result.length < originalText.length * 0.2 && originalText.length > 50) {
+    return false;
+  }
+  
+  return true;
+}
+
+async function translateOrSummarize(
+  text: string, 
+  targetLangName: string, 
+  apiKey: string, 
+  shouldSummarize: boolean
+): Promise<string> {
   let prompt: string;
   
   if (shouldSummarize) {
-    prompt = `You are a professional translator and summarizer. 
+    prompt = `Traduce y resume este texto del español al ${targetLangName}.
 
-Take this Spanish text and create a CONCISE SUMMARY in ${targetLangName}.
+Crea un resumen de 500-800 palabras máximo con la información más importante.
+Escribe SOLO en ${targetLangName}. No añadas explicaciones ni notas.
 
-RULES:
-- Create a summary of approximately 500-800 words maximum
-- Keep the most important information, key facts, and main concepts
-- Use clear, well-structured paragraphs
-- Preserve any critical numbers, dates, or technical terms
-- Write ONLY in ${targetLangName}, not Spanish
-- Do NOT add any explanations or notes, just the summarized translation
-
-Spanish text to summarize and translate:
+Texto:
 ${text}`;
   } else {
-    prompt = `Translate the following text from Spanish to ${targetLangName}.
+    prompt = `Traduce del español al ${targetLangName}. Devuelve SOLO la traducción:
 
-RULES:
-- Translate accurately and completely
-- Preserve formatting (headers, lists, etc.)
-- Return ONLY the translated text
-
-Text:
 ${text}`;
   }
 
@@ -47,13 +66,9 @@ ${text}`;
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: shouldSummarize 
-          ? 'You summarize and translate long texts into concise, well-organized summaries in the target language.' 
-          : 'You are a professional translator.' 
-        },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.2,
+      temperature: 0.1,
       max_tokens: shouldSummarize ? 4000 : 8000,
     })
   });
@@ -63,7 +78,19 @@ ${text}`;
   }
 
   const data = await response.json();
-  return data.choices?.[0]?.message?.content?.trim() || text;
+  const result = data.choices?.[0]?.message?.content?.trim();
+  
+  if (!result) {
+    throw new Error('Empty response from API');
+  }
+  
+  // Validar que no sea el prompt
+  if (!isValidTranslation(result, text)) {
+    console.warn('Invalid translation detected, contains prompt fragments');
+    throw new Error('Invalid translation - contains prompt');
+  }
+  
+  return result;
 }
 
 serve(async (req) => {
@@ -104,6 +131,8 @@ serve(async (req) => {
     console.log(`Processing ${textsArray.length} texts to ${targetLangName}`);
 
     const translations: string[] = [];
+    let successCount = 0;
+    let failCount = 0;
 
     for (let i = 0; i < textsArray.length; i++) {
       const text = textsArray[i];
@@ -115,18 +144,31 @@ serve(async (req) => {
 
       const shouldSummarize = text.length > SUMMARIZE_THRESHOLD;
       
-      try {
-        console.log(`Text ${i}: ${text.length} chars, ${shouldSummarize ? 'summarizing' : 'translating directly'}`);
-        const result = await translateOrSummarize(text, targetLangName, LOVABLE_API_KEY, shouldSummarize);
-        translations.push(result);
-        console.log(`Text ${i} done: ${result.length} chars`);
-      } catch (error) {
-        console.error(`Error processing text ${i}:`, error);
-        translations.push(text);
+      // Intentar hasta 2 veces
+      let translated = false;
+      for (let attempt = 0; attempt < 2 && !translated; attempt++) {
+        try {
+          if (attempt > 0) {
+            // Pequeña pausa antes de reintentar
+            await new Promise(r => setTimeout(r, 500));
+          }
+          
+          const result = await translateOrSummarize(text, targetLangName, LOVABLE_API_KEY, shouldSummarize);
+          translations.push(result);
+          translated = true;
+          successCount++;
+        } catch (error) {
+          console.error(`Error text ${i} attempt ${attempt + 1}:`, error);
+          if (attempt === 1) {
+            // Último intento fallido, usar original
+            translations.push(text);
+            failCount++;
+          }
+        }
       }
     }
 
-    console.log(`Completed ${translations.length} texts`);
+    console.log(`Completed: ${successCount} ok, ${failCount} failed`);
 
     return new Response(JSON.stringify({ translations }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
