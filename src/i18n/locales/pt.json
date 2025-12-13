@@ -39,7 +39,9 @@
     "documentReference": "Referência do documento",
     "document": "Documento",
     "page": "Página",
-    "location": "Localização"
+    "location": "Localização",
+    "enableAudio": "Ativar áudio",
+    "disableAudio": "Desativar áudio"
   },
   "landing": {
     "title": "Agente IA para Concursos | Testes e Resumos",

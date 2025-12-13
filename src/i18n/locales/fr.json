@@ -39,7 +39,9 @@
     "documentReference": "Référence du document",
     "document": "Document",
     "page": "Page",
-    "location": "Emplacement"
+    "location": "Emplacement",
+    "enableAudio": "Activer l'audio",
+    "disableAudio": "Désactiver l'audio"
   },
   "landing": {
     "title": "Agent IA pour Concours | Tests et Résumés",
