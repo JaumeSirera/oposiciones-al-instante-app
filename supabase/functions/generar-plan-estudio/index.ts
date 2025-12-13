@@ -145,16 +145,27 @@ Genera el plan completo en formato JSON válido.`;
       );
     }
 
-    // Extraer JSON del texto generado
+    // Extraer y sanitizar JSON del texto generado
     let planData;
     try {
       const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("No se encontró JSON en la respuesta");
-      planData = JSON.parse(jsonMatch[0]);
+      
+      // Sanitizar caracteres de control inválidos
+      let sanitizedJson = jsonMatch[0]
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*]/g, ']')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, '')
+        .replace(/\t/g, ' ');
+      
+      planData = JSON.parse(sanitizedJson);
     } catch (parseError) {
       console.error("Error parseando JSON:", parseError);
+      console.error("Texto generado (primeros 500 chars):", generatedText.substring(0, 500));
       return new Response(
-        JSON.stringify({ success: false, error: "Error al procesar respuesta de IA" }),
+        JSON.stringify({ success: false, error: "Error al procesar respuesta de IA. Intenta de nuevo." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
