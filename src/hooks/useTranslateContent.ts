@@ -44,40 +44,52 @@ export function useTranslateContent() {
     setTranslationFailed(false);
 
     try {
-      let data: any = null;
-      let error: any = null;
+      // Vamos a traducir en lotes para evitar timeouts / errores 503
+      const BATCH_SIZE = 40;
 
-      // Pequeño sistema de reintentos: hasta 2 intentos si hay fallo de red
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const result = await supabase.functions.invoke('translate-content', {
-          body: {
-            texts: textsToTranslate.map(t => t.text),
-            targetLanguage: currentLang,
-            sourceLanguage: 'es'
+      for (let start = 0; start < textsToTranslate.length; start += BATCH_SIZE) {
+        const batch = textsToTranslate.slice(start, start + BATCH_SIZE);
+
+        let data: any = null;
+        let error: any = null;
+
+        // Pequeño sistema de reintentos por lote: hasta 2 intentos si hay fallo de red
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const result = await supabase.functions.invoke('translate-content', {
+              body: {
+                texts: batch.map(t => t.text),
+                targetLanguage: currentLang,
+                sourceLanguage: 'es'
+              }
+            });
+
+            data = result.data;
+            error = result.error;
+
+            if (!error) break;
+            console.error(`Translation error (batch ${start / BATCH_SIZE}, attempt ${attempt + 1}):`, error);
+          } catch (e) {
+            error = e;
+            console.error(`Translation fetch error (batch ${start / BATCH_SIZE}, attempt ${attempt + 1}):`, e);
           }
-        });
+        }
 
-        data = result.data;
-        error = result.error;
-
-        if (!error) break;
-        console.error('Translation error (attempt ' + (attempt + 1) + '):', error);
-      }
-
-      if (error) {
-        // En caso de error definitivo, marcar como fallido y devolver originales
-        setTranslationFailed(true);
-        textsToTranslate.forEach(({ index, text }) => {
-          results[index] = text;
-        });
-      } else {
-        const translations = data?.translations || [];
-        textsToTranslate.forEach(({ index, text }, i) => {
-          const translated = translations[i] || text;
-          results[index] = translated;
-          // Guardar en cache
-          translationCache.set(getCacheKey(text, currentLang), translated);
-        });
+        if (error) {
+          // En caso de error definitivo en este lote, marcar como fallido y devolver originales de ese lote
+          setTranslationFailed(true);
+          batch.forEach(({ index, text }) => {
+            results[index] = text;
+          });
+        } else {
+          const translations = data?.translations || [];
+          batch.forEach(({ index, text }, i) => {
+            const translated = translations[i] || text;
+            results[index] = translated;
+            // Guardar en cache
+            translationCache.set(getCacheKey(text, currentLang), translated);
+          });
+        }
       }
     } catch (err) {
       console.error('Translation failed:', err);
