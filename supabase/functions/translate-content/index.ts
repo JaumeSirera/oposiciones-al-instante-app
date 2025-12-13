@@ -5,65 +5,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MAX_CHUNK_SIZE = 3000; // Máximo de caracteres por chunk para traducción segura
+const MAX_DIRECT_TRANSLATE = 2500; // Traducir directamente si es menor
+const SUMMARIZE_THRESHOLD = 2500;  // Resumir si es mayor
 
-function splitTextIntoChunks(text: string, maxSize: number): string[] {
-  if (text.length <= maxSize) {
-    return [text];
+async function translateOrSummarize(text: string, targetLangName: string, apiKey: string, shouldSummarize: boolean): Promise<string> {
+  let prompt: string;
+  
+  if (shouldSummarize) {
+    prompt = `You are a professional translator and summarizer. 
+
+Take this Spanish text and create a CONCISE SUMMARY in ${targetLangName}.
+
+RULES:
+- Create a summary of approximately 500-800 words maximum
+- Keep the most important information, key facts, and main concepts
+- Use clear, well-structured paragraphs
+- Preserve any critical numbers, dates, or technical terms
+- Write ONLY in ${targetLangName}, not Spanish
+- Do NOT add any explanations or notes, just the summarized translation
+
+Spanish text to summarize and translate:
+${text}`;
+  } else {
+    prompt = `Translate the following text from Spanish to ${targetLangName}.
+
+RULES:
+- Translate accurately and completely
+- Preserve formatting (headers, lists, etc.)
+- Return ONLY the translated text
+
+Text:
+${text}`;
   }
-
-  const chunks: string[] = [];
-  const paragraphs = text.split(/\n\n+/);
-  let currentChunk = '';
-
-  for (const para of paragraphs) {
-    // Si un solo párrafo es muy largo, dividirlo por oraciones
-    if (para.length > maxSize) {
-      if (currentChunk) {
-        chunks.push(currentChunk.trim());
-        currentChunk = '';
-      }
-      // Dividir párrafo largo por oraciones
-      const sentences = para.split(/(?<=[.!?])\s+/);
-      for (const sentence of sentences) {
-        if ((currentChunk + ' ' + sentence).length > maxSize) {
-          if (currentChunk) {
-            chunks.push(currentChunk.trim());
-          }
-          currentChunk = sentence;
-        } else {
-          currentChunk = currentChunk ? currentChunk + ' ' + sentence : sentence;
-        }
-      }
-    } else if ((currentChunk + '\n\n' + para).length > maxSize) {
-      if (currentChunk) {
-        chunks.push(currentChunk.trim());
-      }
-      currentChunk = para;
-    } else {
-      currentChunk = currentChunk ? currentChunk + '\n\n' + para : para;
-    }
-  }
-
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks;
-}
-
-async function translateChunk(chunk: string, targetLangName: string, apiKey: string): Promise<string> {
-  const prompt = `Translate the following text from Spanish to ${targetLangName}.
-
-CRITICAL RULES:
-- Translate the COMPLETE text, do NOT summarize or shorten it
-- Keep ALL paragraphs, formatting, bullet points, and markdown exactly as in the original
-- Preserve all markdown formatting (headers ##, lists *, bold **, etc.)
-- Return ONLY the translated text, nothing else
-- Do NOT add any explanations, comments, or notes
-
-Text to translate:
-${chunk}`;
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -74,20 +47,23 @@ ${chunk}`;
     body: JSON.stringify({
       model: 'google/gemini-2.5-flash',
       messages: [
-        { role: 'system', content: 'You are a professional translator. Translate accurately and completely. NEVER summarize or shorten. Preserve all formatting.' },
+        { role: 'system', content: shouldSummarize 
+          ? 'You summarize and translate long texts into concise, well-organized summaries in the target language.' 
+          : 'You are a professional translator.' 
+        },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.1,
-      max_tokens: 8000,
+      temperature: 0.2,
+      max_tokens: shouldSummarize ? 4000 : 8000,
     })
   });
 
   if (!response.ok) {
-    throw new Error(`Translation failed: ${response.status}`);
+    throw new Error(`API error: ${response.status}`);
   }
 
   const data = await response.json();
-  return data.choices?.[0]?.message?.content?.trim() || chunk;
+  return data.choices?.[0]?.message?.content?.trim() || text;
 }
 
 serve(async (req) => {
@@ -98,7 +74,6 @@ serve(async (req) => {
   try {
     const { texts, targetLanguage, sourceLanguage = 'es' } = await req.json();
 
-    // Si el idioma destino es español, devolver los textos originales
     if (targetLanguage === 'es' || targetLanguage === sourceLanguage) {
       return new Response(JSON.stringify({ translations: texts }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -126,60 +101,45 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Translating ${textsArray.length} texts to ${targetLangName}`);
+    console.log(`Processing ${textsArray.length} texts to ${targetLangName}`);
 
     const translations: string[] = [];
 
     for (let i = 0; i < textsArray.length; i++) {
       const text = textsArray[i];
       
-      // Si el texto está vacío, mantenerlo
       if (!text || text.trim() === '') {
         translations.push(text);
         continue;
       }
 
-      // Para textos cortos, traducir directamente
-      if (text.length <= MAX_CHUNK_SIZE) {
-        try {
-          const translated = await translateChunk(text, targetLangName, LOVABLE_API_KEY);
-          translations.push(translated);
-          console.log(`Translated text ${i} (${text.length} chars) directly`);
-        } catch (error) {
-          console.error(`Error translating text ${i}:`, error);
-          translations.push(text); // Fallback al original
-        }
-        continue;
+      const shouldSummarize = text.length > SUMMARIZE_THRESHOLD;
+      
+      try {
+        console.log(`Text ${i}: ${text.length} chars, ${shouldSummarize ? 'summarizing' : 'translating directly'}`);
+        const result = await translateOrSummarize(text, targetLangName, LOVABLE_API_KEY, shouldSummarize);
+        translations.push(result);
+        console.log(`Text ${i} done: ${result.length} chars`);
+      } catch (error) {
+        console.error(`Error processing text ${i}:`, error);
+        translations.push(text);
       }
-
-      // Para textos largos, dividir en chunks y traducir cada uno
-      console.log(`Text ${i} is long (${text.length} chars), splitting into chunks`);
-      const chunks = splitTextIntoChunks(text, MAX_CHUNK_SIZE);
-      console.log(`Split into ${chunks.length} chunks`);
-      
-      const translatedChunks: string[] = [];
-      
-      for (let j = 0; j < chunks.length; j++) {
-        try {
-          console.log(`Translating chunk ${j + 1}/${chunks.length} (${chunks[j].length} chars)`);
-          const translatedChunk = await translateChunk(chunks[j], targetLangName, LOVABLE_API_KEY);
-          translatedChunks.push(translatedChunk);
-        } catch (error) {
-          console.error(`Error translating chunk ${j}:`, error);
-          translatedChunks.push(chunks[j]); // Fallback al original
-        }
-      }
-      
-      // Unir los chunks traducidos
-      translations.push(translatedChunks.join('\n\n'));
-      console.log(`Completed translation of text ${i}`);
     }
 
-    console.log(`Successfully translated ${translations.length} texts`);
+    console.log(`Completed ${translations.length} texts`);
 
     return new Response(JSON.stringify({ translations }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
+  } catch (error) {
+    console.error('Translation error:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
 
   } catch (error) {
     console.error('Translation error:', error);
