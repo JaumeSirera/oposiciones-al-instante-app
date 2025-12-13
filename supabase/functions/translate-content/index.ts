@@ -33,10 +33,17 @@ serve(async (req) => {
     const textsArray = Array.isArray(texts) ? texts : [texts];
     const numberedTexts = textsArray.map((t: string, i: number) => `[${i}] ${t}`).join('\n');
 
-    const prompt = `Translate the following texts from Spanish to ${targetLangName}. 
-Keep the exact same format and numbering. Only translate, do not add explanations.
-Return ONLY the translations with their numbers, one per line.
+    const prompt = `You are a professional translator. Translate ALL of the following texts from Spanish to ${targetLangName}.
 
+CRITICAL RULES:
+- Translate the COMPLETE text, do NOT summarize or shorten it
+- Keep ALL paragraphs, sections, bullet points, and formatting exactly as in the original
+- Preserve all markdown formatting (headers, lists, bold, etc.)
+- Return ONLY the translations with their numbers [0], [1], etc., each on a new line
+- Do NOT add any explanations, comments or notes
+- Each numbered translation must contain the FULL translated text
+
+Texts to translate:
 ${numberedTexts}`;
 
     console.log(`Translating ${textsArray.length} texts to ${targetLangName}`);
@@ -60,11 +67,11 @@ ${numberedTexts}`;
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a professional translator. Translate accurately and naturally.' },
+          { role: 'system', content: 'You are a professional translator. Your task is to translate text accurately and completely. NEVER summarize, shorten, or omit any content. Translate every single word and paragraph.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.1,
-        max_tokens: 16384,
+        max_tokens: 32000,
       })
     });
 

@@ -86,7 +86,7 @@ export default function ResumenDetalle() {
     }
   }, [id, navigate, toast, t]);
 
-  // Traducir tema y sección cuando cambia el idioma o se carga el detalle
+  // Traducir contenido cuando cambia el idioma o se carga el detalle
   useEffect(() => {
     const translateContent = async () => {
       if (!detalle) return;
@@ -103,14 +103,14 @@ export default function ResumenDetalle() {
       const textsToTranslate = [
         detalle.tema || '',
         detalle.seccion || '',
+        detalle.resumen || '',
       ];
 
       const translated = await translateTexts(textsToTranslate);
       setTranslatedContent({
         tema: translated[0] || detalle.tema,
         seccion: translated[1] || detalle.seccion,
-        // Siempre mantenemos el texto completo original del resumen
-        resumen: detalle.resumen,
+        resumen: translated[2] || detalle.resumen,
       });
     };
 
@@ -349,7 +349,7 @@ export default function ResumenDetalle() {
                 </div>
               ) : (
                 <p className="text-base leading-relaxed whitespace-pre-wrap">
-                  {detalle.resumen || t('summaryDetail.noContent')}
+                  {translatedContent.resumen || detalle.resumen || t('summaryDetail.noContent')}
                 </p>
               )}
             </div>
