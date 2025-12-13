@@ -39,7 +39,9 @@
     "documentReference": "Document reference",
     "document": "Document",
     "page": "Page",
-    "location": "Location"
+    "location": "Location",
+    "enableAudio": "Enable audio",
+    "disableAudio": "Disable audio"
   },
   "landing": {
     "title": "AI Agent for Civil Service Exams | Tests and Summaries",

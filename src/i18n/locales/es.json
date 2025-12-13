@@ -39,7 +39,9 @@
     "documentReference": "Referencia del documento",
     "document": "Documento",
     "page": "Página",
-    "location": "Ubicación"
+    "location": "Ubicación",
+    "enableAudio": "Activar audio",
+    "disableAudio": "Desactivar audio"
   },
   "landing": {
     "title": "Agente IA para Oposiciones | Tests para Oposiciones y Resúmenes",

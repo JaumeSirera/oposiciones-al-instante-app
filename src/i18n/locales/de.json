@@ -39,7 +39,9 @@
     "documentReference": "Dokumentreferenz",
     "document": "Dokument",
     "page": "Seite",
-    "location": "Standort"
+    "location": "Standort",
+    "enableAudio": "Audio aktivieren",
+    "disableAudio": "Audio deaktivieren"
   },
   "landing": {
     "title": "KI-Agent für Prüfungen | Tests und Zusammenfassungen",

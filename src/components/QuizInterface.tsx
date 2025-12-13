@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap, FileText, BookOpen, Languages } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap, FileText, BookOpen, Languages, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testService, type Pregunta, type Respuesta } from '@/services/testService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import type { TestConfig } from './ConfigTest';
 
 interface QuizInterfaceProps {
@@ -51,9 +52,23 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   const [translatedQuestions, setTranslatedQuestions] = useState<Record<number, TranslatedQuestion>>({});
   const [translatedExplicacion, setTranslatedExplicacion] = useState<string>('');
 
+  // Text-to-Speech
+  const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech();
+
   const currentQuestion = questions[currentQuestionIndex];
   const currentTranslation = translatedQuestions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+
+  // Leer pregunta automáticamente cuando cambia y el audio está habilitado
+  useEffect(() => {
+    if (isEnabled && currentQuestion && !loading) {
+      const textToRead = needsTranslation && currentTranslation 
+        ? currentTranslation.pregunta 
+        : currentQuestion.pregunta;
+      speak(textToRead);
+    }
+    return () => stop();
+  }, [currentQuestionIndex, currentQuestion, isEnabled, currentTranslation, needsTranslation]);
 
   // Traducir pregunta actual cuando cambia
   useEffect(() => {
@@ -539,6 +554,21 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
               <Badge variant="destructive" className="text-sm font-semibold">
                 {t('quiz.examMode')}
               </Badge>
+            )}
+            {isSupported && (
+              <Button
+                variant={isEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={toggleEnabled}
+                className="flex items-center gap-1"
+                title={isEnabled ? t('quiz.disableAudio') : t('quiz.enableAudio')}
+              >
+                {isEnabled ? (
+                  <Volume2 className={`w-4 h-4 ${isPlaying ? 'animate-pulse' : ''}`} />
+                ) : (
+                  <VolumeX className="w-4 h-4" />
+                )}
+              </Button>
             )}
             <div className="flex items-center space-x-2">
               <Clock className="w-5 h-5 text-orange-600" />
