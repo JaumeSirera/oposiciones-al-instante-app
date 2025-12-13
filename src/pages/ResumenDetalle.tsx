@@ -44,7 +44,7 @@ export default function ResumenDetalle() {
   }>({});
 
   const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech(i18n.language);
-  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { translateTexts, isTranslating, needsTranslation, clearCache } = useTranslateContent();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -96,6 +96,9 @@ export default function ResumenDetalle() {
   useEffect(() => {
     const translateContent = async () => {
       if (!detalle) return;
+
+      // Limpiar caché para que no use traducciones antiguas del resumen
+      clearCache();
       
       const resumenTexto = detalle.resumen || '';
 
@@ -123,7 +126,7 @@ export default function ResumenDetalle() {
     };
 
     translateContent();
-  }, [detalle, needsTranslation, translateTexts, i18n.language]);
+  }, [detalle, needsTranslation, translateTexts, i18n.language, clearCache]);
 
   const cargarTecnica = useCallback(async () => {
     if (!id) return;
