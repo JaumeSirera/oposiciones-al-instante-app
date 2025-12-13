@@ -41,7 +41,8 @@
     "page": "Page",
     "location": "Location",
     "enableAudio": "Enable audio",
-    "disableAudio": "Disable audio"
+    "disableAudio": "Disable audio",
+    "listenAnswer": "Listen to answer"
   },
   "landing": {
     "title": "AI Agent for Civil Service Exams | Tests and Summaries",
