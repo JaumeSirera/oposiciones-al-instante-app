@@ -5,6 +5,91 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MAX_CHUNK_SIZE = 3000; // Máximo de caracteres por chunk para traducción segura
+
+function splitTextIntoChunks(text: string, maxSize: number): string[] {
+  if (text.length <= maxSize) {
+    return [text];
+  }
+
+  const chunks: string[] = [];
+  const paragraphs = text.split(/\n\n+/);
+  let currentChunk = '';
+
+  for (const para of paragraphs) {
+    // Si un solo párrafo es muy largo, dividirlo por oraciones
+    if (para.length > maxSize) {
+      if (currentChunk) {
+        chunks.push(currentChunk.trim());
+        currentChunk = '';
+      }
+      // Dividir párrafo largo por oraciones
+      const sentences = para.split(/(?<=[.!?])\s+/);
+      for (const sentence of sentences) {
+        if ((currentChunk + ' ' + sentence).length > maxSize) {
+          if (currentChunk) {
+            chunks.push(currentChunk.trim());
+          }
+          currentChunk = sentence;
+        } else {
+          currentChunk = currentChunk ? currentChunk + ' ' + sentence : sentence;
+        }
+      }
+    } else if ((currentChunk + '\n\n' + para).length > maxSize) {
+      if (currentChunk) {
+        chunks.push(currentChunk.trim());
+      }
+      currentChunk = para;
+    } else {
+      currentChunk = currentChunk ? currentChunk + '\n\n' + para : para;
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
+async function translateChunk(chunk: string, targetLangName: string, apiKey: string): Promise<string> {
+  const prompt = `Translate the following text from Spanish to ${targetLangName}.
+
+CRITICAL RULES:
+- Translate the COMPLETE text, do NOT summarize or shorten it
+- Keep ALL paragraphs, formatting, bullet points, and markdown exactly as in the original
+- Preserve all markdown formatting (headers ##, lists *, bold **, etc.)
+- Return ONLY the translated text, nothing else
+- Do NOT add any explanations, comments, or notes
+
+Text to translate:
+${chunk}`;
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: 'You are a professional translator. Translate accurately and completely. NEVER summarize or shorten. Preserve all formatting.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.1,
+      max_tokens: 8000,
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Translation failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content?.trim() || chunk;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -31,24 +116,7 @@ serve(async (req) => {
 
     const targetLangName = languageNames[targetLanguage] || targetLanguage;
     const textsArray = Array.isArray(texts) ? texts : [texts];
-    const numberedTexts = textsArray.map((t: string, i: number) => `[${i}] ${t}`).join('\n');
 
-    const prompt = `You are a professional translator. Translate ALL of the following texts from Spanish to ${targetLangName}.
-
-CRITICAL RULES:
-- Translate the COMPLETE text, do NOT summarize or shorten it
-- Keep ALL paragraphs, sections, bullet points, and formatting exactly as in the original
-- Preserve all markdown formatting (headers, lists, bold, etc.)
-- Return ONLY the translations with their numbers [0], [1], etc., each on a new line
-- Do NOT add any explanations, comments or notes
-- Each numbered translation must contain the FULL translated text
-
-Texts to translate:
-${numberedTexts}`;
-
-    console.log(`Translating ${textsArray.length} texts to ${targetLangName}`);
-
-    // Use Lovable AI Gateway (no API key needed from user)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -58,62 +126,53 @@ ${numberedTexts}`;
       });
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'You are a professional translator. Your task is to translate text accurately and completely. NEVER summarize, shorten, or omit any content. Translate every single word and paragraph.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.1,
-        max_tokens: 32000,
-      })
-    });
+    console.log(`Translating ${textsArray.length} texts to ${targetLangName}`);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Lovable AI error:', response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded', translations: texts }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: 'Payment required', translations: texts }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      return new Response(JSON.stringify({ translations: texts }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const data = await response.json();
-    const translatedText = data.choices?.[0]?.message?.content || '';
-
-    // Parsear las traducciones
-    const lines = translatedText.split('\n').filter((l: string) => l.trim());
     const translations: string[] = [];
 
     for (let i = 0; i < textsArray.length; i++) {
-      const matchingLine = lines.find((l: string) => l.startsWith(`[${i}]`));
-      if (matchingLine) {
-        translations.push(matchingLine.replace(`[${i}]`, '').trim());
-      } else if (lines[i]) {
-        // Fallback: usar la línea por índice
-        translations.push(lines[i].replace(/^\[\d+\]\s*/, '').trim());
-      } else {
-        translations.push(textsArray[i]); // Mantener original si falla
+      const text = textsArray[i];
+      
+      // Si el texto está vacío, mantenerlo
+      if (!text || text.trim() === '') {
+        translations.push(text);
+        continue;
       }
+
+      // Para textos cortos, traducir directamente
+      if (text.length <= MAX_CHUNK_SIZE) {
+        try {
+          const translated = await translateChunk(text, targetLangName, LOVABLE_API_KEY);
+          translations.push(translated);
+          console.log(`Translated text ${i} (${text.length} chars) directly`);
+        } catch (error) {
+          console.error(`Error translating text ${i}:`, error);
+          translations.push(text); // Fallback al original
+        }
+        continue;
+      }
+
+      // Para textos largos, dividir en chunks y traducir cada uno
+      console.log(`Text ${i} is long (${text.length} chars), splitting into chunks`);
+      const chunks = splitTextIntoChunks(text, MAX_CHUNK_SIZE);
+      console.log(`Split into ${chunks.length} chunks`);
+      
+      const translatedChunks: string[] = [];
+      
+      for (let j = 0; j < chunks.length; j++) {
+        try {
+          console.log(`Translating chunk ${j + 1}/${chunks.length} (${chunks[j].length} chars)`);
+          const translatedChunk = await translateChunk(chunks[j], targetLangName, LOVABLE_API_KEY);
+          translatedChunks.push(translatedChunk);
+        } catch (error) {
+          console.error(`Error translating chunk ${j}:`, error);
+          translatedChunks.push(chunks[j]); // Fallback al original
+        }
+      }
+      
+      // Unir los chunks traducidos
+      translations.push(translatedChunks.join('\n\n'));
+      console.log(`Completed translation of text ${i}`);
     }
 
     console.log(`Successfully translated ${translations.length} texts`);

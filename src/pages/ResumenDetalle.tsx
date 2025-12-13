@@ -98,7 +98,6 @@ export default function ResumenDetalle() {
       if (!detalle) return;
       
       const resumenTexto = detalle.resumen || '';
-      const shouldTranslateResumen = resumenTexto.length > 0 && resumenTexto.length < 4000;
       
       if (!needsTranslation) {
         setTranslatedContent({
@@ -109,17 +108,18 @@ export default function ResumenDetalle() {
         return;
       }
 
+      // Siempre intentar traducir, el Edge Function maneja textos largos por chunks
       const textsToTranslate = [
         detalle.tema || '',
         detalle.seccion || '',
-        shouldTranslateResumen ? resumenTexto : '',
+        resumenTexto,
       ];
 
       const translated = await translateTexts(textsToTranslate);
       setTranslatedContent({
         tema: translated[0] || detalle.tema,
         seccion: translated[1] || detalle.seccion,
-        resumen: shouldTranslateResumen ? (translated[2] || resumenTexto) : resumenTexto,
+        resumen: translated[2] || resumenTexto,
       });
     };
 
