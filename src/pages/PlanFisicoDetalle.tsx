@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { authService } from '@/services/authService';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -317,19 +318,22 @@ export default function PlanFisicoDetalle() {
 
     try {
       const token = authService.getToken();
-      const response = await fetch(`${API_BASE}/planes_fisicos.php?action=buscar_imagen_stock`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('php-api-proxy', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: {
+          endpoint: 'planes_fisicos.php',
+          action: 'buscar_imagen_stock',
           ejercicio: params.nombre,
           tipo_prueba: plan?.tipo_prueba || '',
           limit: 4,
-        }),
+        },
       });
-      const data = await response.json();
+
+      if (error) {
+        console.error('Error al buscar imagen:', error);
+        toast.error('Error al buscar imágenes');
+        return;
+      }
 
       let entries: { url: string; credit?: string }[] = [];
       if (Array.isArray(data?.items) && data.items.length) {
@@ -352,6 +356,7 @@ export default function PlanFisicoDetalle() {
         toast.info('No se encontraron imágenes relevantes');
       }
     } catch (error) {
+      console.error('Error al buscar imagen:', error);
       toast.error('Error al buscar imágenes');
     } finally {
       setImgLoading((prev) => ({ ...prev, [key]: false }));
