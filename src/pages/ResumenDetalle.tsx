@@ -351,24 +351,17 @@ export default function ResumenDetalle() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-               <h3 className="font-semibold text-sm text-muted-foreground mb-1">{t('summaryDetail.summary')}:</h3>
+            <div>
+               <h3 className="font-semibold text-sm text-muted-foreground mb-2">{t('summaryDetail.summary')}:</h3>
                {isTranslating ? (
                  <div className="flex items-center gap-2 text-muted-foreground">
                    <Loader2 className="w-4 h-4 animate-spin" />
                    {t('common.translating')}
                  </div>
                ) : (
-                 <>
-                   {needsTranslation && translatedContent.resumen && (
-                     <p className="text-base leading-relaxed whitespace-pre-wrap">
-                       {translatedContent.resumen}
-                     </p>
-                   )}
-                   <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground border-t pt-2 mt-2">
-                     {detalle.resumen || t('summaryDetail.noContent')}
-                   </p>
-                 </>
+                 <p className="text-base leading-relaxed whitespace-pre-wrap">
+                   {translatedContent.resumen || detalle.resumen || t('summaryDetail.noContent')}
+                 </p>
                )}
              </div>
 
