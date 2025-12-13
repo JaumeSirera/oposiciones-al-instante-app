@@ -68,7 +68,13 @@ export default function ResumenDetalle() {
       const data = await response.json();
       
       if (data?.resumen) {
-        setDetalle(data.resumen);
+        const resumenData = data.resumen as Detalle & { archivo_texto?: string };
+        const resumenTexto = resumenData.resumen || (resumenData as any).archivo_texto || '';
+
+        setDetalle({
+          ...resumenData,
+          resumen: resumenTexto,
+        });
       } else if (data?.error) {
         throw new Error(data.error);
       } else {
