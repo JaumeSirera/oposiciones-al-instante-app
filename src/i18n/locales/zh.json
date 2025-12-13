@@ -741,7 +741,10 @@
     "yourAnswer": "你的答案",
     "correctAnswer": "正确答案",
     "incorrectQuestions": "错误的问题",
-    "noIncorrectQuestions": "没有错误的问题。"
+    "noIncorrectQuestions": "没有错误的问题。",
+    "sourceText": "从文本",
+    "sourceAI": "AI生成",
+    "sourceManual": "手动"
   },
   "generateQuestions": {
     "title": "生成测试",

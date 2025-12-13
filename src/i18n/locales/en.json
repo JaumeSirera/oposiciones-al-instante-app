@@ -814,7 +814,10 @@
     "yourAnswer": "Your answer",
     "correctAnswer": "Correct answer",
     "incorrectQuestions": "Incorrect Questions",
-    "noIncorrectQuestions": "No incorrect questions."
+    "noIncorrectQuestions": "No incorrect questions.",
+    "sourceText": "From text",
+    "sourceAI": "AI generated",
+    "sourceManual": "Manual"
   },
   "generateQuestions": {
     "title": "Generate Test",
