@@ -32,8 +32,8 @@ serve(async (req) => {
       );
     }
 
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY");
-    if (!GOOGLE_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
       return new Response(
         JSON.stringify({ success: false, error: "API key no configurada" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
@@ -144,26 +144,44 @@ ${getProgresionGuidelines(semanaInicio, semanasTotal, nivel_fisico)}
 
 Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
 
-      const aiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.3,
-              topK: 40,
-              topP: 0.9,
-              maxOutputTokens: 4096,
+      // Usar Lovable AI Gateway
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { 
+              role: "system", 
+              content: "Eres un experto entrenador deportivo. Genera planes de entrenamiento físico estructurados en formato JSON. Responde SIEMPRE con JSON válido sin markdown." 
             },
-          }),
-        }
-      );
+            { role: "user", content: prompt }
+          ],
+          max_tokens: 8000,
+          temperature: 0.3,
+        }),
+      });
 
       if (!aiResponse.ok) {
         const errorText = await aiResponse.text();
-        console.error(`Error en chunk ${chunk + 1}:`, errorText);
+        console.error(`Error en chunk ${chunk + 1}:`, aiResponse.status, errorText);
+        
+        if (aiResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Límite de solicitudes excedido. Intenta de nuevo en unos segundos." }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+          );
+        }
+        if (aiResponse.status === 402) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Se requiere añadir créditos a Lovable AI." }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ success: false, error: `Error al generar semanas ${semanaInicio}-${semanaFin}` }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
@@ -171,7 +189,7 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
       }
 
       const aiData = await aiResponse.json();
-      let content = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      let content = aiData.choices?.[0]?.message?.content;
 
       if (!content) {
         console.error(`No se generó contenido para chunk ${chunk + 1}`);
@@ -181,20 +199,32 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
         );
       }
 
-      // Limpiar markdown
+      // Limpiar y sanitizar contenido
       content = content.trim();
       content = content.replace(/```json\s*/g, "").replace(/```\s*/g, "");
       content = content.replace(/\/\*[\s\S]*?\*\//g, "");
       content = content.replace(/\/\/.*/g, "");
+      
+      // Sanitizar caracteres de control
+      content = content
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*]/g, ']');
 
       let chunkData;
       try {
         chunkData = JSON.parse(content);
       } catch (directParseError) {
+        console.error(`Error parseando chunk ${chunk + 1} directamente:`, directParseError);
+        
         // Buscar JSON válido
         const startIdx = content.indexOf('{');
         if (startIdx === -1) {
-          throw new Error(`No se encontró JSON en chunk ${chunk + 1}`);
+          console.error(`No se encontró JSON en chunk ${chunk + 1}, contenido:`, content.substring(0, 500));
+          return new Response(
+            JSON.stringify({ success: false, error: `No se encontró JSON válido. Intenta de nuevo.` }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+          );
         }
 
         let braceCount = 0;
@@ -229,15 +259,31 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
         }
 
         if (braceCount !== 0) {
-          throw new Error(`JSON incompleto en chunk ${chunk + 1}`);
+          console.error(`JSON incompleto en chunk ${chunk + 1}, braceCount: ${braceCount}`);
+          return new Response(
+            JSON.stringify({ success: false, error: `JSON incompleto. Intenta de nuevo.` }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+          );
         }
 
         const jsonStr = content.substring(startIdx, endIdx);
-        chunkData = JSON.parse(jsonStr);
+        try {
+          chunkData = JSON.parse(jsonStr);
+        } catch (finalParseError) {
+          console.error(`Error final parseando chunk ${chunk + 1}:`, finalParseError);
+          return new Response(
+            JSON.stringify({ success: false, error: `Error procesando respuesta. Intenta de nuevo.` }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+          );
+        }
       }
 
       if (!chunkData.semanas || !Array.isArray(chunkData.semanas)) {
-        throw new Error(`Estructura inválida en chunk ${chunk + 1}`);
+        console.error(`Estructura inválida en chunk ${chunk + 1}:`, JSON.stringify(chunkData).substring(0, 500));
+        return new Response(
+          JSON.stringify({ success: false, error: `Estructura inválida. Intenta de nuevo.` }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
       }
 
       console.log(`Chunk ${chunk + 1} completado: ${chunkData.semanas.length} semanas`);
@@ -274,7 +320,7 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
 });
 
 function getTipoPruebaGuidelines(tipo: string): string {
-  const guidelines = {
+  const guidelines: Record<string, string> = {
     "Bombero": "Fuerza funcional + resistencia. Incluir: dominadas, flexiones, carrera.",
     "Policía Nacional": "Equilibrio fuerza-velocidad-resistencia. Circuitos y natación.",
     "Policía Local": "Resistencia + pruebas físicas generales. Circuitos metabólicos.",
