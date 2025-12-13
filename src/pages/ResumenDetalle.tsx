@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ArrowLeft, Brain, FileText, Calendar } from 'lucide-react';
+import { Loader2, ArrowLeft, Brain, FileText, Calendar, Volume2, VolumeX } from 'lucide-react';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useToast } from '@/hooks/use-toast';
 
 interface Detalle {
@@ -35,6 +36,8 @@ export default function ResumenDetalle() {
   const [techLoading, setTechLoading] = useState(false);
   const [techSaving, setTechSaving] = useState(false);
   const [techGenerating, setTechGenerating] = useState(false);
+
+  const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech(i18n.language);
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -265,10 +268,33 @@ export default function ResumenDetalle() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-start gap-2">
-              <FileText className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
-              <span>{detalle.tema || t('summaryDetail.noTopic')}</span>
-            </CardTitle>
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="flex items-start gap-2">
+                <FileText className="w-6 h-6 text-primary mt-1 flex-shrink-0" />
+                <span>{detalle.tema || t('summaryDetail.noTopic')}</span>
+              </CardTitle>
+              {isSupported && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleEnabled}
+                    title={isEnabled ? t('quiz.disableAudio') : t('quiz.enableAudio')}
+                  >
+                    {isEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                  </Button>
+                  {isEnabled && detalle.resumen && (
+                    <Button
+                      variant={isPlaying ? "secondary" : "default"}
+                      size="sm"
+                      onClick={() => isPlaying ? stop() : speak(detalle.resumen || '')}
+                    >
+                      {isPlaying ? t('quiz.stop') : t('quiz.listen')}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
             {detalle.seccion && (
               <CardDescription className="text-base font-medium">
                 {detalle.seccion}
