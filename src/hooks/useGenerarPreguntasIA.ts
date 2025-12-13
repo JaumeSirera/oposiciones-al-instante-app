@@ -12,6 +12,10 @@ interface PreguntaGenerada {
   respuestas: Respuesta[];
   correcta_indice: string;
   explicacion?: string;
+  documento?: string | null;
+  pagina?: string | null;
+  ubicacion?: string | null;
+  cita?: string | null;
 }
 
 interface GenerarPreguntasParams {
@@ -20,6 +24,7 @@ interface GenerarPreguntasParams {
   tema?: string;
   num_preguntas: number;
   texto?: string;
+  documento?: string; // Nombre del documento fuente
 }
 
 interface GenerarPreguntasResult {
@@ -66,6 +71,7 @@ export function useGenerarPreguntasIA() {
             tema: params.tema,
             num_preguntas: preguntasEnEsteLote,
             texto: textoFragmento,
+            documento: params.documento, // Pasar nombre del documento
           },
         });
 

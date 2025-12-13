@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { id_proceso, seccion, tema, num_preguntas, texto } = await req.json();
+    const { id_proceso, seccion, tema, num_preguntas, texto, documento } = await req.json();
 
     if (!id_proceso || !num_preguntas) {
       return new Response(
@@ -25,25 +25,38 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY no configurada");
     }
 
+    const tieneTexto = texto && texto.trim().length > 0;
+
     // Construir prompt optimizado para generación rápida
-    const promptBase = texto 
+    const promptBase = tieneTexto 
       ? `Genera exactamente ${num_preguntas} preguntas de test tipo oposición basándote en el siguiente texto:
 
 "${texto.substring(0, 8000)}"
 
-Las preguntas deben evaluar comprensión del contenido.`
+Las preguntas deben evaluar comprensión del contenido.
+IMPORTANTE: Para cada pregunta, indica la ubicación aproximada en el texto donde se encuentra la respuesta.`
       : `Genera exactamente ${num_preguntas} preguntas de test tipo oposición sobre:
 - Tema: ${tema || "General"}
 - Sección: ${seccion || "General"}
 
 Las preguntas deben ser de nivel oposición, precisas y con respuestas claras.`;
 
-    const systemPrompt = `Eres un experto generador de preguntas para oposiciones españolas. 
-Genera preguntas de opción múltiple con 4 respuestas cada una.
-IMPORTANTE: Responde SOLO con un JSON válido, sin markdown ni texto adicional.
+    // Sistema con o sin trazabilidad según haya texto
+    const formatoConTrazabilidad = `{
+  "preguntas": [
+    {
+      "pregunta": "texto de la pregunta",
+      "respuestas": ["respuesta A", "respuesta B", "respuesta C", "respuesta D"],
+      "correcta": 0,
+      "explicacion": "breve explicación de por qué es correcta",
+      "pagina": "1",
+      "ubicacion": "inicio|medio|final",
+      "cita": "fragmento textual exacto del documento donde se encuentra la respuesta"
+    }
+  ]
+}`;
 
-Formato requerido:
-{
+    const formatoSinTrazabilidad = `{
   "preguntas": [
     {
       "pregunta": "texto de la pregunta",
@@ -52,9 +65,20 @@ Formato requerido:
       "explicacion": "breve explicación de por qué es correcta"
     }
   ]
-}
+}`;
 
-El campo "correcta" es el índice (0-3) de la respuesta correcta.`;
+    const systemPrompt = `Eres un experto generador de preguntas para oposiciones españolas. 
+Genera preguntas de opción múltiple con 4 respuestas cada una.
+IMPORTANTE: Responde SOLO con un JSON válido, sin markdown ni texto adicional.
+
+Formato requerido:
+${tieneTexto ? formatoConTrazabilidad : formatoSinTrazabilidad}
+
+El campo "correcta" es el índice (0-3) de la respuesta correcta.${tieneTexto ? `
+Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desde texto.
+- "pagina": número de página aproximado o "1" si no hay paginación
+- "ubicacion": dónde está la respuesta en el texto (inicio, medio, final)  
+- "cita": copia textual del fragmento donde aparece la información de la respuesta correcta` : ''}`;
 
     console.log(`[generar-preguntas-ia] Generando ${num_preguntas} preguntas...`);
 
@@ -130,6 +154,11 @@ El campo "correcta" es el índice (0-3) de la respuesta correcta.`;
       })),
       correcta_indice: String.fromCharCode(65 + (p.correcta || 0)),
       explicacion: p.explicacion || "",
+      // Campos de trazabilidad (solo si hay texto fuente)
+      documento: tieneTexto ? (documento || "Documento subido") : null,
+      pagina: tieneTexto ? (p.pagina || "1") : null,
+      ubicacion: tieneTexto ? (p.ubicacion || "medio") : null,
+      cita: tieneTexto ? (p.cita || "") : null,
     }));
 
     console.log(`[generar-preguntas-ia] Generadas ${resultado.length} preguntas`);
