@@ -20,8 +20,8 @@ serve(async (req) => {
       );
     }
 
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY");
-    if (!GOOGLE_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
       return new Response(
         JSON.stringify({ success: false, error: "API key no configurada" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
@@ -34,7 +34,7 @@ serve(async (req) => {
     const dias = Math.ceil((fin.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
     const semanas = Math.ceil(dias / 7);
 
-    // Construir prompt para Gemini
+    // Construir prompt para la IA
     const temasSeleccionados = Array.isArray(temas) ? temas : [];
     const seccionesSeleccionadas = Array.isArray(secciones) ? secciones : [];
     
@@ -106,37 +106,56 @@ Genera un JSON con esta estructura exacta:
 7. Incluye una actividad de test semanal con los temas de esa semana
 8. Las fechas deben ser consecutivas y coherentes
 
-Genera el plan completo en formato JSON válido.`;
+Genera el plan completo en formato JSON válido. Responde SOLO con JSON, sin markdown ni explicaciones.`;
 
-    // Llamar a Gemini API
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 8192,
+    console.log(`Generando plan de estudio: ${semanas} semanas, ${temasSeleccionados.length} temas`);
+
+    // Llamar a Lovable AI Gateway
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { 
+            role: "system", 
+            content: "Eres un experto en planificación de estudios para oposiciones. Genera planes de estudio estructurados en formato JSON. Responde SIEMPRE con JSON válido sin markdown." 
           },
-        }),
-      }
-    );
+          { role: "user", content: prompt }
+        ],
+        max_tokens: 8192,
+        temperature: 0.7,
+      }),
+    });
 
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error("Error de Gemini:", errorText);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error("Error de Lovable AI:", aiResponse.status, errorText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Límite de solicitudes excedido. Intenta de nuevo en unos segundos." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+        );
+      }
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Se requiere añadir créditos a Lovable AI." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ success: false, error: "Error al generar plan con IA" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
 
-    const geminiData = await geminiResponse.json();
-    const generatedText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const aiData = await aiResponse.json();
+    const generatedText = aiData.choices?.[0]?.message?.content;
 
     if (!generatedText) {
       return new Response(
@@ -148,19 +167,18 @@ Genera el plan completo en formato JSON válido.`;
     // Extraer y sanitizar JSON del texto generado
     let planData;
     try {
-      const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No se encontró JSON en la respuesta");
-      
-      // Sanitizar caracteres de control inválidos
-      let sanitizedJson = jsonMatch[0]
+      // Limpiar markdown y caracteres de control
+      let cleanText = generatedText.trim();
+      cleanText = cleanText.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+      cleanText = cleanText
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
         .replace(/,\s*}/g, '}')
-        .replace(/,\s*]/g, ']')
-        .replace(/\n/g, ' ')
-        .replace(/\r/g, '')
-        .replace(/\t/g, ' ');
+        .replace(/,\s*]/g, ']');
       
-      planData = JSON.parse(sanitizedJson);
+      const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No se encontró JSON en la respuesta");
+      
+      planData = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
       console.error("Error parseando JSON:", parseError);
       console.error("Texto generado (primeros 500 chars):", generatedText.substring(0, 500));
@@ -172,18 +190,24 @@ Genera el plan completo en formato JSON válido.`;
 
     // Guardar en la base de datos usando el proxy PHP
     const API_BASE_URL = "https://oposiciones-test.com/api";
-    const saveResponse = await fetch(`${API_BASE_URL}/guardar_plan_ia.php`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id_plan: id_plan,
-        plan_json: JSON.stringify(planData),
-        resumen: planData.resumen || "",
-      }),
-    });
+    try {
+      const saveResponse = await fetch(`${API_BASE_URL}/guardar_plan_ia.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_plan: id_plan,
+          plan_json: JSON.stringify(planData),
+          resumen: planData.resumen || "",
+        }),
+      });
 
-    if (!saveResponse.ok) {
-      console.error("Error al guardar en BD");
+      if (!saveResponse.ok) {
+        console.error("Error al guardar en BD:", await saveResponse.text());
+      } else {
+        console.log("Plan guardado en BD correctamente");
+      }
+    } catch (saveError) {
+      console.error("Error guardando plan:", saveError);
     }
 
     return new Response(
