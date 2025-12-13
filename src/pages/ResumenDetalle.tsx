@@ -92,16 +92,18 @@ export default function ResumenDetalle() {
     }
   }, [id, navigate, toast, t]);
 
-  // Traducir solo tema y sección cuando cambia el idioma o se carga el detalle
+  // Traducir tema, sección y resumen, pero manteniendo SIEMPRE el original
   useEffect(() => {
     const translateContent = async () => {
       if (!detalle) return;
       
+      const resumenTexto = detalle.resumen || '';
+
       if (!needsTranslation) {
         setTranslatedContent({
           tema: detalle.tema,
           seccion: detalle.seccion,
-          resumen: detalle.resumen,
+          resumen: resumenTexto,
         });
         return;
       }
@@ -109,13 +111,14 @@ export default function ResumenDetalle() {
       const textsToTranslate = [
         detalle.tema || '',
         detalle.seccion || '',
+        resumenTexto,
       ];
 
       const translated = await translateTexts(textsToTranslate);
       setTranslatedContent({
         tema: translated[0] || detalle.tema,
         seccion: translated[1] || detalle.seccion,
-        resumen: detalle.resumen,
+        resumen: translated[2] || resumenTexto,
       });
     };
 
@@ -345,17 +348,24 @@ export default function ResumenDetalle() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-               <h3 className="font-semibold text-sm text-muted-foreground mb-2">{t('summaryDetail.summary')}:</h3>
+            <div className="space-y-2">
+               <h3 className="font-semibold text-sm text-muted-foreground mb-1">{t('summaryDetail.summary')}:</h3>
                {isTranslating ? (
                  <div className="flex items-center gap-2 text-muted-foreground">
                    <Loader2 className="w-4 h-4 animate-spin" />
                    {t('common.translating')}
                  </div>
                ) : (
-                 <p className="text-base leading-relaxed whitespace-pre-wrap">
-                   {detalle.resumen || t('summaryDetail.noContent')}
-                 </p>
+                 <>
+                   {needsTranslation && translatedContent.resumen && (
+                     <p className="text-base leading-relaxed whitespace-pre-wrap">
+                       {translatedContent.resumen}
+                     </p>
+                   )}
+                   <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground border-t pt-2 mt-2">
+                     {detalle.resumen || t('summaryDetail.noContent')}
+                   </p>
+                 </>
                )}
              </div>
 
