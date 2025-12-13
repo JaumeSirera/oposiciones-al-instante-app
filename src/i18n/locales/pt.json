@@ -741,7 +741,10 @@
     "yourAnswer": "Sua resposta",
     "correctAnswer": "Resposta correta",
     "incorrectQuestions": "Perguntas Erradas",
-    "noIncorrectQuestions": "Nenhuma pergunta errada."
+    "noIncorrectQuestions": "Nenhuma pergunta errada.",
+    "sourceText": "Do texto",
+    "sourceAI": "IA genérica",
+    "sourceManual": "Manual"
   },
   "generateQuestions": {
     "title": "Gerar Teste",

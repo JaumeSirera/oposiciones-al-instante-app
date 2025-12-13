@@ -741,7 +741,10 @@
     "yourAnswer": "Deine Antwort",
     "correctAnswer": "Richtige Antwort",
     "incorrectQuestions": "Falsche Fragen",
-    "noIncorrectQuestions": "Keine falschen Fragen."
+    "noIncorrectQuestions": "Keine falschen Fragen.",
+    "sourceText": "Aus Text",
+    "sourceAI": "KI-generiert",
+    "sourceManual": "Manuell"
   },
   "generateQuestions": {
     "title": "Test generieren",

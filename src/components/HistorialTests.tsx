@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Calendar, Search, Trophy, XCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Search, Trophy, XCircle, CheckCircle, FileText, Sparkles, PenTool } from 'lucide-react';
 import { testService } from '@/services/testService';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -236,14 +236,31 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
                 onClick={() => openModal(test)}
               >
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant={test.tipo_test === 'examen' ? 'destructive' : 'default'}>
                         {test.tipo_test === 'examen' ? t('history.exam') : t('history.simulation')}
                       </Badge>
                       <Badge variant={test.estado === 'finalizado' ? 'outline' : 'secondary'}>
                         {test.estado === 'finalizado' ? t('history.finished') : t('history.inProgress')}
                       </Badge>
+                      {test.fuente && test.fuente !== 'desconocido' && (
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            test.fuente === 'texto' 
+                              ? 'bg-amber-50 text-amber-700 border-amber-300' 
+                              : test.fuente === 'ia' 
+                                ? 'bg-purple-50 text-purple-700 border-purple-300' 
+                                : 'bg-teal-50 text-teal-700 border-teal-300'
+                          }
+                        >
+                          {test.fuente === 'texto' && <FileText className="w-3 h-3 mr-1" />}
+                          {test.fuente === 'ia' && <Sparkles className="w-3 h-3 mr-1" />}
+                          {test.fuente === 'manual' && <PenTool className="w-3 h-3 mr-1" />}
+                          {test.fuente === 'texto' ? t('history.sourceText') : test.fuente === 'ia' ? t('history.sourceAI') : t('history.sourceManual')}
+                        </Badge>
+                      )}
                     </div>
                     <span className="text-sm text-gray-500">
                       {formatDate(test.fecha_finalizacion || test.fecha_inicio)}

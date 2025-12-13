@@ -664,7 +664,10 @@
     "yourAnswer": "Tu respuesta",
     "correctAnswer": "Respuesta correcta",
     "incorrectQuestions": "Preguntas Falladas",
-    "noIncorrectQuestions": "Sin preguntas falladas."
+    "noIncorrectQuestions": "Sin preguntas falladas.",
+    "sourceText": "Desde texto",
+    "sourceAI": "IA genérica",
+    "sourceManual": "Manual"
   },
   "personality": {
     "title": "Test de Personalidad (IPF-B)",
