@@ -41,17 +41,28 @@ export function useTranslateContent() {
     setIsTranslating(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('translate-content', {
-        body: {
-          texts: textsToTranslate.map(t => t.text),
-          targetLanguage: currentLang,
-          sourceLanguage: 'es'
-        }
-      });
+      let data: any = null;
+      let error: any = null;
+
+      // Pequeño sistema de reintentos: hasta 2 intentos si hay fallo de red
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const result = await supabase.functions.invoke('translate-content', {
+          body: {
+            texts: textsToTranslate.map(t => t.text),
+            targetLanguage: currentLang,
+            sourceLanguage: 'es'
+          }
+        });
+
+        data = result.data;
+        error = result.error;
+
+        if (!error) break;
+        console.error('Translation error (attempt ' + (attempt + 1) + '):', error);
+      }
 
       if (error) {
-        console.error('Translation error:', error);
-        // En caso de error, devolver originales
+        // En caso de error definitivo, devolver originales
         textsToTranslate.forEach(({ index, text }) => {
           results[index] = text;
         });
