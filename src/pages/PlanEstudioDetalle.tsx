@@ -12,7 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, BookOpen, Target, PlayCircle, Brain, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, BookOpen, Target, PlayCircle, Brain, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ActividadDia {
   dia: number;
@@ -41,7 +42,7 @@ export default function PlanEstudioDetalle() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { translateTexts, isTranslating, needsTranslation, translationFailed, retryTranslation } = useTranslateContent();
   const dateLocale = localeMap[i18n.language] || 'es-ES';
   const [detalle, setDetalle] = useState<PlanDetalle | null>(null);
   const [planIA, setPlanIA] = useState<SemanaPlan[] | null>(null);
@@ -418,6 +419,32 @@ export default function PlanEstudioDetalle() {
         <ArrowLeft className="mr-2 h-4 w-4" />
         {t('common.back')}
       </Button>
+
+      {/* Aviso de fallo de traducción */}
+      {needsTranslation && translationFailed && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{t('common.translationFailed') || 'No se ha podido traducir el contenido (problema de conexión)'}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                retryTranslation();
+                // Forzar recarga del detalle para reintentar traducciones
+                if (id) {
+                  cargarDetalle();
+                  cargarPlanIA();
+                }
+              }}
+              className="ml-4"
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              {t('common.retry') || 'Reintentar'}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-6">
         <Card>

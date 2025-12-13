@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -8,6 +8,8 @@ const translationCache = new Map<string, string>();
 export function useTranslateContent() {
   const { i18n } = useTranslation();
   const [isTranslating, setIsTranslating] = useState(false);
+  const [translationFailed, setTranslationFailed] = useState(false);
+  const failedAttemptRef = useRef(false);
 
   const getCacheKey = (text: string, targetLang: string) => `${targetLang}:${text}`;
 
@@ -39,6 +41,7 @@ export function useTranslateContent() {
     }
 
     setIsTranslating(true);
+    setTranslationFailed(false);
 
     try {
       let data: any = null;
@@ -62,7 +65,8 @@ export function useTranslateContent() {
       }
 
       if (error) {
-        // En caso de error definitivo, devolver originales
+        // En caso de error definitivo, marcar como fallido y devolver originales
+        setTranslationFailed(true);
         textsToTranslate.forEach(({ index, text }) => {
           results[index] = text;
         });
@@ -77,6 +81,7 @@ export function useTranslateContent() {
       }
     } catch (err) {
       console.error('Translation failed:', err);
+      setTranslationFailed(true);
       textsToTranslate.forEach(({ index, text }) => {
         results[index] = text;
       });
@@ -110,10 +115,17 @@ export function useTranslateContent() {
     translationCache.clear();
   }, []);
 
+  const retryTranslation = useCallback(() => {
+    setTranslationFailed(false);
+    translationCache.clear();
+  }, []);
+
   return {
     translateTexts,
     translateQuestion,
     isTranslating,
+    translationFailed,
+    retryTranslation,
     clearCache,
     needsTranslation: i18n.language !== 'es'
   };

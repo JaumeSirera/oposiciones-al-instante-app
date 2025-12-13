@@ -196,7 +196,9 @@
     "success": "成功",
     "week": "周",
     "translating": "正在翻译...",
-    "translatingContent": "正在翻译计划内容..."
+    "translatingContent": "正在翻译计划内容...",
+    "translationFailed": "无法翻译内容（连接问题）",
+    "retry": "重试"
   },
   "test": {
     "choosePracticeMode": "选择练习模式",

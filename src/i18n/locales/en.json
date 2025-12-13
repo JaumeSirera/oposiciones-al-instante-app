@@ -196,7 +196,9 @@
     "success": "Success",
     "week": "Week",
     "translating": "Translating...",
-    "translatingContent": "Translating plan content..."
+    "translatingContent": "Translating plan content...",
+    "translationFailed": "Could not translate content (connection issue)",
+    "retry": "Retry"
   },
   "test": {
     "choosePracticeMode": "Choose practice mode",
