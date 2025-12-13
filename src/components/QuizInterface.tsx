@@ -889,7 +889,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => speak(explicacionProfesor)}
+                        onClick={() => {
+                          const cleanText = explicacionProfesor
+                            .replace(/[#*_~`]/g, '')
+                            .replace(/\n+/g, '. ');
+                          speak(cleanText);
+                        }}
                         title={t('quiz.listenExplanation')}
                         className="ml-auto"
                       >
