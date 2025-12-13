@@ -135,9 +135,10 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
         cleanContent = cleanContent.replace(/^```\s*/, "").replace(/\s*```$/, "");
       }
       
-      // Eliminar caracteres de control problemáticos (excepto espacios normales)
+      // Eliminar TODOS los caracteres de control (incluyendo saltos de línea) para evitar JSON truncado
       cleanContent = cleanContent
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+        .replace(/[\x00-\x1F\x7F]/g, ' ');
+      
       
       parsed = JSON.parse(cleanContent);
     } catch (parseError) {
@@ -149,7 +150,7 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
         const preguntasMatch = content.match(/"preguntas"\s*:\s*\[[\s\S]*\]/);
         if (preguntasMatch) {
           const sanitized = preguntasMatch[0]
-            .replace(/[\x00-\x1F\x7F]/g, '')
+            .replace(/[\x00-\x1F\x7F]/g, ' ')
             .replace(/,\s*]/g, ']');
           parsed = JSON.parse(`{${sanitized}}`);
         } else {
