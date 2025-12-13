@@ -361,26 +361,20 @@ ${formData.resumen}`;
     try {
       const procesoId = formData.proceso ? parseInt(formData.proceso) : 1;
       
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/php-api-proxy`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            endpoint: 'generar_resumen.php',
-            id_usuario: user.id,
-            id_proceso: procesoId,
-            tema: temaFinal,
-            seccion: `${procesoFinal}${seccionFinal ? ' - ' + seccionFinal : ''}`,
-            texto: formData.resumen,
-            nivel_detalle: 'corto'
-          }),
-        }
-      );
+      // Guardar vía php-api-proxy
+      const { data, error } = await supabase.functions.invoke('php-api-proxy', {
+        body: {
+          endpoint: 'generar_resumen.php',
+          id_usuario: user.id,
+          id_proceso: procesoId,
+          tema: temaFinal,
+          seccion: `${procesoFinal}${seccionFinal ? ' - ' + seccionFinal : ''}`,
+          texto: formData.resumen,
+          nivel_detalle: 'corto'
+        },
+      });
 
-      const data = await response.json();
+      if (error) throw error;
 
       if (data.success || data.id) {
         toast({
