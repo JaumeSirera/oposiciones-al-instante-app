@@ -42,10 +42,14 @@ export function useGenerarPreguntasIA() {
     setProgress(null);
 
     try {
-      // Para textos largos, dividir en lotes
+      // Dividir en lotes: para textos largos O cuando se piden muchas preguntas
       const textoLargo = params.texto && params.texto.length > 6000;
-      const numPreguntasPorLote = textoLargo ? Math.min(10, params.num_preguntas) : params.num_preguntas;
-      const numLotes = textoLargo ? Math.ceil(params.num_preguntas / numPreguntasPorLote) : 1;
+      const muchasPreguntas = params.num_preguntas > 15;
+      const necesitaBatching = textoLargo || muchasPreguntas;
+      
+      // Máximo 15 preguntas por lote para evitar truncamiento de respuestas
+      const numPreguntasPorLote = necesitaBatching ? Math.min(15, params.num_preguntas) : params.num_preguntas;
+      const numLotes = necesitaBatching ? Math.ceil(params.num_preguntas / numPreguntasPorLote) : 1;
       
       let todasLasPreguntas: PreguntaGenerada[] = [];
       
