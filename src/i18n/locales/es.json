@@ -1015,7 +1015,9 @@
     "generationCancelledDesc": "El proceso ha sido cancelado por el usuario",
     "couldNotGenerateTest": "No se pudo generar el test",
     "cancelled": "Cancelado",
-    "cancelledDesc": "La generación de preguntas ha sido cancelada"
+    "cancelledDesc": "La generación de preguntas ha sido cancelada",
+    "processingBatch": "Procesando lote {{current}} de {{total}}...",
+    "questionsGenerated": "Preguntas generadas"
   },
   "createSummary": {
     "title": "Crear Nuevo Resumen",

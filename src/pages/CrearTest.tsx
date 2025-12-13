@@ -9,11 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, X, FileQuestion, Upload, FileText, Languages } from 'lucide-react';
+import { Loader2, ArrowLeft, X, FileQuestion, Upload, FileText, Languages, Zap } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { testService, type Proceso } from '@/services/testService';
 import { supabase } from '@/lib/supabaseClient';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
+import { useGenerarPreguntasIA } from '@/hooks/useGenerarPreguntasIA';
 
 export default function CrearTest() {
   const { t, i18n } = useTranslation();
@@ -21,10 +22,12 @@ export default function CrearTest() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { generarPreguntas: generarPreguntasIA, loading: loadingIA, progress: progressIA } = useGenerarPreguntasIA();
   
   const [loading, setLoading] = useState(false);
   const [extractingText, setExtractingText] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
+  const [useEdgeFunction, setUseEdgeFunction] = useState(true); // Usar Lovable AI por defecto (más rápido)
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [progressInfo, setProgressInfo] = useState<{
     current: number;
@@ -316,94 +319,58 @@ export default function CrearTest() {
         throw new Error(t('createTest.couldNotDetermineProcess'));
       }
       
-      // Check if text is long enough to use streaming
-      const shouldUseStreaming = formData.textoBase.length > 6000;
-      
-      if (shouldUseStreaming) {
-        // Create abort controller for cancellation
-        const controller = new AbortController();
-        setAbortController(controller);
-        
-        // Use SSE for progress updates
-        const response = await fetch(
-          `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            signal: controller.signal,
-            body: JSON.stringify({
-              endpoint: 'generar_preguntas.php',
+      // Usar Lovable AI Edge Function (más rápido, sin problemas de cuota)
+      if (useEdgeFunction) {
+        const result = await generarPreguntasIA({
+          id_proceso: procesoId,
+          seccion: seccionFinal,
+          tema: temaFinal,
+          num_preguntas: formData.numPreguntas,
+          texto: formData.textoBase,
+        });
+
+        if (result.success && result.preguntas) {
+          // Guardar las preguntas generadas en la base de datos via PHP
+          const guardarResponse = await fetch(
+            `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+            {
               method: 'POST',
-              body: {
-                id_proceso: procesoId,
-                seccion: seccionFinal,
-                tema: temaFinal,
-                id_usuario: user.id,
-                num_preguntas: formData.numPreguntas,
-                texto: formData.textoBase,
-                use_streaming: true
-              }
-            })
-          }
-        );
-
-        if (!response.ok || !response.body) {
-          throw new Error('Failed to start streaming');
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonStr = line.slice(6);
-              try {
-                const event = JSON.parse(jsonStr);
-                
-                if (event.type === 'progress') {
-                  setProgressInfo({
-                    current: event.current,
-                    total: event.total,
-                    message: event.message
-                  });
-                } else if (event.type === 'chunk_complete') {
-                  setProgressInfo({
-                    current: event.current,
-                    total: event.total,
-                    message: t('createTest.completedFragment', { current: event.current, total: event.total }),
-                    generated: event.totalGenerated
-                  });
-                } else if (event.type === 'complete') {
-                  setAbortController(null);
-                  toast({
-                    title: t('createTest.questionsSaved'),
-                    description: t('createTest.questionsSavedDesc', { count: event.generadas, chunks: event.chunks_procesados, total: event.total_chunks })
-                  });
-                  setFormData(prev => ({ ...prev, numPreguntas: 50, textoBase: '' }));
-                  setProgressInfo(null);
-                } else if (event.type === 'error') {
-                  setAbortController(null);
-                  throw new Error(event.error);
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                endpoint: 'guardar_preguntas_generadas.php',
+                method: 'POST',
+                body: {
+                  id_proceso: procesoId,
+                  seccion: seccionFinal,
+                  tema: temaFinal,
+                  id_usuario: user.id,
+                  preguntas: result.preguntas,
                 }
-              } catch (e) {
-                console.error('Failed to parse SSE event:', e);
-              }
+              })
             }
+          );
+
+          const guardarData = await guardarResponse.json();
+          
+          if (guardarData.ok || guardarData.success) {
+            toast({
+              title: t('createTest.questionsSaved'),
+              description: t('createTest.simpleQuestionsSavedDesc', { count: result.preguntas.length })
+            });
+            setFormData(prev => ({ ...prev, numPreguntas: 50, textoBase: '' }));
+          } else {
+            // Si falla el guardado, al menos las preguntas se generaron
+            toast({
+              title: t('createTest.questionsGenerated'),
+              description: `Se generaron ${result.preguntas.length} preguntas pero hubo un error al guardarlas.`,
+              variant: "destructive"
+            });
           }
+        } else {
+          throw new Error(result.error || t('createTest.couldNotGenerateTest'));
         }
       } else {
-        // Direct call for short texts
+        // Fallback al método PHP original
         const response = await fetch(
           `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
           {
@@ -908,51 +875,67 @@ export default function CrearTest() {
               </div>
 
               {/* Progress Indicator */}
-              {progressInfo && (
+              {(progressInfo || (loadingIA && progressIA)) && (
                 <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{progressInfo.message}</span>
+                    <span className="font-medium flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-yellow-500" />
+                      {progressIA 
+                        ? t('createTest.processingBatch', { current: progressIA.current, total: progressIA.total })
+                        : progressInfo?.message
+                      }
+                    </span>
                     <span className="text-muted-foreground">
-                      {progressInfo.current}/{progressInfo.total}
+                      {progressIA 
+                        ? `${progressIA.current}/${progressIA.total}`
+                        : `${progressInfo?.current}/${progressInfo?.total}`
+                      }
                     </span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2.5 overflow-hidden">
                     <div 
                       className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-in-out"
-                      style={{ width: `${(progressInfo.current / progressInfo.total) * 100}%` }}
+                      style={{ 
+                        width: `${progressIA 
+                          ? (progressIA.current / progressIA.total) * 100 
+                          : (progressInfo!.current / progressInfo!.total) * 100
+                        }%` 
+                      }}
                     />
                   </div>
-                  {progressInfo.generated !== undefined && (
+                  {progressInfo?.generated !== undefined && (
                     <p className="text-xs text-muted-foreground text-center">
                       {t('createTest.questionsGeneratedSoFar', { count: progressInfo.generated })}
                     </p>
                   )}
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleCancelar}
-                    className="w-full mt-2"
-                  >
-                    {t('createTest.cancelGeneration')}
-                  </Button>
+                  {!loadingIA && abortController && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleCancelar}
+                      className="w-full mt-2"
+                    >
+                      {t('createTest.cancelGeneration')}
+                    </Button>
+                  )}
                 </div>
               )}
 
               <div className="flex gap-4">
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || loadingIA}
                   className="flex-1"
                 >
-                  {loading ? (
+                  {(loading || loadingIA) ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       {t('createTest.generating')}
                     </>
                   ) : (
                     <>
-                      <FileQuestion className="w-4 h-4 mr-2" />
+                      <Zap className="w-4 h-4 mr-2" />
                       {t('createTest.generateTest')}
                     </>
                   )}
