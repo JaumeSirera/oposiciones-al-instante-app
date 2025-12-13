@@ -1015,7 +1015,9 @@
     "generationCancelledDesc": "The process has been cancelled by the user",
     "couldNotGenerateTest": "Could not generate the test",
     "cancelled": "Cancelled",
-    "cancelledDesc": "Question generation has been cancelled"
+    "cancelledDesc": "Question generation has been cancelled",
+    "processingBatch": "Processing batch {{current}} of {{total}}...",
+    "questionsGenerated": "Questions generated"
   },
   "createPsychotechnics": {
     "title": "Generate Psychotechnics",
