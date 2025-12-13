@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, X, Brain, Upload, FileText, Languages } from 'lucide-react';
+import { Loader2, ArrowLeft, X, Brain, Upload, FileText, Languages, Zap } from 'lucide-react';
 import { testService, type Proceso } from '@/services/testService';
 import { supabase } from '@/lib/supabaseClient';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
+import { useGenerarPsicotecnicosIA } from '@/hooks/useGenerarPsicotecnicosIA';
 
 export default function CrearPsicotecnicos() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function CrearPsicotecnicos() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { generarPsicotecnicos: generarPsicotecnicosIA, loading: loadingIA, progress: progressIA } = useGenerarPsicotecnicosIA();
   
   const [loading, setLoading] = useState(false);
   const [extractingText, setExtractingText] = useState(false);
@@ -226,14 +228,7 @@ export default function CrearPsicotecnicos() {
       return;
     }
 
-    if (!formData.textoBase) {
-      toast({
-        variant: "destructive",
-        title: t('createPsychotechnics.requiredField'),
-        description: t('createPsychotechnics.mustProvideText')
-      });
-      return;
-    }
+    // Texto es opcional - si no hay texto, se generan preguntas basadas en tema/sección
 
     if (!formData.proceso && !useCustomProceso) {
       toast({
@@ -305,190 +300,84 @@ export default function CrearPsicotecnicos() {
         throw new Error('No se pudo determinar el ID del proceso');
       }
       
-      // Calcular total de combinaciones
-      const totalCombinaciones = seccionesFinal.length * temasFinal.length;
-      const preguntasPorCombinacion = Math.ceil(formData.numPreguntas / totalCombinaciones);
+      // Usar Lovable AI Edge Function (más rápido)
+      let totalGeneradas = 0;
+      let errores = 0;
       
-      // Check if text is long enough to use streaming
-      const shouldUseStreaming = formData.textoBase.length > 6000;
-      
-      if (shouldUseStreaming) {
-        // Create abort controller for cancellation
-        const controller = new AbortController();
-        setAbortController(controller);
-        
-        let totalGeneradas = 0;
-        let errores = 0;
-        let combinacionActual = 0;
-        
-        // Hacer una llamada por cada combinación sección-tema
-        for (const seccion of seccionesFinal) {
-          for (const tema of temasFinal) {
-            combinacionActual++;
+      for (const seccion of seccionesFinal) {
+        for (const tema of temasFinal) {
+          const preguntasPorCombinacion = Math.ceil(formData.numPreguntas / (seccionesFinal.length * temasFinal.length));
+          
+          const result = await generarPsicotecnicosIA({
+            id_proceso: procesoId,
+            seccion: seccion,
+            tema: tema,
+            num_preguntas: preguntasPorCombinacion,
+            texto: formData.textoBase || undefined,
+            documento: archivo?.name || (formData.textoBase ? "Texto introducido" : undefined),
+          });
+
+          if (result.success && result.preguntas) {
+            // Guardar las preguntas generadas en la base de datos via PHP
+            const guardarResponse = await fetch(
+              `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  endpoint: 'guardar_preguntas_generadas.php',
+                  method: 'POST',
+                  body: {
+                    id_proceso: procesoId,
+                    seccion: seccion,
+                    tema: tema,
+                    id_usuario: user.id,
+                    preguntas: result.preguntas,
+                  }
+                })
+              }
+            );
+
+            const guardarData = await guardarResponse.json();
             
-            try {
-              // Use SSE for progress updates
-              const response = await fetch(
-                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  signal: controller.signal,
-                  body: JSON.stringify({
-                    endpoint: 'generar_psicotecnicos.php',
-                    id_proceso: procesoId,
-                    tema: tema,
-                    seccion: seccion,
-                    id_usuario: user.id,
-                    num_preguntas: preguntasPorCombinacion,
-                    texto: formData.textoBase
-                  })
-                }
-              );
-
-              const data = await response.json();
-              
-              if (data.ok) {
-                totalGeneradas += data.preguntas || 0;
-                setProgressInfo({
-                  current: combinacionActual,
-                  total: totalCombinaciones,
-                  message: `Generadas ${totalGeneradas} preguntas`,
-                  generated: totalGeneradas,
-                  fragmentos: data.texto_dividido ? {
-                    total: data.fragmentos_totales || 1,
-                    actual: 1
-                  } : undefined
-                });
-              } else {
-                errores++;
-                console.error(`Error en ${seccion} - ${tema}:`, data.error);
-                
-                if (data.error && (data.error.includes('Límite') || data.error.includes('Créditos'))) {
-                  setAbortController(null);
-                  setProgressInfo(null);
-                  setLoading(false);
-                  
-                  toast({
-                    title: "Error al generar psicotécnicos",
-                    description: data.error,
-                    variant: "destructive",
-                  });
-                  
-                  return;
-                }
-              }
-            } catch (error: any) {
-              if (error.name === 'AbortError') {
-                throw error; // Re-throw abort errors
-              }
+            if (guardarData.ok || guardarData.success) {
+              totalGeneradas += result.preguntas.length;
+              setProgressInfo({
+                current: totalGeneradas,
+                total: formData.numPreguntas,
+                message: `Generadas ${totalGeneradas} preguntas`,
+                generated: totalGeneradas,
+              });
+            } else {
               errores++;
-              console.error(`Error en ${seccion} - ${tema}:`, error);
+              console.error(`Error guardando ${seccion} - ${tema}:`, guardarData.error);
             }
+          } else {
+            errores++;
+            console.error(`Error generando ${seccion} - ${tema}:`, result.error);
           }
         }
-        
-        setAbortController(null);
-        setProgressInfo(null);
-        
-        if (totalGeneradas > 0) {
-          toast({
-            title: "¡Psicotécnicos guardados!",
-            description: `Se han generado y guardado ${totalGeneradas} preguntas psicotécnicas${errores > 0 ? ` (${errores} combinación${errores > 1 ? 'es' : ''} fallaron)` : ''}`
-          });
-          setFormData(prev => ({ ...prev, numPreguntas: 10, textoBase: '' }));
-        } else {
-          throw new Error('No se pudieron generar preguntas para ninguna combinación');
-        }
+      }
+      
+      if (totalGeneradas > 0) {
+        toast({
+          title: "¡Psicotécnicos guardados!",
+          description: `Se han generado y guardado ${totalGeneradas} preguntas psicotécnicas${errores > 0 ? ` (${errores} combinación${errores > 1 ? 'es' : ''} fallaron)` : ''}`
+        });
+        setFormData(prev => ({ ...prev, numPreguntas: 10, textoBase: '' }));
+        setArchivo(null);
       } else {
-        // Direct calls for short texts (original logic)
-        let totalGeneradas = 0;
-        let errores = 0;
-
-        // Hacer una llamada por cada combinación sección-tema
-        for (const seccion of seccionesFinal) {
-          for (const tema of temasFinal) {
-            try {
-              const response = await fetch(
-                `https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/php-api-proxy`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    endpoint: 'generar_psicotecnicos.php',
-                    id_proceso: procesoId,
-                    tema: tema,
-                    seccion: seccion,
-                    id_usuario: user.id,
-                    num_preguntas: preguntasPorCombinacion,
-                    texto: formData.textoBase
-                  }),
-                }
-              );
-
-              const data = await response.json();
-
-              if (data.ok) {
-                totalGeneradas += data.preguntas;
-                
-                // Update progress for short texts too
-                const combinacionActual = (seccionesFinal.indexOf(seccion) * temasFinal.length) + temasFinal.indexOf(tema) + 1;
-                setProgressInfo({
-                  current: combinacionActual,
-                  total: totalCombinaciones,
-                  message: `Generando preguntas para ${seccion} - ${tema}`,
-                  generated: totalGeneradas,
-                  fragmentos: data.texto_dividido ? {
-                    total: data.fragmentos_totales || 1,
-                    actual: 1
-                  } : undefined
-                });
-              } else {
-                errores++;
-                console.error(`Error en ${seccion} - ${tema}:`, data.error);
-              }
-            } catch (error) {
-              errores++;
-              console.error(`Error en ${seccion} - ${tema}:`, error);
-            }
-          }
-        }
-
-        if (totalGeneradas > 0) {
-          toast({
-            title: "¡Psicotécnicos guardados!",
-            description: `Se han generado y guardado ${totalGeneradas} preguntas psicotécnicas${errores > 0 ? ` (${errores} combinación${errores > 1 ? 'es' : ''} fallaron)` : ''}`
-          });
-          // Resetear número de preguntas, mantener las selecciones
-          setFormData(prev => ({ ...prev, numPreguntas: 10 }));
-        } else {
-          throw new Error('No se pudieron generar preguntas para ninguna combinación');
-        }
+        throw new Error('No se pudieron generar preguntas para ninguna combinación');
       }
     } catch (error: any) {
       console.error('Error al generar psicotécnicos:', error);
-      
-      // Check if it was cancelled
-      if (error.name === 'AbortError') {
-        toast({
-          title: "Generación cancelada",
-          description: "El proceso ha sido cancelado por el usuario",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || 'No se pudieron generar los psicotécnicos'
-        });
-      }
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || 'No se pudieron generar los psicotécnicos'
+      });
     } finally {
       setLoading(false);
-      setAbortController(null);
       setProgressInfo(null);
     }
   };
