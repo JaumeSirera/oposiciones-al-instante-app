@@ -230,6 +230,7 @@ export default function PlanEstudioDetalle() {
       });
 
       if (allTexts.length > 0) {
+        console.debug('[PlanEstudioDetalle] Translating etapas texts', { language: i18n.language, count: allTexts.length });
         const translations = await translateTexts(allTexts);
         
         // Clonar etapas profundamente
