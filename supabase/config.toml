@@ -41,3 +41,9 @@ verify_jwt = false
 
 [functions.create-donation-payment]
 verify_jwt = false
+
+[functions.generar-preguntas-ia]
+verify_jwt = false
+
+[functions.generar-psicotecnicos-ia]
+verify_jwt = false
