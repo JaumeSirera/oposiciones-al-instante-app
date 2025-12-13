@@ -214,26 +214,32 @@ export default function CrearResumen() {
 
     setGeneratingAI(true);
     try {
-      const procesoId = formData.proceso ? parseInt(formData.proceso) : 1;
-      
+      // Construir contexto para el resumen
+      const contexto = `Tema: ${temaFinal}${procesoFinal ? ` | Proceso: ${procesoFinal}` : ''}${seccionFinal ? ` | Sección: ${seccionFinal}` : ''}
+
+Contenido a resumir:
+${formData.resumen}`;
+
+      // Llamar directamente a la edge function de Lovable AI
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/php-api-proxy`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generar-resumen`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            endpoint: 'generar_resumen.php',
-            id_usuario: user.id,
-            id_proceso: procesoId,
-            tema: temaFinal,
-            seccion: `${procesoFinal}${seccionFinal ? ' - ' + seccionFinal : ''}`,
-            texto: formData.resumen,
-            nivel_detalle: 'largo'
+            contenido: contexto,
+            idioma: i18n.language,
           }),
         }
       );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t('createSummary.errorGenerating'));
+      }
 
       const data = await response.json();
       
@@ -251,6 +257,7 @@ export default function CrearResumen() {
         throw new Error(data.error || t('createSummary.errorGenerating'));
       }
     } catch (error: any) {
+      console.error('Error generando resumen:', error);
       toast({
         variant: "destructive",
         title: t('createSummary.error'),
