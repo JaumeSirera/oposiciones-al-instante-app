@@ -67,6 +67,15 @@ export default function CrearPsicotecnicos() {
   const [useCustomSeccion, setUseCustomSeccion] = useState(false);
   const [useCustomTema, setUseCustomTema] = useState(false);
 
+  // Asegurar prefijo "PSICO -" en los temas de psicotcnicos
+  const ensurePsicoPrefix = (label: string): string => {
+    if (!label) return "PSICO - General";
+    const upper = label.toUpperCase();
+    if (upper.startsWith("PSICO - ")) return label;
+    if (upper.startsWith("PSICO -")) return "PSICO - " + label.substring(7).trim();
+    return "PSICO - " + label.trim();
+  };
+
   useEffect(() => {
     const loadProcesos = async () => {
       setLoadingProcesos(true);
@@ -306,12 +315,13 @@ export default function CrearPsicotecnicos() {
       
       for (const seccion of seccionesFinal) {
         for (const tema of temasFinal) {
+          const temaConPrefijo = ensurePsicoPrefix(tema);
           const preguntasPorCombinacion = Math.ceil(formData.numPreguntas / (seccionesFinal.length * temasFinal.length));
           
           const result = await generarPsicotecnicosIA({
             id_proceso: procesoId,
             seccion: seccion,
-            tema: tema,
+            tema: temaConPrefijo,
             num_preguntas: preguntasPorCombinacion,
             texto: formData.textoBase || undefined,
             documento: archivo?.name || (formData.textoBase ? "Texto introducido" : undefined),
@@ -330,7 +340,7 @@ export default function CrearPsicotecnicos() {
                   body: {
                     id_proceso: procesoId,
                     seccion: seccion,
-                    tema: tema,
+                    tema: temaConPrefijo,
                     id_usuario: user.id,
                     preguntas: result.preguntas,
                   }
@@ -350,15 +360,15 @@ export default function CrearPsicotecnicos() {
               });
             } else {
               errores++;
-              console.error(`Error guardando ${seccion} - ${tema}:`, guardarData.error);
+              console.error(`Error guardando ${seccion} - ${temaConPrefijo}:`, guardarData.error);
             }
           } else {
             errores++;
-            console.error(`Error generando ${seccion} - ${tema}:`, result.error);
+            console.error(`Error generando ${seccion} - ${temaConPrefijo}:`, result.error);
           }
         }
       }
-      
+
       if (totalGeneradas > 0) {
         toast({
           title: "¡Psicotécnicos guardados!",
