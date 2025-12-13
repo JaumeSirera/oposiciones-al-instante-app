@@ -43,7 +43,9 @@
     "enableAudio": "Audio aktivieren",
     "disableAudio": "Audio deaktivieren",
     "listenAnswer": "Antwort anhören",
-    "listenExplanation": "Erklärung anhören"
+    "listenExplanation": "Erklärung anhören",
+    "listen": "Anhören",
+    "stop": "Stopp"
   },
   "landing": {
     "title": "KI-Agent für Prüfungen | Tests und Zusammenfassungen",
