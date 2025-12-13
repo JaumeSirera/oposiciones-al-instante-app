@@ -42,7 +42,8 @@
     "location": "位置",
     "enableAudio": "启用音频",
     "disableAudio": "禁用音频",
-    "listenAnswer": "听答案"
+    "listenAnswer": "听答案",
+    "listenExplanation": "听解释"
   },
   "landing": {
     "title": "考试AI助手 | 测试和摘要",

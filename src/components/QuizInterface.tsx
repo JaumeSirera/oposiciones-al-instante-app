@@ -59,13 +59,23 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   const currentTranslation = translatedQuestions[currentQuestionIndex];
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
-  // Leer pregunta automáticamente cuando cambia y el audio está habilitado
+  // Leer pregunta y respuestas automáticamente cuando cambia y el audio está habilitado
   useEffect(() => {
     if (isEnabled && currentQuestion && !loading && !showExplanation) {
-      const textToRead = needsTranslation && currentTranslation 
+      const questionText = needsTranslation && currentTranslation 
         ? currentTranslation.pregunta 
         : currentQuestion.pregunta;
-      speak(textToRead);
+      
+      // Construir texto con pregunta y respuestas
+      const answersText = currentQuestion.respuestas.map((r, index) => {
+        const letter = String.fromCharCode(65 + index);
+        const answerText = needsTranslation && currentTranslation 
+          ? currentTranslation.respuestas[index] 
+          : r.respuesta;
+        return `${letter}: ${answerText}`;
+      }).join('. ');
+      
+      speak(`${questionText}. ${answersText}`);
     }
     return () => stop();
   }, [currentQuestionIndex, currentQuestion, isEnabled, currentTranslation, needsTranslation, loading]);
@@ -868,12 +878,25 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
             <CardContent>
               {explicacionProfesor ? (
                 <div className="bg-white rounded-lg p-4 shadow-sm">
-                  {needsTranslation && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <Languages className="h-4 w-4 text-purple-600" />
-                      <Badge variant="outline" className="text-xs">{i18n.language.toUpperCase()}</Badge>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between mb-2">
+                    {needsTranslation && (
+                      <div className="flex items-center gap-2">
+                        <Languages className="h-4 w-4 text-purple-600" />
+                        <Badge variant="outline" className="text-xs">{i18n.language.toUpperCase()}</Badge>
+                      </div>
+                    )}
+                    {isSupported && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => speak(explicacionProfesor)}
+                        title={t('quiz.listenExplanation')}
+                        className="ml-auto"
+                      >
+                        <Volume2 className={`w-4 h-4 ${isPlaying ? 'animate-pulse' : ''}`} />
+                      </Button>
+                    )}
+                  </div>
                   <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
                     {explicacionProfesor}
                   </p>
