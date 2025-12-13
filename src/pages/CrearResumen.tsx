@@ -178,6 +178,9 @@ export default function CrearResumen() {
     }
   };
 
+  const [progressMessage, setProgressMessage] = useState('');
+  const [resumenBreve, setResumenBreve] = useState('');
+
   const handleGenerarConIA = async () => {
     if (!formData.resumen) {
       toast({
@@ -213,6 +216,9 @@ export default function CrearResumen() {
     }
 
     setGeneratingAI(true);
+    setProgressMessage(t('createSummary.startingGeneration') || 'Iniciando generación...');
+    setResumenBreve('');
+    
     try {
       // Construir contexto para el resumen
       const contexto = `Tema: ${temaFinal}${procesoFinal ? ` | Proceso: ${procesoFinal}` : ''}${seccionFinal ? ` | Sección: ${seccionFinal}` : ''}
@@ -220,7 +226,7 @@ export default function CrearResumen() {
 Contenido a resumir:
 ${formData.resumen}`;
 
-      // Llamar directamente a la edge function de Lovable AI
+      // Llamar a la edge function con streaming
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generar-resumen`,
         {
@@ -232,6 +238,8 @@ ${formData.resumen}`;
           body: JSON.stringify({
             contenido: contexto,
             idioma: i18n.language,
+            palabras_objetivo: 1200,
+            streaming: true,
           }),
         }
       );
@@ -241,20 +249,69 @@ ${formData.resumen}`;
         throw new Error(errorData.error || t('createSummary.errorGenerating'));
       }
 
-      const data = await response.json();
+      // Procesar SSE
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No se pudo leer la respuesta');
+      }
+
+      let buffer = '';
       
-      if (data.success && data.resumen) {
-        setFormData(prev => ({
-          ...prev,
-          resumen: data.resumen
-        }));
-        
-        toast({
-          title: t('createSummary.summaryGenerated'),
-          description: t('createSummary.summaryGeneratedDesc')
-        });
-      } else {
-        throw new Error(data.error || t('createSummary.errorGenerating'));
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            const eventType = line.slice(7);
+            continue;
+          }
+          
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.fase) {
+                // Evento de progreso
+                setProgressMessage(data.mensaje || data.fase);
+              }
+              
+              if (data.resumen && !data.success) {
+                // Resumen breve recibido
+                setResumenBreve(data.resumen);
+              }
+              
+              if (data.success && data.resumen) {
+                // Resumen completo recibido
+                setFormData(prev => ({
+                  ...prev,
+                  resumen: data.resumen
+                }));
+                
+                if (data.resumen_breve) {
+                  setResumenBreve(data.resumen_breve);
+                }
+                
+                toast({
+                  title: t('createSummary.summaryGenerated'),
+                  description: t('createSummary.summaryGeneratedDesc')
+                });
+              }
+              
+              if (data.error) {
+                throw new Error(data.error);
+              }
+            } catch (parseError) {
+              // Ignorar errores de parsing en líneas incompletas
+            }
+          }
+        }
       }
     } catch (error: any) {
       console.error('Error generando resumen:', error);
@@ -265,6 +322,7 @@ ${formData.resumen}`;
       });
     } finally {
       setGeneratingAI(false);
+      setProgressMessage('');
     }
   };
 
@@ -663,6 +721,26 @@ ${formData.resumen}`;
                   {t('createSummary.allowedFormats')}
                 </p>
               </div>
+
+              {/* Progreso de streaming */}
+              {generatingAI && progressMessage && (
+                <div className="p-4 border rounded-lg bg-primary/5 border-primary/20">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="font-medium">{progressMessage}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Resumen breve (preview durante generación) */}
+              {resumenBreve && (
+                <div className="space-y-2">
+                  <Label>{t('createSummary.executiveSummary') || 'Resumen ejecutivo'}</Label>
+                  <div className="p-4 border rounded-lg bg-muted/30 whitespace-pre-wrap text-sm">
+                    {resumenBreve}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
