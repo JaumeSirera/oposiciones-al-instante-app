@@ -92,34 +92,30 @@ export default function ResumenDetalle() {
     }
   }, [id, navigate, toast, t]);
 
-  // Traducir contenido cuando cambia el idioma o se carga el detalle
+  // Traducir solo tema y sección cuando cambia el idioma o se carga el detalle
   useEffect(() => {
     const translateContent = async () => {
       if (!detalle) return;
-      
-      const resumenTexto = detalle.resumen || '';
       
       if (!needsTranslation) {
         setTranslatedContent({
           tema: detalle.tema,
           seccion: detalle.seccion,
-          resumen: resumenTexto,
+          resumen: detalle.resumen,
         });
         return;
       }
 
-      // Siempre intentar traducir, el Edge Function maneja textos largos por chunks
       const textsToTranslate = [
         detalle.tema || '',
         detalle.seccion || '',
-        resumenTexto,
       ];
 
       const translated = await translateTexts(textsToTranslate);
       setTranslatedContent({
         tema: translated[0] || detalle.tema,
         seccion: translated[1] || detalle.seccion,
-        resumen: translated[2] || resumenTexto,
+        resumen: detalle.resumen,
       });
     };
 
@@ -350,18 +346,18 @@ export default function ResumenDetalle() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">{t('summaryDetail.summary')}:</h3>
-              {isTranslating ? (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t('common.translating')}
-                </div>
-              ) : (
-                <p className="text-base leading-relaxed whitespace-pre-wrap">
-                  {translatedContent.resumen || detalle.resumen || t('summaryDetail.noContent')}
-                </p>
-              )}
-            </div>
+               <h3 className="font-semibold text-sm text-muted-foreground mb-2">{t('summaryDetail.summary')}:</h3>
+               {isTranslating ? (
+                 <div className="flex items-center gap-2 text-muted-foreground">
+                   <Loader2 className="w-4 h-4 animate-spin" />
+                   {t('common.translating')}
+                 </div>
+               ) : (
+                 <p className="text-base leading-relaxed whitespace-pre-wrap">
+                   {detalle.resumen || t('summaryDetail.noContent')}
+                 </p>
+               )}
+             </div>
 
             <Separator />
 
