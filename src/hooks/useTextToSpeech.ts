@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
 interface UseTextToSpeechReturn {
   speak: (text: string) => void;
@@ -19,8 +18,7 @@ const langMap: Record<string, string> = {
   zh: 'zh-CN',
 };
 
-export function useTextToSpeech(): UseTextToSpeechReturn {
-  const { i18n } = useTranslation();
+export function useTextToSpeech(language: string = 'es'): UseTextToSpeechReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isEnabled, setIsEnabled] = useState(() => {
     const saved = localStorage.getItem('tts_enabled');
@@ -52,8 +50,8 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
-    // Usar idioma de i18n
-    utterance.lang = langMap[i18n.language] || 'es-ES';
+    // Usar idioma pasado como parámetro
+    utterance.lang = langMap[language] || 'es-ES';
     utterance.rate = 0.9;
     utterance.pitch = 1;
     utterance.volume = 1;
@@ -63,7 +61,7 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     utterance.onerror = () => setIsPlaying(false);
 
     window.speechSynthesis.speak(utterance);
-  }, [isSupported, isEnabled, i18n.language]);
+  }, [isSupported, isEnabled, language]);
 
   const stop = useCallback(() => {
     if (!isSupported) return;

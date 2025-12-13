@@ -53,7 +53,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   const [translatedExplicacion, setTranslatedExplicacion] = useState<string>('');
 
   // Text-to-Speech
-  const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech();
+  const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech(i18n.language);
 
   const currentQuestion = questions[currentQuestionIndex];
   const currentTranslation = translatedQuestions[currentQuestionIndex];
