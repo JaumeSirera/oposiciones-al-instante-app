@@ -42,7 +42,8 @@
     "location": "Ubicación",
     "enableAudio": "Activar audio",
     "disableAudio": "Desactivar audio",
-    "listenAnswer": "Escuchar respuesta"
+    "listenAnswer": "Escuchar respuesta",
+    "listenExplanation": "Escuchar explicación"
   },
   "landing": {
     "title": "Agente IA para Oposiciones | Tests para Oposiciones y Resúmenes",

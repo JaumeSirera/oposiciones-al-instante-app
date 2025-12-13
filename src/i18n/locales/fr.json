@@ -42,7 +42,8 @@
     "location": "Emplacement",
     "enableAudio": "Activer l'audio",
     "disableAudio": "Désactiver l'audio",
-    "listenAnswer": "Écouter la réponse"
+    "listenAnswer": "Écouter la réponse",
+    "listenExplanation": "Écouter l'explication"
   },
   "landing": {
     "title": "Agent IA pour Concours | Tests et Résumés",
