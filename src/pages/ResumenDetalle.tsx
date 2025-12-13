@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -359,9 +360,19 @@ export default function ResumenDetalle() {
                    {t('common.translating')}
                  </div>
                ) : (
-                 <p className="text-base leading-relaxed whitespace-pre-wrap">
-                   {translatedContent.resumen || detalle.resumen || t('summaryDetail.noContent')}
-                 </p>
+                 <div className="prose prose-sm dark:prose-invert max-w-none
+                   prose-headings:font-semibold prose-headings:text-foreground
+                   prose-h1:text-xl prose-h1:mt-4 prose-h1:mb-2
+                   prose-h2:text-lg prose-h2:mt-3 prose-h2:mb-2
+                   prose-h3:text-base prose-h3:mt-2 prose-h3:mb-1
+                   prose-p:text-base prose-p:leading-relaxed prose-p:my-2
+                   prose-ul:my-2 prose-ul:pl-4
+                   prose-li:my-1
+                   prose-strong:text-foreground">
+                   <ReactMarkdown>
+                     {translatedContent.resumen || detalle.resumen || t('summaryDetail.noContent')}
+                   </ReactMarkdown>
+                 </div>
                )}
              </div>
 
