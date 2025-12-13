@@ -86,7 +86,7 @@ export default function ResumenDetalle() {
     }
   }, [id, navigate, toast, t]);
 
-  // Traducir contenido cuando cambia el idioma o se carga el detalle
+  // Traducir tema y sección cuando cambia el idioma o se carga el detalle
   useEffect(() => {
     const translateContent = async () => {
       if (!detalle) return;
@@ -103,14 +103,14 @@ export default function ResumenDetalle() {
       const textsToTranslate = [
         detalle.tema || '',
         detalle.seccion || '',
-        detalle.resumen || '',
       ];
 
       const translated = await translateTexts(textsToTranslate);
       setTranslatedContent({
         tema: translated[0] || detalle.tema,
         seccion: translated[1] || detalle.seccion,
-        resumen: translated[2] || detalle.resumen,
+        // Siempre mantenemos el texto completo original del resumen
+        resumen: detalle.resumen,
       });
     };
 
@@ -321,11 +321,11 @@ export default function ResumenDetalle() {
                   >
                     {isEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                   </Button>
-                  {isEnabled && (translatedContent.resumen || detalle.resumen) && (
+                  {isEnabled && (detalle.resumen) && (
                     <Button
                       variant={isPlaying ? "secondary" : "default"}
                       size="sm"
-                      onClick={() => isPlaying ? stop() : speak(translatedContent.resumen || detalle.resumen || '')}
+                      onClick={() => isPlaying ? stop() : speak(detalle.resumen || '')}
                     >
                       {isPlaying ? t('quiz.stop') : t('quiz.listen')}
                     </Button>
@@ -349,7 +349,7 @@ export default function ResumenDetalle() {
                 </div>
               ) : (
                 <p className="text-base leading-relaxed whitespace-pre-wrap">
-                  {translatedContent.resumen || detalle.resumen || t('summaryDetail.noContent')}
+                  {detalle.resumen || t('summaryDetail.noContent')}
                 </p>
               )}
             </div>
