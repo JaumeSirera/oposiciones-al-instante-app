@@ -131,11 +131,34 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
         cleanContent = cleanContent.replace(/^```\s*/, "").replace(/\s*```$/, "");
       }
       
+      // Sanitizar caracteres de control que rompen JSON.parse
+      cleanContent = cleanContent
+        .replace(/[\x00-\x1F\x7F]/g, (char) => {
+          if (char === '\n') return '\\n';
+          if (char === '\r') return '\\r';
+          if (char === '\t') return '\\t';
+          return '';
+        });
+      
       parsed = JSON.parse(cleanContent);
     } catch (parseError) {
       console.error("[generar-preguntas-ia] Error parsing JSON:", parseError);
       console.error("[generar-preguntas-ia] Content:", content.substring(0, 500));
-      throw new Error("Error al procesar respuesta del modelo");
+      
+      // Fallback: extraer con regex
+      try {
+        const preguntasMatch = content.match(/"preguntas"\s*:\s*\[[\s\S]*\]/);
+        if (preguntasMatch) {
+          const sanitized = preguntasMatch[0]
+            .replace(/[\x00-\x1F\x7F]/g, '')
+            .replace(/,\s*]/g, ']');
+          parsed = JSON.parse(`{${sanitized}}`);
+        } else {
+          throw new Error("No se pudo extraer JSON válido");
+        }
+      } catch {
+        throw new Error("Error al procesar respuesta del modelo");
+      }
     }
 
     const preguntas = parsed.preguntas || parsed;
