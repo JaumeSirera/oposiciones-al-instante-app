@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ArrowLeft, Brain, FileText, Calendar, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, ArrowLeft, Brain, FileText, Calendar, Volume2, VolumeX, Copy, Printer } from 'lucide-react';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { useToast } from '@/hooks/use-toast';
@@ -280,6 +280,57 @@ export default function ResumenDetalle() {
     }).format(date);
   };
 
+  const copyToClipboard = async () => {
+    const textToCopy = translatedContent.resumen || detalle?.resumen || '';
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast({
+        title: t('common.success'),
+        description: t('summaryDetail.copiedToClipboard') || 'Copied to clipboard',
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: t('common.error'),
+        description: 'Could not copy text',
+      });
+    }
+  };
+
+  const printSummary = () => {
+    const title = translatedContent.tema || detalle?.tema || '';
+    const section = translatedContent.seccion || detalle?.seccion || '';
+    const content = translatedContent.resumen || detalle?.resumen || '';
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
+            h1 { font-size: 24px; margin-bottom: 8px; }
+            h2 { font-size: 18px; color: #666; margin-bottom: 24px; }
+            .content { white-space: pre-wrap; }
+            h3, h4 { margin-top: 16px; margin-bottom: 8px; }
+            ul, ol { margin-left: 20px; }
+            li { margin: 4px 0; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          ${section ? `<h2>${section}</h2>` : ''}
+          <div class="content">${content.replace(/\n/g, '<br>')}</div>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -352,6 +403,17 @@ export default function ResumenDetalle() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex justify-end gap-2 mb-2">
+              <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                <Copy className="w-4 h-4 mr-2" />
+                {t('summaryDetail.copy') || 'Copy'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={printSummary}>
+                <Printer className="w-4 h-4 mr-2" />
+                {t('summaryDetail.print') || 'Print'}
+              </Button>
+            </div>
+
             <div>
                <h3 className="font-semibold text-sm text-muted-foreground mb-2">{t('summaryDetail.summary')}:</h3>
                {isTranslating ? (
