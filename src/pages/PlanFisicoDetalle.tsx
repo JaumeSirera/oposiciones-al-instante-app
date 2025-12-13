@@ -324,8 +324,8 @@ export default function PlanFisicoDetalle() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          q: params.nombre,
-          bloque: params.bloqueTipo || '',
+          ejercicio: params.nombre,
+          tipo_prueba: plan?.tipo_prueba || '',
           limit: 4,
         }),
       });
