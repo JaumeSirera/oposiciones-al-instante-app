@@ -82,6 +82,12 @@ try {
             }
         }
         
+        // Campos de trazabilidad
+        $documento_val = isset($pregunta['documento']) ? trim($pregunta['documento']) : null;
+        $pagina_val = isset($pregunta['pagina']) ? trim($pregunta['pagina']) : null;
+        $ubicacion_val = isset($pregunta['ubicacion']) ? trim($pregunta['ubicacion']) : null;
+        $cita_val = isset($pregunta['cita']) ? trim($pregunta['cita']) : null;
+        
         // Construir SQL dinámico
         $campos = ['id_proceso', 'seccion', 'tema', 'pregunta', 'correcta'];
         $valores = [$id_proceso, $seccion, $tema, $texto_pregunta, $respuesta_correcta];
@@ -97,6 +103,36 @@ try {
             $campos[] = 'id_usuario_creador';
             $valores[] = $id_usuario;
             $tipos .= 'i';
+        }
+        
+        // Añadir campos de trazabilidad si existen y tienen valor
+        $tiene_documento = columna_existe($conn, 'preguntas', 'documento');
+        $tiene_pagina = columna_existe($conn, 'preguntas', 'pagina');
+        $tiene_ubicacion = columna_existe($conn, 'preguntas', 'ubicacion');
+        $tiene_cita = columna_existe($conn, 'preguntas', 'cita');
+        
+        if ($tiene_documento && $documento_val) {
+            $campos[] = 'documento';
+            $valores[] = $documento_val;
+            $tipos .= 's';
+        }
+        
+        if ($tiene_pagina && $pagina_val) {
+            $campos[] = 'pagina';
+            $valores[] = $pagina_val;
+            $tipos .= 's';
+        }
+        
+        if ($tiene_ubicacion && $ubicacion_val) {
+            $campos[] = 'ubicacion';
+            $valores[] = $ubicacion_val;
+            $tipos .= 's';
+        }
+        
+        if ($tiene_cita && $cita_val) {
+            $campos[] = 'cita';
+            $valores[] = $cita_val;
+            $tipos .= 's';
         }
         
         $placeholders = implode(', ', array_fill(0, count($campos), '?'));

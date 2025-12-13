@@ -327,6 +327,7 @@ export default function CrearTest() {
           tema: temaFinal,
           num_preguntas: formData.numPreguntas,
           texto: formData.textoBase,
+          documento: archivo?.name || "Texto introducido", // Nombre del documento
         });
 
         if (result.success && result.preguntas) {
