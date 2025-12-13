@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -361,9 +360,17 @@ ${formData.resumen}`;
     try {
       const procesoId = formData.proceso ? parseInt(formData.proceso) : 1;
       
-      // Guardar vía php-api-proxy
-      const { data, error } = await supabase.functions.invoke('php-api-proxy', {
-        body: {
+      // Guardar vía php-api-proxy con URL directa
+      const supabaseUrl = 'https://yrjwyeuqfleqhbveohrf.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlyand5ZXVxZmxlcWhidmVvaHJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjM1OTUsImV4cCI6MjA3NTUzOTU5NX0.QeAWfPjecNzz_d1MY1UHYmVN9bYl23rzot9gDsUtXKY';
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/php-api-proxy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({
           endpoint: 'generar_resumen.php',
           id_usuario: user.id,
           id_proceso: procesoId,
@@ -371,10 +378,11 @@ ${formData.resumen}`;
           seccion: `${procesoFinal}${seccionFinal ? ' - ' + seccionFinal : ''}`,
           texto: formData.resumen,
           nivel_detalle: 'corto'
-        },
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Error al guardar');
 
       if (data.success || data.id) {
         toast({
