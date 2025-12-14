@@ -16,15 +16,22 @@ export function useTranslateContent() {
   const translateTexts = useCallback(async (texts: string[]): Promise<string[]> => {
     const currentLang = i18n.language;
     
+    console.debug('[useTranslateContent] translateTexts called', {
+      currentLang,
+      textsCount: texts.length,
+      sample: texts.slice(0, 5),
+    });
+    
     // Si es español, devolver originales
     if (currentLang === 'es') {
+      console.debug('[useTranslateContent] Language is es, returning originals');
       return texts;
     }
-
+ 
     // Verificar cache
     const results: string[] = [];
     const textsToTranslate: { index: number; text: string }[] = [];
-
+ 
     texts.forEach((text, index) => {
       const cacheKey = getCacheKey(text, currentLang);
       const cached = translationCache.get(cacheKey);
@@ -34,25 +41,37 @@ export function useTranslateContent() {
         textsToTranslate.push({ index, text });
       }
     });
-
+ 
+    console.debug('[useTranslateContent] Cache check', {
+      total: texts.length,
+      fromCache: results.filter(Boolean).length,
+      toTranslate: textsToTranslate.length,
+    });
+ 
     // Si todo está en cache, devolver
     if (textsToTranslate.length === 0) {
+      console.debug('[useTranslateContent] All texts from cache, returning results');
       return results;
     }
-
+ 
     setIsTranslating(true);
     setTranslationFailed(false);
-
+ 
     try {
       // Vamos a traducir en lotes para evitar timeouts / errores 503
       const BATCH_SIZE = 40;
-
+ 
       for (let start = 0; start < textsToTranslate.length; start += BATCH_SIZE) {
         const batch = textsToTranslate.slice(start, start + BATCH_SIZE);
-
+ 
         let data: any = null;
         let error: any = null;
-
+ 
+        console.debug('[useTranslateContent] Translating batch', {
+          batchIndex: start / BATCH_SIZE,
+          batchSize: batch.length,
+        });
+ 
         // Pequeño sistema de reintentos por lote: hasta 2 intentos si hay fallo de red
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
@@ -63,10 +82,10 @@ export function useTranslateContent() {
                 sourceLanguage: 'es'
               }
             });
-
+ 
             data = result.data;
             error = result.error;
-
+ 
             if (!error) break;
             console.error(`Translation error (batch ${start / BATCH_SIZE}, attempt ${attempt + 1}):`, error);
           } catch (e) {
@@ -74,15 +93,23 @@ export function useTranslateContent() {
             console.error(`Translation fetch error (batch ${start / BATCH_SIZE}, attempt ${attempt + 1}):`, e);
           }
         }
-
+ 
         if (error) {
           // En caso de error definitivo en este lote, marcar como fallido y devolver originales de ese lote
+          console.error('[useTranslateContent] Final error for batch, keeping originals', {
+            batchIndex: start / BATCH_SIZE,
+            error,
+          });
           setTranslationFailed(true);
           batch.forEach(({ index, text }) => {
             results[index] = text;
           });
         } else {
           const translations = data?.translations || [];
+          console.debug('[useTranslateContent] Batch translated successfully', {
+            batchIndex: start / BATCH_SIZE,
+            translationsLength: translations.length,
+          });
           batch.forEach(({ index, text }, i) => {
             const translated = translations[i] || text;
             results[index] = translated;
@@ -99,8 +126,11 @@ export function useTranslateContent() {
       });
     } finally {
       setIsTranslating(false);
+      console.debug('[useTranslateContent] translateTexts finished', {
+        finalResults: results.length,
+      });
     }
-
+ 
     return results;
   }, [i18n.language]);
 

@@ -100,8 +100,16 @@ export default function PlanEstudioDetalle() {
   // Efecto para traducir el contenido cuando cambia el idioma o se carga el plan
   useEffect(() => {
     const translateContent = async () => {
+      console.debug('[PlanEstudioDetalle] translateContent start', {
+        needsTranslation,
+        hasPlanIA: !!planIA && planIA.length > 0,
+        hasResumenIA: !!resumenIA,
+        language: i18n.language,
+      });
+
       // Si es español o no hay datos, usar originales
       if (!needsTranslation) {
+        console.debug('[PlanEstudioDetalle] No translation needed, using originals');
         setTranslatedResumen(resumenIA);
         setTranslatedPlanIA(planIA);
         return;
@@ -109,6 +117,7 @@ export default function PlanEstudioDetalle() {
 
       // Si no hay planIA, no hacer nada
       if (!planIA || planIA.length === 0) {
+        console.debug('[PlanEstudioDetalle] No planIA available, clearing translated content');
         setTranslatedPlanIA(null);
         setTranslatedResumen(null);
         return;
@@ -117,6 +126,7 @@ export default function PlanEstudioDetalle() {
       // Traducir resumen
       if (resumenIA) {
         const [translated] = await translateTexts([resumenIA]);
+        console.debug('[PlanEstudioDetalle] Translated resumen', { original: resumenIA, translated });
         setTranslatedResumen(translated);
       } else {
         setTranslatedResumen(null);
@@ -159,14 +169,25 @@ export default function PlanEstudioDetalle() {
         }
       });
 
+      console.debug('[PlanEstudioDetalle] Collected texts for planIA translation', {
+        totalTexts: allTexts.length,
+        textMapLength: textMap.length,
+        sample: allTexts.slice(0, 5),
+      });
+
       if (allTexts.length > 0) {
         const translations = await translateTexts(allTexts);
+        console.debug('[PlanEstudioDetalle] Received translations for planIA', {
+          translationsLength: translations.length,
+          sample: translations.slice(0, 5),
+        });
         
         // Clonar planIA profundamente para evitar mutaciones
         const translatedPlan: SemanaPlan[] = JSON.parse(JSON.stringify(planIA));
 
         textMap.forEach((map, idx) => {
           const sem = translatedPlan[map.semana];
+          if (!sem) return;
           if (map.field === 'temas_semana' && map.index !== undefined) {
             sem.temas_semana[map.index] = translations[idx];
           } else if (map.field === 'objetivos' && map.index !== undefined) {
@@ -180,8 +201,13 @@ export default function PlanEstudioDetalle() {
           }
         });
 
+        console.debug('[PlanEstudioDetalle] Final translatedPlanIA sample', {
+          firstWeek: translatedPlan[0],
+        });
+
         setTranslatedPlanIA(translatedPlan);
       } else {
+        console.debug('[PlanEstudioDetalle] No texts to translate for planIA, using original');
         setTranslatedPlanIA(planIA);
       }
     };
