@@ -62,6 +62,10 @@ export default function PlanEstudioDetalle() {
   // Traducciones lazy por etapa (solo cuando se expande) - usar string como key porque PHP devuelve IDs como string
   const [translatedEtapasMap, setTranslatedEtapasMap] = useState<Record<string, any>>({});
   const [translatingEtapa, setTranslatingEtapa] = useState<string | number | null>(null);
+  
+  // Pre-traducciones de títulos y descripciones de etapas (se cargan al inicio)
+  const [preTranslatedEtapas, setPreTranslatedEtapas] = useState<Record<string, { titulo: string; descripcion: string }>>({});
+  const [isPreTranslatingEtapas, setIsPreTranslatingEtapas] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -124,7 +128,51 @@ export default function PlanEstudioDetalle() {
   useEffect(() => {
     setTranslatedWeeks({});
     setTranslatedEtapasMap({});
+    setPreTranslatedEtapas({});
   }, [i18n.language]);
+
+  // Pre-traducir títulos y descripciones de etapas al cargar (para mostrar rápido)
+  useEffect(() => {
+    const preTranslateEtapas = async () => {
+      const etapas = detalle?.etapas;
+      if (!etapas || etapas.length === 0 || !needsTranslation) {
+        setPreTranslatedEtapas({});
+        return;
+      }
+      
+      setIsPreTranslatingEtapas(true);
+      
+      const textsToTranslate: string[] = [];
+      const etapaIds: string[] = [];
+      
+      etapas.forEach((etapa: any) => {
+        const etapaIdStr = String(etapa.id);
+        etapaIds.push(etapaIdStr);
+        textsToTranslate.push(etapa.titulo || '');
+        textsToTranslate.push(etapa.descripcion || '');
+      });
+      
+      try {
+        const translations = await translateTexts(textsToTranslate);
+        const preTranslated: Record<string, { titulo: string; descripcion: string }> = {};
+        
+        etapaIds.forEach((id, idx) => {
+          preTranslated[id] = {
+            titulo: translations[idx * 2] || '',
+            descripcion: translations[idx * 2 + 1] || ''
+          };
+        });
+        
+        setPreTranslatedEtapas(preTranslated);
+      } catch (error) {
+        console.error('Error pre-translating etapas:', error);
+      }
+      
+      setIsPreTranslatingEtapas(false);
+    };
+    
+    preTranslateEtapas();
+  }, [detalle?.etapas, i18n.language, needsTranslation, translateTexts]);
 
   // Función para traducir una semana específica cuando se expande
   const translateWeek = async (weekIndex: number) => {
@@ -209,47 +257,42 @@ export default function PlanEstudioDetalle() {
     }
   };
 
-  // Función para traducir una etapa específica cuando se expande
+  // Función para traducir solo las tareas de una etapa cuando se expande
+  // (título y descripción ya están pre-traducidos)
   const translateEtapa = async (etapaId: string | number) => {
     const etapas = detalle?.etapas;
-    console.debug('[translateEtapa] Called with etapaId:', etapaId, 'type:', typeof etapaId);
-    if (!etapas || !needsTranslation) {
-      console.debug('[translateEtapa] Skipping - no etapas or no translation needed');
-      return;
-    }
+    if (!etapas || !needsTranslation) return;
     
     const etapaIdStr = String(etapaId);
-    if (translatedEtapasMap[etapaIdStr]) {
-      console.debug('[translateEtapa] Already translated');
-      return;
-    }
+    if (translatedEtapasMap[etapaIdStr]) return; // Ya traducida
     
     const etapa = etapas.find(e => String(e.id) === etapaIdStr);
-    console.debug('[translateEtapa] Found etapa:', etapa?.titulo);
-    if (!etapa) return;
+    if (!etapa || !etapa.tareas || etapa.tareas.length === 0) {
+      // Si no hay tareas, marcar como traducida con pre-traducción
+      const preTranslated = preTranslatedEtapas[etapaIdStr];
+      if (preTranslated) {
+        const translatedEtapa = JSON.parse(JSON.stringify(etapa));
+        translatedEtapa.titulo = preTranslated.titulo;
+        translatedEtapa.descripcion = preTranslated.descripcion;
+        setTranslatedEtapasMap(prev => ({ ...prev, [etapaIdStr]: translatedEtapa }));
+      }
+      return;
+    }
     
     setTranslatingEtapa(etapaId);
     
+    // Solo traducir tareas (título y descripción de etapa ya están pre-traducidos)
     const allTexts: string[] = [];
-    const textMap: { field: string; tareaIdx?: number }[] = [];
+    const textMap: { tareaIdx: number; field: 'titulo' | 'descripcion' }[] = [];
 
-    // Solo título y descripción de etapa + tareas
-    if (etapa.titulo) {
-      allTexts.push(etapa.titulo);
-      textMap.push({ field: 'etapa_titulo' });
-    }
-    if (etapa.descripcion) {
-      allTexts.push(etapa.descripcion);
-      textMap.push({ field: 'etapa_descripcion' });
-    }
-    etapa.tareas?.forEach((tarea: any, tIdx: number) => {
+    etapa.tareas.forEach((tarea: any, tIdx: number) => {
       if (tarea.titulo) {
         allTexts.push(tarea.titulo);
-        textMap.push({ field: 'tarea_titulo', tareaIdx: tIdx });
+        textMap.push({ tareaIdx: tIdx, field: 'titulo' });
       }
       if (tarea.descripcion) {
         allTexts.push(tarea.descripcion);
-        textMap.push({ field: 'tarea_descripcion', tareaIdx: tIdx });
+        textMap.push({ tareaIdx: tIdx, field: 'descripcion' });
       }
     });
 
@@ -257,22 +300,22 @@ export default function PlanEstudioDetalle() {
       try {
         const translations = await translateTexts(allTexts);
         const translatedEtapa = JSON.parse(JSON.stringify(etapa));
+        
+        // Usar título y descripción pre-traducidos
+        const preTranslated = preTranslatedEtapas[etapaIdStr];
+        if (preTranslated) {
+          translatedEtapa.titulo = preTranslated.titulo;
+          translatedEtapa.descripcion = preTranslated.descripcion;
+        }
 
+        // Aplicar traducciones de tareas
         textMap.forEach((map, idx) => {
-          if (map.field === 'etapa_titulo') {
-            translatedEtapa.titulo = translations[idx];
-          } else if (map.field === 'etapa_descripcion') {
-            translatedEtapa.descripcion = translations[idx];
-          } else if (map.field === 'tarea_titulo' && map.tareaIdx !== undefined) {
-            translatedEtapa.tareas[map.tareaIdx].titulo = translations[idx];
-          } else if (map.field === 'tarea_descripcion' && map.tareaIdx !== undefined) {
-            translatedEtapa.tareas[map.tareaIdx].descripcion = translations[idx];
-          }
+          translatedEtapa.tareas[map.tareaIdx][map.field] = translations[idx];
         });
 
-        setTranslatedEtapasMap(prev => ({ ...prev, [etapaId]: translatedEtapa }));
+        setTranslatedEtapasMap(prev => ({ ...prev, [etapaIdStr]: translatedEtapa }));
       } catch (error) {
-        console.error('Error translating etapa:', error);
+        console.error('Error translating etapa tasks:', error);
       }
     }
     setTranslatingEtapa(null);
@@ -280,12 +323,10 @@ export default function PlanEstudioDetalle() {
 
   // Handler para cuando se expande un acordeón de etapa
   const handleEtapaAccordionChange = (value: string) => {
-    console.debug('[handleEtapaAccordionChange] Value:', value, 'needsTranslation:', needsTranslation);
     if (value && needsTranslation) {
       const match = value.match(/etapa-(\d+)/);
       if (match) {
-        const etapaId = match[1]; // Mantener como string
-        console.debug('[handleEtapaAccordionChange] Calling translateEtapa with:', etapaId);
+        const etapaId = match[1];
         translateEtapa(etapaId);
       }
     }
@@ -725,11 +766,22 @@ export default function PlanEstudioDetalle() {
                   <CardContent>
                     <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
                       {etapas.map((etapaOriginal) => {
-                        // Usar etapa traducida si existe, sino original (usar String porque PHP devuelve IDs como string)
+                        // Usar etapa traducida si existe, sino usar pre-traducción para título/descripción
                         const etapaIdStr = String(etapaOriginal.id);
-                        const etapa = (needsTranslation && translatedEtapasMap[etapaIdStr]) 
-                          ? translatedEtapasMap[etapaIdStr] 
-                          : etapaOriginal;
+                        const fullTranslated = translatedEtapasMap[etapaIdStr];
+                        const preTranslated = preTranslatedEtapas[etapaIdStr];
+                        
+                        // Para el título y descripción: usar fullTranslated > preTranslated > original
+                        const displayTitulo = needsTranslation 
+                          ? (fullTranslated?.titulo || preTranslated?.titulo || etapaOriginal.titulo)
+                          : etapaOriginal.titulo;
+                        const displayDescripcion = needsTranslation 
+                          ? (fullTranslated?.descripcion || preTranslated?.descripcion || etapaOriginal.descripcion)
+                          : etapaOriginal.descripcion;
+                        
+                        // Para las tareas: usar fullTranslated si existe, sino original
+                        const etapa = fullTranslated || etapaOriginal;
+                        
                         const isTranslatingThisEtapa = String(translatingEtapa) === etapaIdStr;
                         const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
                           ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
@@ -742,13 +794,16 @@ export default function PlanEstudioDetalle() {
                               <div className="flex items-center justify-between w-full pr-4">
                                 <div className="text-left">
                                   <p className="font-medium">
-                                    {etapa.titulo}
+                                    {isPreTranslatingEtapas && needsTranslation ? (
+                                      <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
+                                    ) : null}
+                                    {displayTitulo}
                                     {isTranslatingThisEtapa && (
                                       <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
                                     )}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    {etapa.descripcion?.length > 100 ? etapa.descripcion.substring(0, 100) + '...' : etapa.descripcion}
+                                    {displayDescripcion?.length > 100 ? displayDescripcion.substring(0, 100) + '...' : displayDescripcion}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -827,10 +882,22 @@ export default function PlanEstudioDetalle() {
               <CardContent>
                 <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
                   {etapas.map((etapaOriginal) => {
+                    // Usar etapa traducida si existe, sino usar pre-traducción para título/descripción
                     const etapaIdStr = String(etapaOriginal.id);
-                    const etapa = (needsTranslation && translatedEtapasMap[etapaIdStr]) 
-                      ? translatedEtapasMap[etapaIdStr] 
-                      : etapaOriginal;
+                    const fullTranslated = translatedEtapasMap[etapaIdStr];
+                    const preTranslated = preTranslatedEtapas[etapaIdStr];
+                    
+                    // Para el título y descripción: usar fullTranslated > preTranslated > original
+                    const displayTitulo = needsTranslation 
+                      ? (fullTranslated?.titulo || preTranslated?.titulo || etapaOriginal.titulo)
+                      : etapaOriginal.titulo;
+                    const displayDescripcion = needsTranslation 
+                      ? (fullTranslated?.descripcion || preTranslated?.descripcion || etapaOriginal.descripcion)
+                      : etapaOriginal.descripcion;
+                    
+                    // Para las tareas: usar fullTranslated si existe, sino original
+                    const etapa = fullTranslated || etapaOriginal;
+                    
                     const isTranslatingThisEtapa = String(translatingEtapa) === etapaIdStr;
                     const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
                       ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
@@ -843,7 +910,10 @@ export default function PlanEstudioDetalle() {
                           <div className="flex items-center justify-between w-full pr-4">
                             <div className="text-left flex-1">
                               <p className="font-semibold text-base">
-                                {etapa.titulo}
+                                {isPreTranslatingEtapas && needsTranslation ? (
+                                  <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
+                                ) : null}
+                                {displayTitulo}
                                 {isTranslatingThisEtapa && (
                                   <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
                                 )}
@@ -863,11 +933,11 @@ export default function PlanEstudioDetalle() {
                           <AccordionContent>
                             <div className="space-y-6 pt-2">
                               {/* Temas de la etapa */}
-                              {etapa.descripcion && (
+                              {displayDescripcion && (
                                 <div>
                                   <h4 className="font-semibold text-sm mb-3">{t('studyPlans.topics')}:</h4>
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                    {etapa.descripcion.split(',').slice(0, 12).map((tema: string, idx: number) => {
+                                    {displayDescripcion.split(',').slice(0, 12).map((tema: string, idx: number) => {
                                       const temaLimpio = tema.trim();
                                       return (
                                         <Badge 
@@ -879,9 +949,9 @@ export default function PlanEstudioDetalle() {
                                         </Badge>
                                       );
                                     })}
-                                    {etapa.descripcion.split(',').length > 12 && (
+                                    {displayDescripcion.split(',').length > 12 && (
                                       <Badge variant="outline" className="text-xs">
-                                        +{etapa.descripcion.split(',').length - 12} {t('studyPlans.more')}
+                                        +{displayDescripcion.split(',').length - 12} {t('studyPlans.more')}
                                       </Badge>
                                     )}
                                   </div>
