@@ -49,13 +49,16 @@ export default function PlanEstudioDetalle() {
   const [resumenIA, setResumenIA] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Estados para traducciones
+  // Estados para traducciones - solo cabecera/resumen al inicio
   const [translatedResumen, setTranslatedResumen] = useState<string | null>(null);
-  const [translatedPlanIA, setTranslatedPlanIA] = useState<SemanaPlan[] | null>(null);
-  const [translatedEtapas, setTranslatedEtapas] = useState<any[] | null>(null);
   const [translatedDescripcion, setTranslatedDescripcion] = useState<string | null>(null);
   const [translatedTitulo, setTranslatedTitulo] = useState<string | null>(null);
   const [translatedEstado, setTranslatedEstado] = useState<string | null>(null);
+  
+  // Traducciones lazy por semana (solo cuando se expande)
+  const [translatedWeeks, setTranslatedWeeks] = useState<Record<number, SemanaPlan>>({});
+  const [translatingWeek, setTranslatingWeek] = useState<number | null>(null);
+  const [translatedEtapas, setTranslatedEtapas] = useState<any[] | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -97,123 +100,110 @@ export default function PlanEstudioDetalle() {
     translatePlanInfo();
   }, [detalle?.plan?.titulo, detalle?.plan?.descripcion, detalle?.plan?.estado, i18n.language, needsTranslation, translateTexts]);
 
-  // Efecto para traducir el contenido cuando cambia el idioma o se carga el plan
+  // Efecto para traducir solo el resumen al cargar (no todo el plan)
   useEffect(() => {
-    const translateContent = async () => {
-      console.debug('[PlanEstudioDetalle] translateContent start', {
-        needsTranslation,
-        hasPlanIA: !!planIA && planIA.length > 0,
-        hasResumenIA: !!resumenIA,
-        language: i18n.language,
-      });
-
-      // Si es español o no hay datos, usar originales
+    const translateResumen = async () => {
       if (!needsTranslation) {
-        console.debug('[PlanEstudioDetalle] No translation needed, using originals');
         setTranslatedResumen(resumenIA);
-        setTranslatedPlanIA(planIA);
         return;
       }
-
-      // Si no hay planIA, no hacer nada
-      if (!planIA || planIA.length === 0) {
-        console.debug('[PlanEstudioDetalle] No planIA available, clearing translated content');
-        setTranslatedPlanIA(null);
-        setTranslatedResumen(null);
-        return;
-      }
-
-      // Traducir resumen
       if (resumenIA) {
         const [translated] = await translateTexts([resumenIA]);
-        console.debug('[PlanEstudioDetalle] Translated resumen', { original: resumenIA, translated });
         setTranslatedResumen(translated);
       } else {
         setTranslatedResumen(null);
       }
+    };
+    translateResumen();
+  }, [resumenIA, i18n.language, needsTranslation, translateTexts]);
 
-      // Traducir planIA
-      const allTexts: string[] = [];
-      const textMap: { semana: number; field: string; index?: number }[] = [];
+  // Limpiar traducciones de semanas cuando cambia el idioma
+  useEffect(() => {
+    setTranslatedWeeks({});
+  }, [i18n.language]);
 
-      planIA.forEach((semana, semIdx) => {
-        // Temas
-        semana.temas_semana?.forEach((tema, tIdx) => {
-          if (tema) {
-            allTexts.push(tema);
-            textMap.push({ semana: semIdx, field: 'temas_semana', index: tIdx });
-          }
-        });
-        // Objetivos
-        semana.objetivos?.forEach((obj, oIdx) => {
-          if (obj) {
-            allTexts.push(obj);
-            textMap.push({ semana: semIdx, field: 'objetivos', index: oIdx });
-          }
-        });
-        // Actividades
-        semana.actividades?.forEach((act, aIdx) => {
-          if (act.tema) {
-            allTexts.push(act.tema);
-            textMap.push({ semana: semIdx, field: 'actividad_tema', index: aIdx });
-          }
-          if (act.actividad) {
-            allTexts.push(act.actividad);
-            textMap.push({ semana: semIdx, field: 'actividad_actividad', index: aIdx });
-          }
-        });
-        // Notas
-        if (semana.notas) {
-          allTexts.push(semana.notas);
-          textMap.push({ semana: semIdx, field: 'notas' });
-        }
-      });
+  // Función para traducir una semana específica cuando se expande
+  const translateWeek = async (weekIndex: number) => {
+    if (!planIA || !planIA[weekIndex] || !needsTranslation) return;
+    if (translatedWeeks[weekIndex]) return; // Ya traducida
+    
+    setTranslatingWeek(weekIndex);
+    const semana = planIA[weekIndex];
+    
+    const allTexts: string[] = [];
+    const textMap: { field: string; index?: number }[] = [];
 
-      console.debug('[PlanEstudioDetalle] Collected texts for planIA translation', {
-        totalTexts: allTexts.length,
-        textMapLength: textMap.length,
-        sample: allTexts.slice(0, 5),
-      });
+    // Temas
+    semana.temas_semana?.forEach((tema, tIdx) => {
+      if (tema) {
+        allTexts.push(tema);
+        textMap.push({ field: 'temas_semana', index: tIdx });
+      }
+    });
+    // Objetivos
+    semana.objetivos?.forEach((obj, oIdx) => {
+      if (obj) {
+        allTexts.push(obj);
+        textMap.push({ field: 'objetivos', index: oIdx });
+      }
+    });
+    // Actividades
+    semana.actividades?.forEach((act, aIdx) => {
+      if (act.tema) {
+        allTexts.push(act.tema);
+        textMap.push({ field: 'actividad_tema', index: aIdx });
+      }
+      if (act.actividad) {
+        allTexts.push(act.actividad);
+        textMap.push({ field: 'actividad_actividad', index: aIdx });
+      }
+    });
+    // Notas
+    if (semana.notas) {
+      allTexts.push(semana.notas);
+      textMap.push({ field: 'notas' });
+    }
 
-      if (allTexts.length > 0) {
+    if (allTexts.length > 0) {
+      try {
         const translations = await translateTexts(allTexts);
-        console.debug('[PlanEstudioDetalle] Received translations for planIA', {
-          translationsLength: translations.length,
-          sample: translations.slice(0, 5),
-        });
-        
-        // Clonar planIA profundamente para evitar mutaciones
-        const translatedPlan: SemanaPlan[] = JSON.parse(JSON.stringify(planIA));
+        const translatedSemana: SemanaPlan = JSON.parse(JSON.stringify(semana));
 
         textMap.forEach((map, idx) => {
-          const sem = translatedPlan[map.semana];
-          if (!sem) return;
           if (map.field === 'temas_semana' && map.index !== undefined) {
-            sem.temas_semana[map.index] = translations[idx];
+            translatedSemana.temas_semana[map.index] = translations[idx];
           } else if (map.field === 'objetivos' && map.index !== undefined) {
-            sem.objetivos[map.index] = translations[idx];
+            translatedSemana.objetivos[map.index] = translations[idx];
           } else if (map.field === 'actividad_tema' && map.index !== undefined) {
-            sem.actividades[map.index].tema = translations[idx];
+            translatedSemana.actividades[map.index].tema = translations[idx];
           } else if (map.field === 'actividad_actividad' && map.index !== undefined) {
-            sem.actividades[map.index].actividad = translations[idx];
+            translatedSemana.actividades[map.index].actividad = translations[idx];
           } else if (map.field === 'notas') {
-            sem.notas = translations[idx];
+            translatedSemana.notas = translations[idx];
           }
         });
 
-        console.debug('[PlanEstudioDetalle] Final translatedPlanIA sample', {
-          firstWeek: translatedPlan[0],
-        });
-
-        setTranslatedPlanIA(translatedPlan);
-      } else {
-        console.debug('[PlanEstudioDetalle] No texts to translate for planIA, using original');
-        setTranslatedPlanIA(planIA);
+        setTranslatedWeeks(prev => ({ ...prev, [weekIndex]: translatedSemana }));
+      } catch (error) {
+        console.error('Error translating week:', error);
       }
-    };
+    }
+    setTranslatingWeek(null);
+  };
 
-    translateContent();
-  }, [planIA, resumenIA, i18n.language, needsTranslation, translateTexts]);
+  // Handler para cuando se expande un acordeón de semana
+  const handleWeekAccordionChange = (value: string) => {
+    if (value && needsTranslation) {
+      const match = value.match(/semana-(\d+)/);
+      if (match) {
+        const weekNum = parseInt(match[1]);
+        const weekIndex = planIA?.findIndex(s => s.semana === weekNum);
+        if (weekIndex !== undefined && weekIndex >= 0) {
+          translateWeek(weekIndex);
+        }
+      }
+    }
+  };
 
   // Efecto para traducir las etapas cuando cambia el idioma
   useEffect(() => {
@@ -572,21 +562,29 @@ export default function PlanEstudioDetalle() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    {(() => {
-                      const displayPlan = translatedPlanIA || planIA;
-                      return displayPlan && Array.isArray(displayPlan) && displayPlan.map((semana, index) => (
-                      <AccordionItem key={index} value={`semana-${semana.semana}`}>
+                  <Accordion type="single" collapsible className="w-full" onValueChange={handleWeekAccordionChange}>
+                    {planIA && Array.isArray(planIA) && planIA.map((semanaOriginal, index) => {
+                      // Usar semana traducida si existe, sino original
+                      const semana = (needsTranslation && translatedWeeks[index]) ? translatedWeeks[index] : semanaOriginal;
+                      const isTranslatingThisWeek = translatingWeek === index;
+                      
+                      return (
+                      <AccordionItem key={index} value={`semana-${semanaOriginal.semana}`}>
                         <AccordionTrigger>
                           <div className="flex items-center justify-between w-full pr-4">
                             <div className="text-left flex-1">
-                              <p className="font-semibold text-base">{t('studyPlans.week')} {semana.semana}</p>
+                              <p className="font-semibold text-base">
+                                {t('studyPlans.week')} {semanaOriginal.semana}
+                                {isTranslatingThisWeek && (
+                                  <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
+                                )}
+                              </p>
                               <p className="text-sm text-muted-foreground mt-0.5">
-                                {new Date(semana.fecha_inicio).toLocaleDateString(dateLocale, {
+                                {new Date(semanaOriginal.fecha_inicio).toLocaleDateString(dateLocale, {
                                   day: '2-digit',
                                   month: '2-digit',
                                   year: 'numeric'
-                                })} - {new Date(semana.fecha_fin).toLocaleDateString(dateLocale, {
+                                })} - {new Date(semanaOriginal.fecha_fin).toLocaleDateString(dateLocale, {
                                   day: '2-digit',
                                   month: '2-digit',
                                   year: 'numeric'
@@ -683,8 +681,8 @@ export default function PlanEstudioDetalle() {
                           </div>
                         </AccordionContent>
                       </AccordionItem>
-                    ));
-                    })()}
+                      );
+                    })}
                   </Accordion>
                 </CardContent>
               </Card>
