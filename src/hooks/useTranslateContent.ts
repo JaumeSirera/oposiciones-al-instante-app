@@ -2,8 +2,44 @@ import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabaseClient';
 
-// Cache para evitar re-traducir contenido ya traducido
+// Cache en memoria para acceso rápido
 const translationCache = new Map<string, string>();
+
+// Prefijo para localStorage
+const STORAGE_PREFIX = 'trans_';
+const CACHE_VERSION = 'v1';
+
+// Cargar cache persistente al iniciar
+function loadPersistentCache() {
+  try {
+    const stored = localStorage.getItem(`${STORAGE_PREFIX}cache_${CACHE_VERSION}`);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      Object.entries(parsed).forEach(([key, value]) => {
+        translationCache.set(key, value as string);
+      });
+      console.debug('[TranslationCache] Loaded', translationCache.size, 'entries from localStorage');
+    }
+  } catch (e) {
+    console.warn('[TranslationCache] Failed to load persistent cache:', e);
+  }
+}
+
+// Guardar cache en localStorage (limitado a 500 entradas más recientes)
+function savePersistentCache() {
+  try {
+    const entries = Array.from(translationCache.entries());
+    // Mantener solo las últimas 500 traducciones para no saturar localStorage
+    const limited = entries.slice(-500);
+    const obj = Object.fromEntries(limited);
+    localStorage.setItem(`${STORAGE_PREFIX}cache_${CACHE_VERSION}`, JSON.stringify(obj));
+  } catch (e) {
+    console.warn('[TranslationCache] Failed to save persistent cache:', e);
+  }
+}
+
+// Cargar cache al importar el módulo
+loadPersistentCache();
 
 export function useTranslateContent() {
   const { i18n } = useTranslation();
@@ -113,9 +149,11 @@ export function useTranslateContent() {
           batch.forEach(({ index, text }, i) => {
             const translated = translations[i] || text;
             results[index] = translated;
-            // Guardar en cache
+            // Guardar en cache memoria
             translationCache.set(getCacheKey(text, currentLang), translated);
           });
+          // Persistir cache después de cada lote exitoso
+          savePersistentCache();
         }
       }
     } catch (err) {
@@ -155,11 +193,21 @@ export function useTranslateContent() {
 
   const clearCache = useCallback(() => {
     translationCache.clear();
+    try {
+      localStorage.removeItem(`${STORAGE_PREFIX}cache_${CACHE_VERSION}`);
+    } catch (e) {
+      console.warn('[TranslationCache] Failed to clear persistent cache:', e);
+    }
   }, []);
 
   const retryTranslation = useCallback(() => {
     setTranslationFailed(false);
     translationCache.clear();
+    try {
+      localStorage.removeItem(`${STORAGE_PREFIX}cache_${CACHE_VERSION}`);
+    } catch (e) {
+      console.warn('[TranslationCache] Failed to clear persistent cache:', e);
+    }
   }, []);
 
   return {
