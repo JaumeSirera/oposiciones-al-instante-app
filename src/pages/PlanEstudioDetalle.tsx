@@ -58,7 +58,10 @@ export default function PlanEstudioDetalle() {
   // Traducciones lazy por semana (solo cuando se expande)
   const [translatedWeeks, setTranslatedWeeks] = useState<Record<number, SemanaPlan>>({});
   const [translatingWeek, setTranslatingWeek] = useState<number | null>(null);
-  const [translatedEtapas, setTranslatedEtapas] = useState<any[] | null>(null);
+  
+  // Traducciones lazy por etapa (solo cuando se expande)
+  const [translatedEtapasMap, setTranslatedEtapasMap] = useState<Record<number, any>>({});
+  const [translatingEtapa, setTranslatingEtapa] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -117,9 +120,10 @@ export default function PlanEstudioDetalle() {
     translateResumen();
   }, [resumenIA, i18n.language, needsTranslation, translateTexts]);
 
-  // Limpiar traducciones de semanas cuando cambia el idioma
+  // Limpiar traducciones cuando cambia el idioma
   useEffect(() => {
     setTranslatedWeeks({});
+    setTranslatedEtapasMap({});
   }, [i18n.language]);
 
   // Función para traducir una semana específica cuando se expande
@@ -205,75 +209,75 @@ export default function PlanEstudioDetalle() {
     }
   };
 
-  // Efecto para traducir las etapas cuando cambia el idioma
-  useEffect(() => {
-    const translateEtapas = async () => {
-      const etapas = detalle?.etapas;
-      
-      if (!needsTranslation) {
-        setTranslatedEtapas(etapas || null);
-        return;
+  // Función para traducir una etapa específica cuando se expande
+  const translateEtapa = async (etapaId: number) => {
+    const etapas = detalle?.etapas;
+    if (!etapas || !needsTranslation) return;
+    if (translatedEtapasMap[etapaId]) return; // Ya traducida
+    
+    const etapa = etapas.find(e => e.id === etapaId);
+    if (!etapa) return;
+    
+    setTranslatingEtapa(etapaId);
+    
+    const allTexts: string[] = [];
+    const textMap: { field: string; tareaIdx?: number }[] = [];
+
+    // Solo título y descripción de etapa + tareas
+    if (etapa.titulo) {
+      allTexts.push(etapa.titulo);
+      textMap.push({ field: 'etapa_titulo' });
+    }
+    if (etapa.descripcion) {
+      allTexts.push(etapa.descripcion);
+      textMap.push({ field: 'etapa_descripcion' });
+    }
+    etapa.tareas?.forEach((tarea: any, tIdx: number) => {
+      if (tarea.titulo) {
+        allTexts.push(tarea.titulo);
+        textMap.push({ field: 'tarea_titulo', tareaIdx: tIdx });
       }
-
-      if (!etapas || etapas.length === 0) {
-        setTranslatedEtapas(null);
-        return;
+      if (tarea.descripcion) {
+        allTexts.push(tarea.descripcion);
+        textMap.push({ field: 'tarea_descripcion', tareaIdx: tIdx });
       }
+    });
 
-      const allTexts: string[] = [];
-      const textMap: { etapaIdx: number; field: string; tareaIdx?: number }[] = [];
-
-      etapas.forEach((etapa, eIdx) => {
-        // Título y descripción de etapa
-        if (etapa.titulo) {
-          allTexts.push(etapa.titulo);
-          textMap.push({ etapaIdx: eIdx, field: 'etapa_titulo' });
-        }
-        if (etapa.descripcion) {
-          allTexts.push(etapa.descripcion);
-          textMap.push({ etapaIdx: eIdx, field: 'etapa_descripcion' });
-        }
-        // Tareas
-        etapa.tareas?.forEach((tarea, tIdx) => {
-          if (tarea.titulo) {
-            allTexts.push(tarea.titulo);
-            textMap.push({ etapaIdx: eIdx, field: 'tarea_titulo', tareaIdx: tIdx });
-          }
-          if (tarea.descripcion) {
-            allTexts.push(tarea.descripcion);
-            textMap.push({ etapaIdx: eIdx, field: 'tarea_descripcion', tareaIdx: tIdx });
-          }
-        });
-      });
-
-      if (allTexts.length > 0) {
-        console.debug('[PlanEstudioDetalle] Translating etapas texts', { language: i18n.language, count: allTexts.length });
+    if (allTexts.length > 0) {
+      try {
         const translations = await translateTexts(allTexts);
-        
-        // Clonar etapas profundamente
-        const translatedEtapasList = JSON.parse(JSON.stringify(etapas));
+        const translatedEtapa = JSON.parse(JSON.stringify(etapa));
 
         textMap.forEach((map, idx) => {
-          const etapa = translatedEtapasList[map.etapaIdx];
           if (map.field === 'etapa_titulo') {
-            etapa.titulo = translations[idx];
+            translatedEtapa.titulo = translations[idx];
           } else if (map.field === 'etapa_descripcion') {
-            etapa.descripcion = translations[idx];
+            translatedEtapa.descripcion = translations[idx];
           } else if (map.field === 'tarea_titulo' && map.tareaIdx !== undefined) {
-            etapa.tareas[map.tareaIdx].titulo = translations[idx];
+            translatedEtapa.tareas[map.tareaIdx].titulo = translations[idx];
           } else if (map.field === 'tarea_descripcion' && map.tareaIdx !== undefined) {
-            etapa.tareas[map.tareaIdx].descripcion = translations[idx];
+            translatedEtapa.tareas[map.tareaIdx].descripcion = translations[idx];
           }
         });
 
-        setTranslatedEtapas(translatedEtapasList);
-      } else {
-        setTranslatedEtapas(etapas);
+        setTranslatedEtapasMap(prev => ({ ...prev, [etapaId]: translatedEtapa }));
+      } catch (error) {
+        console.error('Error translating etapa:', error);
       }
-    };
+    }
+    setTranslatingEtapa(null);
+  };
 
-    translateEtapas();
-  }, [detalle?.etapas, i18n.language, needsTranslation, translateTexts]);
+  // Handler para cuando se expande un acordeón de etapa
+  const handleEtapaAccordionChange = (value: string) => {
+    if (value && needsTranslation) {
+      const match = value.match(/etapa-(\d+)/);
+      if (match) {
+        const etapaId = parseInt(match[1]);
+        translateEtapa(etapaId);
+      }
+    }
+  };
 
   const cargarDetalle = async () => {
     if (!id) return;
@@ -689,7 +693,7 @@ export default function PlanEstudioDetalle() {
             </TabsContent>
 
             <TabsContent value="etapas">
-              {(translatedEtapas || etapas).length === 0 ? (
+              {etapas.length === 0 ? (
               <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
@@ -707,34 +711,36 @@ export default function PlanEstudioDetalle() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {isTranslating && needsTranslation && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {t('common.translatingContent')}
-                      </div>
-                    )}
-                    <Accordion type="single" collapsible className="w-full">
-                      {(() => {
-                        const displayEtapas = translatedEtapas || etapas;
-                        return displayEtapas && Array.isArray(displayEtapas) && displayEtapas.map((etapa) => {
-                        const progresoEtapa = etapa.tareas && etapa.tareas.length > 0
-                          ? (etapa.tareas.filter(t => t.completada === 1).length / etapa.tareas.length) * 100
+                    <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
+                      {etapas.map((etapaOriginal) => {
+                        // Usar etapa traducida si existe, sino original
+                        const etapa = (needsTranslation && translatedEtapasMap[etapaOriginal.id]) 
+                          ? translatedEtapasMap[etapaOriginal.id] 
+                          : etapaOriginal;
+                        const isTranslatingThisEtapa = translatingEtapa === etapaOriginal.id;
+                        const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
+                          ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
                           : 0;
-                        const tareasCompletadas = etapa.tareas ? etapa.tareas.filter((t) => t.completada === 1).length : 0;
+                        const tareasCompletadas = etapaOriginal.tareas ? etapaOriginal.tareas.filter((t: any) => t.completada === 1).length : 0;
 
                         return (
-                          <AccordionItem key={etapa.id} value={`etapa-${etapa.id}`}>
+                          <AccordionItem key={etapaOriginal.id} value={`etapa-${etapaOriginal.id}`}>
                             <AccordionTrigger>
                               <div className="flex items-center justify-between w-full pr-4">
                                 <div className="text-left">
-                                  <p className="font-medium">{etapa.titulo}</p>
+                                  <p className="font-medium">
+                                    {etapa.titulo}
+                                    {isTranslatingThisEtapa && (
+                                      <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
+                                    )}
+                                  </p>
                                   <p className="text-sm text-muted-foreground">
-                                    {etapa.descripcion}
+                                    {etapa.descripcion?.length > 100 ? etapa.descripcion.substring(0, 100) + '...' : etapa.descripcion}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-muted-foreground">
-                                    {tareasCompletadas}/{etapa.tareas ? etapa.tareas.length : 0}
+                                    {tareasCompletadas}/{etapaOriginal.tareas ? etapaOriginal.tareas.length : 0}
                                   </span>
                                   <Progress value={progresoEtapa} className="w-20" />
                                 </div>
@@ -742,30 +748,32 @@ export default function PlanEstudioDetalle() {
                             </AccordionTrigger>
                             <AccordionContent>
                               <div className="space-y-3 pt-2">
-                                {etapa.tareas && Array.isArray(etapa.tareas) && etapa.tareas.map((tarea) => (
+                                {etapa.tareas && Array.isArray(etapa.tareas) && etapa.tareas.map((tarea: any, tareaIdx: number) => {
+                                  const tareaOriginal = etapaOriginal.tareas[tareaIdx];
+                                  return (
                                   <div
-                                    key={tarea.id}
+                                    key={tareaOriginal.id}
                                     className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
-                                    onClick={() => handleClickTarea(tarea, etapa)}
+                                    onClick={() => handleClickTarea(tareaOriginal, etapaOriginal)}
                                   >
                                     <Checkbox
-                                      checked={tarea.completada === 1}
+                                      checked={tareaOriginal.completada === 1}
                                       onCheckedChange={(checked) => {
-                                        checked && handleMarcarTarea(tarea.id, checked as boolean);
+                                        checked && handleMarcarTarea(tareaOriginal.id, checked as boolean);
                                       }}
                                       onClick={(e) => e.stopPropagation()}
                                       className="mt-1"
                                     />
                                     <div className="flex-1">
-                                      <p className={`font-medium ${tarea.completada === 1 ? "line-through text-muted-foreground" : ""}`}>
+                                      <p className={`font-medium ${tareaOriginal.completada === 1 ? "line-through text-muted-foreground" : ""}`}>
                                         {tarea.titulo}
                                       </p>
                                       <p className="text-sm text-muted-foreground mt-1">
                                         {tarea.descripcion}
                                       </p>
-                                      {(tarea.titulo.toLowerCase().includes('test') || 
-                                        tarea.titulo.toLowerCase().includes('examen') || 
-                                        tarea.titulo.toLowerCase().includes('psicotécnico')) && (
+                                      {(tareaOriginal.titulo.toLowerCase().includes('test') || 
+                                        tareaOriginal.titulo.toLowerCase().includes('examen') || 
+                                        tareaOriginal.titulo.toLowerCase().includes('psicotécnico')) && (
                                         <Badge variant="outline" className="mt-2">
                                           <PlayCircle className="mr-1 h-3 w-3" />
                                           {t('studyPlans.clickToTake')}
@@ -773,20 +781,20 @@ export default function PlanEstudioDetalle() {
                                       )}
                                     </div>
                                   </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </AccordionContent>
                           </AccordionItem>
                         );
-                      });
-                      })()}
+                      })}
                     </Accordion>
                   </CardContent>
                 </Card>
               )}
             </TabsContent>
           </Tabs>
-        ) : (translatedEtapas || etapas).length === 0 ? (
+        ) : etapas.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
@@ -804,113 +812,116 @@ export default function PlanEstudioDetalle() {
               </CardDescription>
             </CardHeader>
               <CardContent>
-                {isTranslating && needsTranslation && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    {t('common.translatingContent')}
-                  </div>
-                )}
-                <Accordion type="single" collapsible className="w-full">
-                  {(() => {
-                    const displayEtapas = translatedEtapas || etapas;
-                    return displayEtapas && Array.isArray(displayEtapas) && displayEtapas.map((etapa) => {
-                    const progresoEtapa = etapa.tareas && etapa.tareas.length > 0
-                    ? (etapa.tareas.filter((t: any) => t.completada === 1).length / etapa.tareas.length) * 100
-                    : 0;
-                  const tareasCompletadas = etapa.tareas ? etapa.tareas.filter((t: any) => t.completada === 1).length : 0;
+                <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
+                  {etapas.map((etapaOriginal) => {
+                    const etapa = (needsTranslation && translatedEtapasMap[etapaOriginal.id]) 
+                      ? translatedEtapasMap[etapaOriginal.id] 
+                      : etapaOriginal;
+                    const isTranslatingThisEtapa = translatingEtapa === etapaOriginal.id;
+                    const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
+                      ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
+                      : 0;
+                    const tareasCompletadas = etapaOriginal.tareas ? etapaOriginal.tareas.filter((t: any) => t.completada === 1).length : 0;
 
-                  return (
-                    <AccordionItem key={etapa.id} value={`etapa-${etapa.id}`}>
-                      <AccordionTrigger>
-                        <div className="flex items-center justify-between w-full pr-4">
-                          <div className="text-left flex-1">
-                            <p className="font-semibold text-base">{etapa.titulo}</p>
-                            <p className="text-sm text-muted-foreground mt-0.5">
-                              {tareasCompletadas}/{etapa.tareas ? etapa.tareas.length : 0} {t('studyPlans.tasksCompleted')}
-                            </p>
+                    return (
+                      <AccordionItem key={etapaOriginal.id} value={`etapa-${etapaOriginal.id}`}>
+                        <AccordionTrigger>
+                          <div className="flex items-center justify-between w-full pr-4">
+                            <div className="text-left flex-1">
+                              <p className="font-semibold text-base">
+                                {etapa.titulo}
+                                {isTranslatingThisEtapa && (
+                                  <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
+                                )}
+                              </p>
+                              <p className="text-sm text-muted-foreground mt-0.5">
+                                {tareasCompletadas}/{etapaOriginal.tareas ? etapaOriginal.tareas.length : 0} {t('studyPlans.tasksCompleted')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-sm font-medium">
+                                {progresoEtapa.toFixed(0)}%
+                              </span>
+                              <Progress value={progresoEtapa} className="w-24 h-2" />
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-sm font-medium">
-                              {progresoEtapa.toFixed(0)}%
-                            </span>
-                            <Progress value={progresoEtapa} className="w-24 h-2" />
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-6 pt-2">
-                            {/* Temas de la etapa */}
-                            {etapa.descripcion && (
-                              <div>
-                                <h4 className="font-semibold text-sm mb-3">{t('studyPlans.topics')}:</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                  {etapa.descripcion.split(',').slice(0, 12).map((tema: string, idx: number) => {
-                                    const temaLimpio = tema.trim();
-                                    return (
-                                      <Badge 
-                                        key={idx} 
-                                        variant="secondary" 
-                                        className="justify-start text-xs py-1.5 px-3 font-normal"
-                                      >
-                                        {temaLimpio.length > 50 ? temaLimpio.substring(0, 50) + '...' : temaLimpio}
+                        </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-6 pt-2">
+                              {/* Temas de la etapa */}
+                              {etapa.descripcion && (
+                                <div>
+                                  <h4 className="font-semibold text-sm mb-3">{t('studyPlans.topics')}:</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    {etapa.descripcion.split(',').slice(0, 12).map((tema: string, idx: number) => {
+                                      const temaLimpio = tema.trim();
+                                      return (
+                                        <Badge 
+                                          key={idx} 
+                                          variant="secondary" 
+                                          className="justify-start text-xs py-1.5 px-3 font-normal"
+                                        >
+                                          {temaLimpio.length > 50 ? temaLimpio.substring(0, 50) + '...' : temaLimpio}
+                                        </Badge>
+                                      );
+                                    })}
+                                    {etapa.descripcion.split(',').length > 12 && (
+                                      <Badge variant="outline" className="text-xs">
+                                        +{etapa.descripcion.split(',').length - 12} {t('studyPlans.more')}
                                       </Badge>
-                                    );
-                                  })}
-                                  {etapa.descripcion.split(',').length > 12 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      +{etapa.descripcion.split(',').length - 12} {t('studyPlans.more')}
-                                    </Badge>
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
 
-                            {/* Tareas de la etapa */}
-                            {etapa.tareas && Array.isArray(etapa.tareas) && etapa.tareas.length > 0 && (
-                              <div>
-                                <h4 className="font-semibold text-sm mb-3">{t('studyPlans.tasks')}:</h4>
-                                <div className="space-y-3">
-                                   {etapa.tareas.map((tarea: any) => (
-                                    <div
-                                      key={tarea.id}
-                                      className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
-                                      onClick={() => handleClickTarea(tarea, etapa)}
-                                    >
-                                      <Checkbox
-                                        checked={tarea.completada === 1}
-                                        onCheckedChange={(checked) => {
-                                          checked && handleMarcarTarea(tarea.id, checked as boolean);
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="mt-1"
-                                      />
-                                      <div className="flex-1">
-                                        <p className={`font-medium ${tarea.completada === 1 ? "line-through text-muted-foreground" : ""}`}>
-                                          {tarea.titulo}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                          {tarea.descripcion}
-                                        </p>
-                                        {(tarea.titulo.toLowerCase().includes('test') || 
-                                          tarea.titulo.toLowerCase().includes('examen') || 
-                                          tarea.titulo.toLowerCase().includes('psicotécnico')) && (
-                                          <Badge variant="outline" className="mt-2">
-                                            <PlayCircle className="mr-1 h-3 w-3" />
-                                            {t('studyPlans.clickToTake')}
-                                          </Badge>
-                                        )}
+                              {/* Tareas de la etapa */}
+                              {etapa.tareas && Array.isArray(etapa.tareas) && etapa.tareas.length > 0 && (
+                                <div>
+                                  <h4 className="font-semibold text-sm mb-3">{t('studyPlans.tasks')}:</h4>
+                                  <div className="space-y-3">
+                                     {etapa.tareas.map((tarea: any, tareaIdx: number) => {
+                                      const tareaOriginal = etapaOriginal.tareas[tareaIdx];
+                                      return (
+                                      <div
+                                        key={tareaOriginal.id}
+                                        className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                                        onClick={() => handleClickTarea(tareaOriginal, etapaOriginal)}
+                                      >
+                                        <Checkbox
+                                          checked={tareaOriginal.completada === 1}
+                                          onCheckedChange={(checked) => {
+                                            checked && handleMarcarTarea(tareaOriginal.id, checked as boolean);
+                                          }}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="mt-1"
+                                        />
+                                        <div className="flex-1">
+                                          <p className={`font-medium ${tareaOriginal.completada === 1 ? "line-through text-muted-foreground" : ""}`}>
+                                            {tarea.titulo}
+                                          </p>
+                                          <p className="text-sm text-muted-foreground mt-1">
+                                            {tarea.descripcion}
+                                          </p>
+                                          {(tareaOriginal.titulo.toLowerCase().includes('test') || 
+                                            tareaOriginal.titulo.toLowerCase().includes('examen') || 
+                                            tareaOriginal.titulo.toLowerCase().includes('psicotécnico')) && (
+                                            <Badge variant="outline" className="mt-2">
+                                              <PlayCircle className="mr-1 h-3 w-3" />
+                                              {t('studyPlans.clickToTake')}
+                                            </Badge>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                  );
-                });
-                })()}
+                              )}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                    );
+                  })}
               </Accordion>
             </CardContent>
           </Card>
