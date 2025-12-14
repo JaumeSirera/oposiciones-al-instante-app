@@ -134,6 +134,9 @@ serve(async (req) => {
     let successCount = 0;
     let failCount = 0;
 
+    // Delay base entre peticiones para evitar rate limit (429)
+    const BASE_DELAY_MS = 1500; // 1.5 segundos entre peticiones
+
     for (let i = 0; i < textsArray.length; i++) {
       const text = textsArray[i];
       
@@ -142,15 +145,22 @@ serve(async (req) => {
         continue;
       }
 
+      // Delay entre peticiones (excepto la primera)
+      if (i > 0) {
+        await new Promise(r => setTimeout(r, BASE_DELAY_MS));
+      }
+
       const shouldSummarize = text.length > SUMMARIZE_THRESHOLD;
       
-      // Intentar hasta 2 veces
+      // Intentar hasta 3 veces con backoff exponencial
       let translated = false;
-      for (let attempt = 0; attempt < 2 && !translated; attempt++) {
+      for (let attempt = 0; attempt < 3 && !translated; attempt++) {
         try {
           if (attempt > 0) {
-            // Pequeña pausa antes de reintentar
-            await new Promise(r => setTimeout(r, 500));
+            // Backoff exponencial: 2s, 4s
+            const backoffDelay = Math.pow(2, attempt) * 1000;
+            console.log(`Retry ${attempt + 1} after ${backoffDelay}ms delay`);
+            await new Promise(r => setTimeout(r, backoffDelay));
           }
           
           const result = await translateOrSummarize(text, targetLangName, LOVABLE_API_KEY, shouldSummarize);
@@ -158,8 +168,15 @@ serve(async (req) => {
           translated = true;
           successCount++;
         } catch (error) {
-          console.error(`Error text ${i} attempt ${attempt + 1}:`, error);
-          if (attempt === 1) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          console.error(`Error text ${i} attempt ${attempt + 1}: ${errorMsg}`);
+          
+          // Si es rate limit (429), esperar más tiempo
+          if (errorMsg.includes('429')) {
+            await new Promise(r => setTimeout(r, 3000)); // Esperar 3s extra
+          }
+          
+          if (attempt === 2) {
             // Último intento fallido, usar original
             translations.push(text);
             failCount++;
