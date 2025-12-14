@@ -59,9 +59,9 @@ export default function PlanEstudioDetalle() {
   const [translatedWeeks, setTranslatedWeeks] = useState<Record<number, SemanaPlan>>({});
   const [translatingWeek, setTranslatingWeek] = useState<number | null>(null);
   
-  // Traducciones lazy por etapa (solo cuando se expande)
-  const [translatedEtapasMap, setTranslatedEtapasMap] = useState<Record<number, any>>({});
-  const [translatingEtapa, setTranslatingEtapa] = useState<number | null>(null);
+  // Traducciones lazy por etapa (solo cuando se expande) - usar string como key porque PHP devuelve IDs como string
+  const [translatedEtapasMap, setTranslatedEtapasMap] = useState<Record<string, any>>({});
+  const [translatingEtapa, setTranslatingEtapa] = useState<string | number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -210,12 +210,22 @@ export default function PlanEstudioDetalle() {
   };
 
   // Función para traducir una etapa específica cuando se expande
-  const translateEtapa = async (etapaId: number) => {
+  const translateEtapa = async (etapaId: string | number) => {
     const etapas = detalle?.etapas;
-    if (!etapas || !needsTranslation) return;
-    if (translatedEtapasMap[etapaId]) return; // Ya traducida
+    console.debug('[translateEtapa] Called with etapaId:', etapaId, 'type:', typeof etapaId);
+    if (!etapas || !needsTranslation) {
+      console.debug('[translateEtapa] Skipping - no etapas or no translation needed');
+      return;
+    }
     
-    const etapa = etapas.find(e => e.id === etapaId);
+    const etapaIdStr = String(etapaId);
+    if (translatedEtapasMap[etapaIdStr]) {
+      console.debug('[translateEtapa] Already translated');
+      return;
+    }
+    
+    const etapa = etapas.find(e => String(e.id) === etapaIdStr);
+    console.debug('[translateEtapa] Found etapa:', etapa?.titulo);
     if (!etapa) return;
     
     setTranslatingEtapa(etapaId);
@@ -270,10 +280,12 @@ export default function PlanEstudioDetalle() {
 
   // Handler para cuando se expande un acordeón de etapa
   const handleEtapaAccordionChange = (value: string) => {
+    console.debug('[handleEtapaAccordionChange] Value:', value, 'needsTranslation:', needsTranslation);
     if (value && needsTranslation) {
       const match = value.match(/etapa-(\d+)/);
       if (match) {
-        const etapaId = parseInt(match[1]);
+        const etapaId = match[1]; // Mantener como string
+        console.debug('[handleEtapaAccordionChange] Calling translateEtapa with:', etapaId);
         translateEtapa(etapaId);
       }
     }
@@ -713,11 +725,12 @@ export default function PlanEstudioDetalle() {
                   <CardContent>
                     <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
                       {etapas.map((etapaOriginal) => {
-                        // Usar etapa traducida si existe, sino original
-                        const etapa = (needsTranslation && translatedEtapasMap[etapaOriginal.id]) 
-                          ? translatedEtapasMap[etapaOriginal.id] 
+                        // Usar etapa traducida si existe, sino original (usar String porque PHP devuelve IDs como string)
+                        const etapaIdStr = String(etapaOriginal.id);
+                        const etapa = (needsTranslation && translatedEtapasMap[etapaIdStr]) 
+                          ? translatedEtapasMap[etapaIdStr] 
                           : etapaOriginal;
-                        const isTranslatingThisEtapa = translatingEtapa === etapaOriginal.id;
+                        const isTranslatingThisEtapa = String(translatingEtapa) === etapaIdStr;
                         const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
                           ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
                           : 0;
@@ -814,10 +827,11 @@ export default function PlanEstudioDetalle() {
               <CardContent>
                 <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
                   {etapas.map((etapaOriginal) => {
-                    const etapa = (needsTranslation && translatedEtapasMap[etapaOriginal.id]) 
-                      ? translatedEtapasMap[etapaOriginal.id] 
+                    const etapaIdStr = String(etapaOriginal.id);
+                    const etapa = (needsTranslation && translatedEtapasMap[etapaIdStr]) 
+                      ? translatedEtapasMap[etapaIdStr] 
                       : etapaOriginal;
-                    const isTranslatingThisEtapa = translatingEtapa === etapaOriginal.id;
+                    const isTranslatingThisEtapa = String(translatingEtapa) === etapaIdStr;
                     const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
                       ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
                       : 0;
