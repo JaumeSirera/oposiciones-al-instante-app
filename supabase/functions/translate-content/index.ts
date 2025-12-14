@@ -5,8 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MAX_DIRECT_TRANSLATE = 2500;
-const SUMMARIZE_THRESHOLD = 2500;
+const MAX_BATCH_CHARS = 8000; // Máximo de caracteres por lote para evitar límites de tokens
 
 // Valida que la respuesta no contenga el prompt de la IA
 function isValidTranslation(result: string, originalText: string): boolean {
@@ -17,45 +16,37 @@ function isValidTranslation(result: string, originalText: string): boolean {
     'Return ONLY the translated',
     'Spanish text to summarize',
     'You are a professional translator',
-    'Create a summary of approximately'
+    'Create a summary of approximately',
+    'Translate each line',
+    'IMPORTANT:'
   ];
   
-  // Si contiene indicadores del prompt, no es válida
   for (const indicator of promptIndicators) {
     if (result.includes(indicator)) {
       return false;
     }
   }
   
-  // Si la respuesta es demasiado corta comparada con el original (menos del 20%), sospechosa
-  if (result.length < originalText.length * 0.2 && originalText.length > 50) {
-    return false;
-  }
-  
   return true;
 }
 
-async function translateOrSummarize(
-  text: string, 
+// Traducir un lote de textos en UNA sola llamada a la API
+async function translateBatch(
+  texts: string[], 
   targetLangName: string, 
-  apiKey: string, 
-  shouldSummarize: boolean
-): Promise<string> {
-  let prompt: string;
+  apiKey: string
+): Promise<string[]> {
+  if (texts.length === 0) return [];
   
-  if (shouldSummarize) {
-    prompt = `Traduce y resume este texto del español al ${targetLangName}.
+  // Usar separador único para dividir las traducciones
+  const separator = "|||SPLIT|||";
+  const combinedText = texts.join(`\n${separator}\n`);
+  
+  const prompt = `Translate from Spanish to ${targetLangName}. 
+Return ONLY the translations, separated by "${separator}" on its own line.
+Do not add explanations or notes. Maintain the same number of items.
 
-Crea un resumen de 500-800 palabras máximo con la información más importante.
-Escribe SOLO en ${targetLangName}. No añadas explicaciones ni notas.
-
-Texto:
-${text}`;
-  } else {
-    prompt = `Traduce del español al ${targetLangName}. Devuelve SOLO la traducción:
-
-${text}`;
-  }
+${combinedText}`;
 
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -69,7 +60,7 @@ ${text}`;
         { role: 'user', content: prompt }
       ],
       temperature: 0.1,
-      max_tokens: shouldSummarize ? 4000 : 8000,
+      max_tokens: 8000,
     })
   });
 
@@ -84,13 +75,51 @@ ${text}`;
     throw new Error('Empty response from API');
   }
   
-  // Validar que no sea el prompt
-  if (!isValidTranslation(result, text)) {
-    console.warn('Invalid translation detected, contains prompt fragments');
+  if (!isValidTranslation(result, combinedText)) {
     throw new Error('Invalid translation - contains prompt');
   }
   
-  return result;
+  // Dividir el resultado por el separador
+  const translations = result.split(separator).map((t: string) => t.trim()).filter((t: string) => t);
+  
+  // Si el número no coincide, devolver originales
+  if (translations.length !== texts.length) {
+    console.warn(`Translation count mismatch: expected ${texts.length}, got ${translations.length}`);
+    // Intentar recuperar lo que podamos
+    const recovered: string[] = [];
+    for (let i = 0; i < texts.length; i++) {
+      recovered.push(translations[i] || texts[i]);
+    }
+    return recovered;
+  }
+  
+  return translations;
+}
+
+// Dividir textos en lotes por tamaño de caracteres
+function splitIntoBatches(texts: string[]): string[][] {
+  const batches: string[][] = [];
+  let currentBatch: string[] = [];
+  let currentSize = 0;
+  
+  for (const text of texts) {
+    const textSize = text.length;
+    
+    if (currentSize + textSize > MAX_BATCH_CHARS && currentBatch.length > 0) {
+      batches.push(currentBatch);
+      currentBatch = [text];
+      currentSize = textSize;
+    } else {
+      currentBatch.push(text);
+      currentSize += textSize;
+    }
+  }
+  
+  if (currentBatch.length > 0) {
+    batches.push(currentBatch);
+  }
+  
+  return batches;
 }
 
 serve(async (req) => {
@@ -128,66 +157,77 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Processing ${textsArray.length} texts to ${targetLangName}`);
-
-    const translations: string[] = [];
-    let successCount = 0;
-    let failCount = 0;
-
-    // Delay base entre peticiones para evitar rate limit (429) - reducido para mejor UX
-    const BASE_DELAY_MS = 200; // 200ms entre peticiones (más rápido)
-
+    // Filtrar textos vacíos y mantener índices
+    const indexedTexts: { index: number; text: string }[] = [];
+    const results: string[] = new Array(textsArray.length);
+    
     for (let i = 0; i < textsArray.length; i++) {
       const text = textsArray[i];
-      
       if (!text || text.trim() === '') {
-        translations.push(text);
-        continue;
+        results[i] = text;
+      } else {
+        indexedTexts.push({ index: i, text });
       }
+    }
+    
+    if (indexedTexts.length === 0) {
+      return new Response(JSON.stringify({ translations: results }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-      // Delay entre peticiones (excepto la primera)
-      if (i > 0) {
-        await new Promise(r => setTimeout(r, BASE_DELAY_MS));
-      }
-
-      const shouldSummarize = text.length > SUMMARIZE_THRESHOLD;
+    console.log(`Processing ${indexedTexts.length} texts to ${targetLangName} in batches`);
+    
+    // Dividir en lotes
+    const textValues = indexedTexts.map(t => t.text);
+    const batches = splitIntoBatches(textValues);
+    
+    console.log(`Split into ${batches.length} batches`);
+    
+    let translatedCount = 0;
+    const allTranslations: string[] = [];
+    
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
       
-      // Intentar hasta 3 veces con backoff exponencial
-      let translated = false;
-      for (let attempt = 0; attempt < 3 && !translated; attempt++) {
+      // Intentar hasta 2 veces por lote
+      let success = false;
+      for (let attempt = 0; attempt < 2 && !success; attempt++) {
         try {
           if (attempt > 0) {
-            // Backoff exponencial: 2s, 4s
-            const backoffDelay = Math.pow(2, attempt) * 1000;
-            console.log(`Retry ${attempt + 1} after ${backoffDelay}ms delay`);
-            await new Promise(r => setTimeout(r, backoffDelay));
+            await new Promise(r => setTimeout(r, 1000));
           }
           
-          const result = await translateOrSummarize(text, targetLangName, LOVABLE_API_KEY, shouldSummarize);
-          translations.push(result);
-          translated = true;
-          successCount++;
+          const batchTranslations = await translateBatch(batch, targetLangName, LOVABLE_API_KEY);
+          allTranslations.push(...batchTranslations);
+          translatedCount += batch.length;
+          success = true;
+          
+          console.log(`Batch ${batchIndex + 1}/${batches.length} completed (${translatedCount}/${textValues.length})`);
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          console.error(`Error text ${i} attempt ${attempt + 1}: ${errorMsg}`);
+          console.error(`Batch ${batchIndex + 1} attempt ${attempt + 1} failed:`, error);
           
-          // Si es rate limit (429), esperar más tiempo
-          if (errorMsg.includes('429')) {
-            await new Promise(r => setTimeout(r, 3000)); // Esperar 3s extra
-          }
-          
-          if (attempt === 2) {
-            // Último intento fallido, usar original
-            translations.push(text);
-            failCount++;
+          if (attempt === 1) {
+            // Último intento fallido, usar originales
+            allTranslations.push(...batch);
           }
         }
       }
+      
+      // Pequeño delay entre lotes para evitar rate limit
+      if (batchIndex < batches.length - 1) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+    
+    // Mapear traducciones a sus índices originales
+    for (let i = 0; i < indexedTexts.length; i++) {
+      results[indexedTexts[i].index] = allTranslations[i] || indexedTexts[i].text;
     }
 
-    console.log(`Completed: ${successCount} ok, ${failCount} failed`);
+    console.log(`Translation completed: ${translatedCount}/${textValues.length} texts`);
 
-    return new Response(JSON.stringify({ translations }), {
+    return new Response(JSON.stringify({ translations: results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
