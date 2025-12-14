@@ -134,8 +134,8 @@ serve(async (req) => {
     let successCount = 0;
     let failCount = 0;
 
-    // Delay base entre peticiones para evitar rate limit (429)
-    const BASE_DELAY_MS = 1500; // 1.5 segundos entre peticiones
+    // Delay base entre peticiones para evitar rate limit (429) - reducido para mejor UX
+    const BASE_DELAY_MS = 200; // 200ms entre peticiones (más rápido)
 
     for (let i = 0; i < textsArray.length; i++) {
       const text = textsArray[i];
