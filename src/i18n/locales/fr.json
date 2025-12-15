@@ -45,7 +45,8 @@
     "listenAnswer": "Écouter la réponse",
     "listenExplanation": "Écouter l'explication",
     "listen": "Écouter",
-    "stop": "Arrêter"
+    "stop": "Arrêter",
+    "audioNotSupported": "Audio indisponible sur cet appareil"
   },
   "landing": {
     "title": "Agent IA pour Concours | Tests et Résumés",

@@ -45,7 +45,8 @@
     "listenAnswer": "Antwort anhören",
     "listenExplanation": "Erklärung anhören",
     "listen": "Anhören",
-    "stop": "Stopp"
+    "stop": "Stopp",
+    "audioNotSupported": "Audio auf diesem Gerät nicht verfügbar"
   },
   "landing": {
     "title": "KI-Agent für Prüfungen | Tests und Zusammenfassungen",

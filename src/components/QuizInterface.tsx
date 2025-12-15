@@ -581,21 +581,42 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 {t('quiz.examMode')}
               </Badge>
             )}
-            {isSupported && (
-              <Button
-                variant={isEnabled ? "default" : "outline"}
-                size="icon"
-                onClick={toggleEnabled}
-                className="h-8 w-8 sm:h-9 sm:w-9"
-                title={isEnabled ? t('quiz.disableAudio') : t('quiz.enableAudio')}
-              >
-                {isEnabled ? (
-                  <Volume2 className={`w-4 h-4 ${isPlaying ? 'animate-pulse' : ''}`} />
-                ) : (
-                  <VolumeX className="w-4 h-4" />
-                )}
-              </Button>
-            )}
+
+            <Button
+              variant={isEnabled ? "default" : "outline"}
+              size="icon"
+              onClick={() => {
+                if (!isSupported) {
+                  toast({
+                    variant: 'destructive',
+                    title: t('quiz.audioNotSupported'),
+                  });
+                  return;
+                }
+                toggleEnabled();
+              }}
+              className={`h-8 w-8 sm:h-9 sm:w-9 ${!isSupported ? 'opacity-60' : ''}`}
+              title={
+                !isSupported
+                  ? t('quiz.audioNotSupported')
+                  : isEnabled
+                    ? t('quiz.disableAudio')
+                    : t('quiz.enableAudio')
+              }
+              aria-label={
+                !isSupported
+                  ? t('quiz.audioNotSupported')
+                  : isEnabled
+                    ? t('quiz.disableAudio')
+                    : t('quiz.enableAudio')
+              }
+            >
+              {isEnabled && isSupported ? (
+                <Volume2 className={`w-4 h-4 ${isPlaying ? 'animate-pulse' : ''}`} />
+              ) : (
+                <VolumeX className="w-4 h-4" />
+              )}
+            </Button>
             <div className="flex items-center gap-1 sm:gap-2">
               <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
               <span className={`text-sm sm:text-lg font-bold ${timeLeft <= 60 ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>

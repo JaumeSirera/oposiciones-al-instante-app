@@ -45,7 +45,8 @@
     "listenAnswer": "Escuchar respuesta",
     "listenExplanation": "Escuchar explicación",
     "listen": "Escuchar",
-    "stop": "Detener"
+    "stop": "Detener",
+    "audioNotSupported": "Audio no disponible en este dispositivo"
   },
   "landing": {
     "title": "Agente IA para Oposiciones | Tests para Oposiciones y Resúmenes",
