@@ -569,23 +569,24 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Button variant="ghost" onClick={onExit}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
+          <Button variant="ghost" onClick={onExit} size="sm">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('quiz.exitTest')}
+            <span className="hidden sm:inline">{t('quiz.exitTest')}</span>
+            <span className="sm:hidden">{t('common.exit')}</span>
           </Button>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-4 w-full sm:w-auto justify-end">
             {config.tipo === 'examen' && (
-              <Badge variant="destructive" className="text-sm font-semibold">
+              <Badge variant="destructive" className="text-xs sm:text-sm font-semibold">
                 {t('quiz.examMode')}
               </Badge>
             )}
             {isSupported && (
               <Button
                 variant={isEnabled ? "default" : "outline"}
-                size="sm"
+                size="icon"
                 onClick={toggleEnabled}
-                className="flex items-center gap-1"
+                className="h-8 w-8 sm:h-9 sm:w-9"
                 title={isEnabled ? t('quiz.disableAudio') : t('quiz.enableAudio')}
               >
                 {isEnabled ? (
@@ -595,14 +596,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 )}
               </Button>
             )}
-            <div className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-orange-600" />
-              <span className={`text-lg font-bold ${timeLeft <= 60 ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
+              <span className={`text-sm sm:text-lg font-bold ${timeLeft <= 60 ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
                 {formatTime(timeLeft)}
               </span>
             </div>
-            <div className="text-sm text-gray-600">
-              {currentQuestionIndex + 1} / {questions.length}
+            <div className="text-xs sm:text-sm text-gray-600">
+              {currentQuestionIndex + 1}/{questions.length}
             </div>
           </div>
         </div>
