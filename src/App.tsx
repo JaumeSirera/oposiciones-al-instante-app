@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Layout } from "@/components/Layout";
+import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
 
 // Públicas
 import Index from "./pages/Index";
@@ -50,6 +51,67 @@ import AdministrarRecordatorios from "./pages/AdministrarRecordatorios";
 
 const queryClient = new QueryClient();
 
+// Componente interno que usa el hook después de BrowserRouter
+function AppContent() {
+  useAndroidBackButton();
+  
+  return (
+    <Routes>
+      {/* Públicas */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/reset-password" element={<ResetPassword />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+      {/* Públicas SEO */}
+      <Route path="/agente-ia-oposiciones" element={<AgenteIA />} />
+      <Route path="/planes-de-estudio-ia" element={<PlanesIA />} />
+      <Route path="/resumenes-ia-oposiciones" element={<ResumenesIA />} />
+      <Route path="/psicotecnicos-online" element={<Psicotecnicos />} />
+      <Route path="/preparacion-fisica-ia" element={<PreparacionFisicaIA />} />
+      <Route path="/profesor-virtual-oposiciones" element={<ProfesorVirtual />} />
+      <Route path="/donacion-publica" element={<DonacionPublica />} />
+
+      {/* Protegidas */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/dashboard" element={<Index />} />
+        <Route path="/test" element={<TestPage mode="simulacion" />} />
+        <Route path="/simulacro" element={<TestPage mode="examen" />} />
+        <Route path="/test-psicotecnico" element={<TestPage mode="simulacion" isPsicotecnico />} />
+        <Route path="/simulacro-psicotecnico" element={<TestPage mode="examen" isPsicotecnico />} />
+        <Route path="/estadisticas" element={<EstadisticasPage />} />
+        <Route path="/historial" element={<HistorialPage />} />
+        <Route path="/ranking" element={<RankingPage />} />
+        <Route path="/donacion" element={<Donacion />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/resumenes" element={<Resumenes />} />
+        <Route path="/resumenes/:id" element={<ResumenDetalle />} />
+        <Route path="/crear-resumen" element={<CrearResumen />} />
+        <Route path="/crear-test" element={<CrearTest />} />
+        <Route path="/crear-psicotecnicos" element={<CrearPsicotecnicos />} />
+        <Route path="/planes-estudio" element={<PlanesEstudio />} />
+        <Route path="/crear-plan-estudio" element={<CrearPlanEstudio />} />
+        <Route path="/generar-plan-ia" element={<GenerarPlanIA />} />
+        <Route path="/plan-estudio/:id" element={<PlanEstudioDetalle />} />
+        <Route path="/planes-fisicos" element={<PlanesFisicos />} />
+        <Route path="/generar-plan-fisico-ia" element={<GenerarPlanFisicoIA />} />
+        <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
+        <Route path="/test-personalidad" element={<TestPersonalidad />} />
+        <Route path="/administrar-recordatorios" element={<AdministrarRecordatorios />} />
+      </Route>
+
+      {/* Fallback global */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -59,59 +121,7 @@ const App: React.FC = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                {/* Públicas */}
-                <Route path="/" element={<Landing />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/reset-password" element={<ResetPassword />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-
-                {/* Públicas SEO */}
-                <Route path="/agente-ia-oposiciones" element={<AgenteIA />} />
-                <Route path="/planes-de-estudio-ia" element={<PlanesIA />} />
-                <Route path="/resumenes-ia-oposiciones" element={<ResumenesIA />} />
-                <Route path="/psicotecnicos-online" element={<Psicotecnicos />} />
-                <Route path="/preparacion-fisica-ia" element={<PreparacionFisicaIA />} />
-                <Route path="/profesor-virtual-oposiciones" element={<ProfesorVirtual />} />
-                <Route path="/donacion-publica" element={<DonacionPublica />} />
-
-                {/* Protegidas */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <Layout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/dashboard" element={<Index />} />
-                  <Route path="/test" element={<TestPage mode="simulacion" />} />
-                  <Route path="/simulacro" element={<TestPage mode="examen" />} />
-                  <Route path="/test-psicotecnico" element={<TestPage mode="simulacion" isPsicotecnico />} />
-                  <Route path="/simulacro-psicotecnico" element={<TestPage mode="examen" isPsicotecnico />} />
-                  <Route path="/estadisticas" element={<EstadisticasPage />} />
-                  <Route path="/historial" element={<HistorialPage />} />
-                  <Route path="/ranking" element={<RankingPage />} />
-                  <Route path="/donacion" element={<Donacion />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/resumenes" element={<Resumenes />} />
-                  <Route path="/resumenes/:id" element={<ResumenDetalle />} />
-                  <Route path="/crear-resumen" element={<CrearResumen />} />
-                  <Route path="/crear-test" element={<CrearTest />} />
-                  <Route path="/crear-psicotecnicos" element={<CrearPsicotecnicos />} />
-                  <Route path="/planes-estudio" element={<PlanesEstudio />} />
-                  <Route path="/crear-plan-estudio" element={<CrearPlanEstudio />} />
-                  <Route path="/generar-plan-ia" element={<GenerarPlanIA />} />
-                  <Route path="/plan-estudio/:id" element={<PlanEstudioDetalle />} />
-                  <Route path="/planes-fisicos" element={<PlanesFisicos />} />
-                  <Route path="/generar-plan-fisico-ia" element={<GenerarPlanFisicoIA />} />
-                  <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
-                  <Route path="/test-personalidad" element={<TestPersonalidad />} />
-                  <Route path="/administrar-recordatorios" element={<AdministrarRecordatorios />} />
-                </Route>
-
-                {/* Fallback global */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AppContent />
             </BrowserRouter>
           </HelmetProvider>
         </TooltipProvider>
