@@ -45,7 +45,8 @@
     "listenAnswer": "听答案",
     "listenExplanation": "听解释",
     "listen": "收听",
-    "stop": "停止"
+    "stop": "停止",
+    "audioNotSupported": "此设备不支持语音朗读"
   },
   "landing": {
     "title": "考试AI助手 | 测试和摘要",
