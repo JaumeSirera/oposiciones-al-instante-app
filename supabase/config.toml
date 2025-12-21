@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.generar-psicotecnicos-ia]
 verify_jwt = false
+
+[functions.fetch-international-news]
+verify_jwt = false
