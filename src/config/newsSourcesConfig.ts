@@ -83,7 +83,7 @@ export const NEWS_CONFIG: Record<string, CountryNewsConfig> = {
     country: 'United Kingdom',
     flag: '🇬🇧',
     newsSources: [
-      { name: 'Civil Service Jobs', rssUrl: 'https://www.civilservicejobs.service.gov.uk/csr/index.cgi?SID=c2VhcmNocGFnZT0xJm93bmVydHlwZT1mYWlyJnVzZXJzZWFyY2hjb250ZXh0PTUyODA4NTA4JnBhZ2VhY3Rpb249c2VhcmNoY29udGV4dCZwYWdlY2xhc3M9Sm9icyZvd25lcj01MDcwMDAwJnNlYXJjaHNvcnQ9c2NvcmU=', isRss: true },
+      { name: 'Public Sector Jobs', rssUrl: 'https://www.publicjobs.ie/restapi/rss/jobs/latest', isRss: true },
     ],
     officialBulletins: [
       { name: 'UK Government', url: 'https://www.gov.uk/', description: 'UK Government Portal' },
