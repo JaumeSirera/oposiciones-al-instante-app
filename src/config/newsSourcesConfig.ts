@@ -84,6 +84,8 @@ export const NEWS_CONFIG: Record<string, CountryNewsConfig> = {
     flag: '🇬🇧',
     newsSources: [
       { name: 'Public Sector Jobs', rssUrl: 'https://www.publicjobs.ie/restapi/rss/jobs/latest', isRss: true },
+      { name: 'Indeed UK Public Sector', rssUrl: 'https://uk.indeed.com/rss?q=public+sector&l=United+Kingdom', isRss: true },
+      { name: 'Guardian Public Sector', rssUrl: 'https://www.theguardian.com/society/publicsectorjobs/rss', isRss: true },
     ],
     officialBulletins: [
       { name: 'UK Government', url: 'https://www.gov.uk/', description: 'UK Government Portal' },
