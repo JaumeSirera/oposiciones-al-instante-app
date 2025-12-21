@@ -324,7 +324,12 @@
     "yourInfo": "Your Information",
     "user": "User",
     "level": "Level",
-    "loadingNews": "Loading latest news..."
+    "loadingNews": "Loading latest news...",
+    "officialBulletins": "Official Bulletins - {{country}}",
+    "officialBulletinsDesc": "Access official public employment portals",
+    "publicJobNews": "Public Job News - {{country}}",
+    "noNewsAvailable": "No news available at this time.",
+    "checkOfficialBulletins": "Check official bulletins for the latest job postings."
   },
   "configTest": {
     "back": "Back",

@@ -10,6 +10,9 @@ import logo from '@/assets/logo.png';
 import { supabase } from '@/lib/supabaseClient';
 import { ModalPlanEstudio } from '@/components/ModalPlanEstudio';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
+import { OfficialBulletinsCard } from '@/components/OfficialBulletinsCard';
+import { InternationalNewsCard } from '@/components/InternationalNewsCard';
+import { isSpanishLanguage } from '@/config/newsSourcesConfig';
 
 const BASE_FOTO_URL = 'https://oposiciones-test.com/api/uploads/procesos/';
 const PROXY_FUNCTION = 'php-api-proxy';
@@ -41,7 +44,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   
-  const isSpanish = i18n.language === 'es' || i18n.language.startsWith('es-');
+  const isSpanish = isSpanishLanguage(i18n.language);
   
   const [userStats, setUserStats] = useState({
     totalQuestions: 0,
@@ -516,12 +519,18 @@ const Index = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Noticias internacionales - Para idiomas no españoles */}
+            <InternationalNewsCard />
           </div>
 
           {/* Right Column */}
           <div className="space-y-6">
             {/* Mapa CCAA - Solo en español */}
             {isSpanish && renderMapaCCAA()}
+
+            {/* Boletines Oficiales - Para todos los idiomas */}
+            {!isSpanish && <OfficialBulletinsCard />}
 
             {/* Acciones rápidas */}
             <Card className="bg-white shadow-md border-orange-100">

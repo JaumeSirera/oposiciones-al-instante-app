@@ -324,7 +324,12 @@
     "yourInfo": "Ihre Informationen",
     "user": "Benutzer",
     "level": "Stufe",
-    "loadingNews": "Lädt neueste Nachrichten..."
+    "loadingNews": "Lädt neueste Nachrichten...",
+    "officialBulletins": "Offizielle Stellenportale - {{country}}",
+    "officialBulletinsDesc": "Zugang zu offiziellen öffentlichen Stellenportalen",
+    "publicJobNews": "Öffentliche Stellennachrichten - {{country}}",
+    "noNewsAvailable": "Derzeit keine Nachrichten verfügbar.",
+    "checkOfficialBulletins": "Schauen Sie in die offiziellen Stellenportale für die neuesten Ausschreibungen."
   },
   "configTest": {
     "back": "Zurück",
