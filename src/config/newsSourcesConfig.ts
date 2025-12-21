@@ -40,8 +40,7 @@ export const NEWS_CONFIG: Record<string, CountryNewsConfig> = {
     country: 'France',
     flag: '🇫🇷',
     newsSources: [
-      { name: 'Emploi Public', rssUrl: 'https://www.emploi-collectivites.fr/flux-rss-annonces', isRss: true },
-      { name: 'Fonction Publique', rssUrl: 'https://www.fonction-publique.gouv.fr/rss', isRss: true },
+      { name: 'Le Monde Politique', rssUrl: 'https://www.lemonde.fr/politique/rss_full.xml', isRss: true },
     ],
     officialBulletins: [
       { name: 'Journal Officiel', url: 'https://www.journal-officiel.gouv.fr/', description: 'Journal Officiel de la République Française' },
@@ -55,7 +54,7 @@ export const NEWS_CONFIG: Record<string, CountryNewsConfig> = {
     country: 'Deutschland',
     flag: '🇩🇪',
     newsSources: [
-      { name: 'Öffentlicher Dienst', rssUrl: 'https://www.bund.de/SiteGlobals/Functions/RSSFeed/RSSNewsFeed/RSSNewsFeed.xml', isRss: true },
+      { name: 'Tagesschau Politik', rssUrl: 'https://www.tagesschau.de/xml/rss2/', isRss: true },
     ],
     officialBulletins: [
       { name: 'Bundesgesetzblatt', url: 'https://www.bgbl.de/', description: 'Bundesgesetzblatt (BGBl.)' },
@@ -69,7 +68,7 @@ export const NEWS_CONFIG: Record<string, CountryNewsConfig> = {
     country: 'Portugal',
     flag: '🇵🇹',
     newsSources: [
-      { name: 'Diário da República', rssUrl: 'https://dre.pt/rss', isRss: true },
+      { name: 'Público Portugal', rssUrl: 'https://feeds.feedburner.com/PublicoRSS', isRss: true },
     ],
     officialBulletins: [
       { name: 'Diário da República', url: 'https://dre.pt/', description: 'Diário da República Eletrónico' },
