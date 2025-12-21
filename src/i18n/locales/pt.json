@@ -324,7 +324,12 @@
     "yourInfo": "Suas informações",
     "user": "Utilizador",
     "level": "Nível",
-    "loadingNews": "Carregando últimas notícias..."
+    "loadingNews": "Carregando últimas notícias...",
+    "officialBulletins": "Boletins Oficiais - {{country}}",
+    "officialBulletinsDesc": "Acesse os portais oficiais de emprego público",
+    "publicJobNews": "Notícias de Emprego Público - {{country}}",
+    "noNewsAvailable": "Nenhuma notícia disponível no momento.",
+    "checkOfficialBulletins": "Consulte os boletins oficiais para os últimos concursos."
   },
   "configTest": {
     "back": "Voltar",
