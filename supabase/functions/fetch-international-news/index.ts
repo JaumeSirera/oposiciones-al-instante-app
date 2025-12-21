@@ -14,40 +14,87 @@ interface NewsItem {
   source: string;
 }
 
-// RSS feeds configuration per language/country
+// RSS feeds de empleo público por idioma - usando rss2json para evitar CORS y parsear RSS
 const RSS_FEEDS: Record<string, { name: string; url: string }[]> = {
   en: [
-    { name: 'UK Civil Service', url: 'https://www.civilservicejobs.service.gov.uk/csr/index.cgi?SID=cGFnZWNsYXNzPUpvYnMmcGFnZWFjdGlvbj1zZWFyY2hieWNvbnRleHRpZCZvd25lcj01MDcwMDAwJm93bmVydHlwZT1mYWlyJmNvbnRleHRpZD01MDcwMDAwJnJlcXNpZz0xNzM0ODAwNzE2LTZkYzkyNGQ4OGU0NjcwZDlmNWRlOGVhYjlmOTE0Zjk3MTE4YzNlOTk=&rss=1' },
+    // UK Government Jobs - Indeed UK Public Sector
+    { name: 'UK Public Sector Jobs', url: 'https://www.indeed.co.uk/rss?q=civil+service&l=United+Kingdom' },
+    { name: 'UK Gov Jobs', url: 'https://www.indeed.co.uk/rss?q=public+sector+government&l=United+Kingdom' },
   ],
   fr: [
-    { name: 'Emploi Territorial', url: 'https://www.emploi-territorial.fr/page.php?controller=rss' },
-    { name: 'Fonction Publique', url: 'https://www.lagazettedescommunes.com/rubriques/emploi/feed/' },
+    // Francia - Empleos función pública
+    { name: 'Emploi Public France', url: 'https://www.indeed.fr/rss?q=fonction+publique+concours&l=France' },
+    { name: 'Concours Fonction Publique', url: 'https://www.indeed.fr/rss?q=concours+administratif&l=France' },
   ],
   de: [
-    { name: 'Bund.de Stellenangebote', url: 'https://www.bund.de/SiteGlobals/Functions/RSSFeed/RSSNewsFeed/RSSNewsFeed.xml' },
-    { name: 'Oeffentlicher Dienst News', url: 'https://oeffentlicher-dienst-news.de/feed/' },
+    // Alemania - Empleos servicio público
+    { name: 'Öffentlicher Dienst', url: 'https://de.indeed.com/rss?q=%C3%B6ffentlicher+dienst&l=Deutschland' },
+    { name: 'Beamte Stellen', url: 'https://de.indeed.com/rss?q=beamte+verwaltung&l=Deutschland' },
   ],
   pt: [
-    { name: 'BEP Portugal', url: 'https://www.bep.gov.pt/rss/feed.aspx' },
-    { name: 'Sapo Emprego Público', url: 'https://emprego.sapo.pt/emprego/administracao-publica/rss' },
+    // Portugal - Empleos administración pública
+    { name: 'Emprego Público Portugal', url: 'https://pt.indeed.com/rss?q=administra%C3%A7%C3%A3o+p%C3%BAblica&l=Portugal' },
+    { name: 'Concursos Públicos', url: 'https://pt.indeed.com/rss?q=concurso+p%C3%BAblico&l=Portugal' },
   ],
 };
 
-// Fallback general news feeds if specific job feeds fail
-const FALLBACK_FEEDS: Record<string, { name: string; url: string }> = {
-  en: { name: 'BBC News', url: 'https://feeds.bbci.co.uk/news/rss.xml' },
-  fr: { name: 'Le Monde', url: 'https://www.lemonde.fr/rss/une.xml' },
-  de: { name: 'Tagesschau', url: 'https://www.tagesschau.de/xml/rss2/' },
-  pt: { name: 'Público', url: 'https://feeds.feedburner.com/PublicoRSS' },
+// Mensajes y textos por idioma
+const MESSAGES: Record<string, { noJobs: string; searching: string }> = {
+  en: { noJobs: 'No public sector job listings found', searching: 'Public sector jobs' },
+  fr: { noJobs: 'Aucune offre d\'emploi public trouvée', searching: 'Emplois fonction publique' },
+  de: { noJobs: 'Keine Stellenangebote im öffentlichen Dienst gefunden', searching: 'Öffentlicher Dienst Jobs' },
+  pt: { noJobs: 'Nenhuma oferta de emprego público encontrada', searching: 'Empregos públicos' },
 };
 
-async function fetchAndParseRSS(url: string, sourceName: string): Promise<NewsItem[]> {
+async function fetchViaRss2Json(rssUrl: string, sourceName: string): Promise<NewsItem[]> {
   try {
-    console.log(`Fetching RSS from: ${url}`);
+    // Usar rss2json.com como proxy para parsear RSS (servicio gratuito)
+    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+    
+    console.log(`Fetching via rss2json: ${rssUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.log(`rss2json failed for ${rssUrl}: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    
+    if (data.status !== 'ok' || !data.items) {
+      console.log(`rss2json returned error or no items for ${rssUrl}`);
+      return [];
+    }
+
+    const items: NewsItem[] = data.items.slice(0, 5).map((item: any) => ({
+      title: item.title || '',
+      link: item.link || '',
+      summary: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 200),
+      date: item.pubDate ? new Date(item.pubDate).toLocaleDateString() : '',
+      image: item.thumbnail || item.enclosure?.link || '',
+      source: sourceName,
+    }));
+
+    console.log(`Got ${items.length} items from ${sourceName}`);
+    return items;
+  } catch (error) {
+    console.error(`Error fetching via rss2json ${rssUrl}:`, error);
+    return [];
+  }
+}
+
+async function fetchDirectRSS(url: string, sourceName: string): Promise<NewsItem[]> {
+  try {
+    console.log(`Fetching RSS directly from: ${url}`);
     
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; JobsBot/1.0)',
         'Accept': 'application/rss+xml, application/xml, text/xml, */*',
       },
     });
@@ -60,15 +107,12 @@ async function fetchAndParseRSS(url: string, sourceName: string): Promise<NewsIt
     const text = await response.text();
     const items: NewsItem[] = [];
 
-    // Parse RSS items using regex (simple parser for Deno)
+    // Parse RSS items using regex
     const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
     const titleRegex = /<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i;
     const linkRegex = /<link[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i;
     const descRegex = /<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i;
     const pubDateRegex = /<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i;
-    const imageRegex = /<enclosure[^>]*url=["']([^"']+)["'][^>]*>/i;
-    const mediaRegex = /<media:content[^>]*url=["']([^"']+)["'][^>]*>/i;
-    const imgTagRegex = /<img[^>]*src=["']([^"']+)["'][^>]*>/i;
 
     let match;
     while ((match = itemRegex.exec(text)) !== null && items.length < 5) {
@@ -78,12 +122,10 @@ async function fetchAndParseRSS(url: string, sourceName: string): Promise<NewsIt
       const linkMatch = linkRegex.exec(itemContent);
       const descMatch = descRegex.exec(itemContent);
       const dateMatch = pubDateRegex.exec(itemContent);
-      const imageMatch = imageRegex.exec(itemContent) || mediaRegex.exec(itemContent) || imgTagRegex.exec(descMatch?.[1] || '');
 
       if (titleMatch && linkMatch) {
-        // Clean HTML tags from description
         let summary = descMatch?.[1] || '';
-        summary = summary.replace(/<[^>]*>/g, '').trim();
+        summary = summary.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]*>/g, '').trim();
         summary = summary.substring(0, 200);
 
         items.push({
@@ -91,7 +133,7 @@ async function fetchAndParseRSS(url: string, sourceName: string): Promise<NewsIt
           link: linkMatch[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
           summary,
           date: dateMatch?.[1] ? new Date(dateMatch[1]).toLocaleDateString() : '',
-          image: imageMatch?.[1] || '',
+          image: '',
           source: sourceName,
         });
       }
@@ -106,7 +148,6 @@ async function fetchAndParseRSS(url: string, sourceName: string): Promise<NewsIt
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -115,9 +156,9 @@ serve(async (req) => {
     const { language } = await req.json();
     const lang = (language || 'en').split('-')[0].toLowerCase();
     
-    console.log(`Fetching news for language: ${lang}`);
+    console.log(`Fetching public sector jobs for language: ${lang}`);
 
-    // Skip Spanish as it uses the existing PHP endpoints
+    // Skip Spanish - usa los endpoints PHP existentes
     if (lang === 'es') {
       return new Response(JSON.stringify({ news: [], message: 'Use PHP endpoints for Spanish' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -125,26 +166,39 @@ serve(async (req) => {
     }
 
     const feeds = RSS_FEEDS[lang] || RSS_FEEDS['en'];
+    const messages = MESSAGES[lang] || MESSAGES['en'];
     let allNews: NewsItem[] = [];
 
-    // Try each feed for the language
+    // Intentar obtener noticias de cada feed
     for (const feed of feeds) {
-      const news = await fetchAndParseRSS(feed.url, feed.name);
+      // Primero intentar con rss2json (más confiable para CORS)
+      let news = await fetchViaRss2Json(feed.url, feed.name);
+      
+      // Si falla, intentar directamente
+      if (news.length === 0) {
+        news = await fetchDirectRSS(feed.url, feed.name);
+      }
+      
       allNews = [...allNews, ...news];
       if (allNews.length >= 5) break;
     }
 
-    // If no news found, try fallback
+    // Si no hay noticias, devolver mensaje informativo
     if (allNews.length === 0) {
-      console.log(`No news found for ${lang}, trying fallback`);
-      const fallback = FALLBACK_FEEDS[lang] || FALLBACK_FEEDS['en'];
-      allNews = await fetchAndParseRSS(fallback.url, fallback.name);
+      console.log(`No job listings found for ${lang}`);
+      allNews = [{
+        title: messages.noJobs,
+        link: '',
+        summary: '',
+        date: new Date().toLocaleDateString(),
+        image: '',
+        source: messages.searching,
+      }];
     }
 
-    // Limit to 5 items
     allNews = allNews.slice(0, 5);
 
-    console.log(`Returning ${allNews.length} news items for ${lang}`);
+    console.log(`Returning ${allNews.length} job listings for ${lang}`);
 
     return new Response(JSON.stringify({ news: allNews }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
