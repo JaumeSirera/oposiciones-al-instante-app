@@ -1,5 +1,87 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Beamtenprüfung Tests</string>
-    <string name="title_activity_main">Beamtenprüfung Tests</string>
+    <!-- App Name (30 Zeichen max) -->
+    <string name="app_name">Beamtenprüfung Tests KI</string>
+    <string name="title_activity_main">Beamtenprüfung Tests KI</string>
+    
+    <!-- Short Description (80 Zeichen max) -->
+    <string name="app_short_description">KI-Tests, virtueller Tutor 24/7, Lernpläne und Eignungstests</string>
+    
+    <!-- Full Description (4000 Zeichen max) -->
+    <string name="app_full_description">
+🎯 BEAMTENPRÜFUNG TESTS KI - Ihr Ultimativer Lernbegleiter
+
+Bereiten Sie sich intelligent auf Ihre Beamtenprüfungen vor mit unserer All-in-One-App. Über 10.000 Kandidaten vertrauen uns bereits.
+
+✨ HAUPTFUNKTIONEN:
+
+📝 KI-PERSONALISIERTE TESTS
+• Unbegrenzte Tests mit künstlicher Intelligenz
+• Adaptive Schwierigkeit nach Ihrem Niveau
+• Themenspezifische oder zufällige Tests
+• Offizielle zeitgesteuerte Simulationen
+• Vollständige Eignungstests
+• IPF-B Persönlichkeitsbewertung
+
+🤖 VIRTUELLER TUTOR 24/7
+• Sofortige Antworten mit KI
+• Detaillierte Erklärungen für jede Antwort
+• Personalisierte Lerntechniken
+• Spezifische Ratschläge für Ihre Prüfung
+
+📚 AUTOMATISCHE ZUSAMMENFASSUNGEN
+• PDF-Lehrpläne hochladen
+• Intelligente Zusammenfassungen erstellen
+• Optimierte Lernkarten
+• Stunden der Vorbereitung sparen
+
+📅 PERSONALISIERTE LERNPLÄNE
+• Tägliche Vorbereitung organisieren
+• Automatische Erinnerungen
+• Fortschrittsverfolgung
+• An Ihren Zeitplan angepasste Pläne
+
+💪 KÖRPERLICHE VORBEREITUNG
+• Spezifische WODs für jede Prüfung
+• Progressive Übungsroutinen
+• Leistungsverfolgung
+
+📊 STATISTIKEN UND RANGLISTE
+• Echtzeit-Fortschrittsdiagramme
+• Schwächenanalyse
+• Nationaler Wettbewerb
+
+🎓 VERFÜGBARE PRÜFUNGEN:
+✓ Polizei
+✓ Feuerwehr
+✓ Post
+✓ Verwaltungsangestellte
+✓ Justiz
+✓ Finanzamt
+✓ Und viele mehr...
+
+💡 WARUM BEAMTENPRÜFUNG TESTS?
+
+🚀 Modernste KI-Technologie
+📱 Lernen Sie überall, jederzeit
+💰 Intelligente Investition
+🔒 Datenschutz garantiert
+
+📈 BEWIESENE ERGEBNISSE:
+• 85% verbessern ihre Note im ersten Monat
+• Tausende erfolgreiche Kandidaten
+• 4.8/5 Sterne Bewertung
+
+🎁 KOSTENLOSE TESTVERSION: 30 Tage unverbindlich
+
+💪 SICHERN SIE SICH IHRE STELLE!
+
+#Beamtenprüfung #Vorbereitung #KI #Polizei #Feuerwehr #Verwaltung #Lernen #Karriere
+    </string>
+    
+    <!-- Promo Text -->
+    <string name="promo_text">Bereiten Sie sich mit KI auf Beamtenprüfungen vor: personalisierte Tests, virtueller Tutor 24/7 und Lernpläne. Über 10.000 Nutzer!</string>
+    
+    <!-- Keywords für ASO -->
+    <string name="keywords">beamtenprüfung, tests, vorbereitung, polizei, feuerwehr, verwaltung, KI, künstliche intelligenz, zusammenfassungen, eignungstests</string>
 </resources>

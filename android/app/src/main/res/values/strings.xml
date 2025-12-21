@@ -1,7 +1,90 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Oposiciones Test</string>
-    <string name="title_activity_main">Oposiciones Test</string>
+    <!-- App Name (30 caracteres máximo) -->
+    <string name="app_name">Oposiciones Test IA</string>
+    <string name="title_activity_main">Oposiciones Test IA</string>
     <string name="package_name">com.oposicionestest.app</string>
     <string name="custom_url_scheme">com.oposicionestest.app</string>
+    
+    <!-- Short Description (80 caracteres máximo) -->
+    <string name="app_short_description">Tests con IA, profesor virtual 24/7, planes de estudio y psicotécnicos</string>
+    
+    <!-- Full Description (4000 caracteres máximo) -->
+    <string name="app_full_description">
+🎯 OPOSICIONES TEST IA - Tu Compañero Definitivo para Aprobar
+
+Prepara tus oposiciones de forma inteligente con nuestra app todo-en-uno. Más de 10.000 opositores ya confían en nosotros.
+
+✨ CARACTERÍSTICAS PRINCIPALES:
+
+📝 TESTS PERSONALIZADOS CON IA
+• Genera tests ilimitados con inteligencia artificial
+• Adapta la dificultad según tu nivel
+• Tests por temas o aleatorios
+• Simulacros cronometrados oficiales
+• Tests psicotécnicos completos
+• Test de personalidad IPF-B
+
+🤖 PROFESOR VIRTUAL 24/7
+• Resuelve tus dudas al instante con IA
+• Explicaciones detalladas de cada respuesta
+• Técnicas de estudio personalizadas
+• Consejos específicos para tu oposición
+
+📚 RESÚMENES AUTOMÁTICOS
+• Sube PDFs de tu temario
+• Genera resúmenes inteligentes
+• Fichas de estudio optimizadas
+• Ahorra horas de preparación
+
+📅 PLANES DE ESTUDIO PERSONALIZADOS
+• Organiza tu preparación día a día
+• Recordatorios automáticos
+• Seguimiento de progreso
+• Planes adaptados a tu tiempo
+
+💪 PREPARACIÓN FÍSICA
+• WODs específicos para cada oposición
+• Tablas de ejercicios progresivas
+• Seguimiento de marcas
+
+📊 ESTADÍSTICAS Y RANKING
+• Gráficos de evolución en tiempo real
+• Análisis de puntos débiles
+• Compite con opositores de toda España
+
+🎓 OPOSICIONES DISPONIBLES:
+✓ Policía Nacional y Local
+✓ Guardia Civil
+✓ Bomberos
+✓ Correos
+✓ Administrativo del Estado
+✓ Auxiliar Administrativo
+✓ Justicia y Hacienda
+✓ Y muchas más...
+
+💡 ¿POR QUÉ OPOSICIONES TEST?
+
+🚀 Tecnología IA de última generación
+📱 Estudia donde quieras, cuando quieras
+💰 Inversión inteligente
+🔒 Privacidad garantizada
+
+📈 RESULTADOS COMPROBADOS:
+• 85% mejora su nota en el primer mes
+• Miles de aprobados
+• Puntuación 4.8/5 estrellas
+
+🎁 PRUEBA GRATIS: 30 días sin compromiso
+
+💪 ¡CONSIGUE TU PLAZA YA!
+
+#Oposiciones #Tests #IA #PolicíaNacional #GuardiaCivil #Bomberos #Correos #Administrativo
+    </string>
+    
+    <!-- Promo Text -->
+    <string name="promo_text">Prepara tus oposiciones con IA: tests personalizados, profesor virtual 24/7 y planes de estudio. ¡Más de 10.000 usuarios!</string>
+    
+    <!-- Keywords para ASO -->
+    <string name="keywords">oposiciones, tests, exámenes, preparación, policía, guardia civil, bomberos, correos, administrativo, IA, inteligencia artificial, resúmenes, psicotécnicos</string>
 </resources>
