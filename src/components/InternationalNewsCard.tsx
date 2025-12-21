@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getNewsConfigForLanguage, isSpanishLanguage } from '@/config/newsSourcesConfig';
-import { supabase } from '@/integrations/supabase/client';
 
 interface NewsItem {
   title: string;
@@ -13,6 +12,9 @@ interface NewsItem {
   image?: string;
   source?: string;
 }
+
+const SUPABASE_URL = 'https://yrjwyeuqfleqhbveohrf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlyand5ZXVxZmxlcWhidmVvaHJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjM1OTUsImV4cCI6MjA3NTUzOTU5NX0.QeAWfPjecNzz_d1MY1UHYmVN9bYl23rzot9gDsUtXKY';
 
 export function InternationalNewsCard() {
   const { i18n, t } = useTranslation();
@@ -33,15 +35,20 @@ export function InternationalNewsCard() {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        // Usar la edge function para obtener noticias
-        const { data, error } = await supabase.functions.invoke('fetch-international-news', {
-          body: { language: i18n.language },
+        // Llamar directamente a la edge function sin usar el cliente Supabase
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/fetch-international-news`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ language: i18n.language }),
         });
 
-        if (error) {
-          console.error('Error fetching international news:', error);
-          setNews([]);
-        } else if (data?.news && Array.isArray(data.news)) {
+        const data = await response.json();
+
+        if (data?.news && Array.isArray(data.news)) {
           setNews(data.news);
         } else {
           setNews([]);
