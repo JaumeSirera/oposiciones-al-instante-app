@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getNewsConfigForLanguage, isSpanishLanguage } from '@/config/newsSourcesConfig';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NewsItem {
   title: string;
@@ -10,6 +11,7 @@ interface NewsItem {
   summary?: string;
   date?: string;
   image?: string;
+  source?: string;
 }
 
 export function InternationalNewsCard() {
@@ -31,28 +33,16 @@ export function InternationalNewsCard() {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        // Para fuentes RSS, intentamos cargar a través de un proxy CORS o servicio RSS
-        const rssSource = config.newsSources.find(s => s.isRss && s.rssUrl);
-        
-        if (rssSource?.rssUrl) {
-          // Usar un servicio RSS-to-JSON público
-          const rssProxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssSource.rssUrl)}`;
-          
-          const response = await fetch(rssProxyUrl);
-          const data = await response.json();
-          
-          if (data.status === 'ok' && Array.isArray(data.items)) {
-            const formattedNews: NewsItem[] = data.items.slice(0, 5).map((item: any) => ({
-              title: item.title || '',
-              link: item.link || '',
-              summary: item.description?.replace(/<[^>]*>/g, '').substring(0, 150) || '',
-              date: item.pubDate ? new Date(item.pubDate).toLocaleDateString(i18n.language) : '',
-              image: item.enclosure?.link || item.thumbnail || '',
-            }));
-            setNews(formattedNews);
-          } else {
-            setNews([]);
-          }
+        // Usar la edge function para obtener noticias
+        const { data, error } = await supabase.functions.invoke('fetch-international-news', {
+          body: { language: i18n.language },
+        });
+
+        if (error) {
+          console.error('Error fetching international news:', error);
+          setNews([]);
+        } else if (data?.news && Array.isArray(data.news)) {
+          setNews(data.news);
         } else {
           setNews([]);
         }
@@ -65,7 +55,7 @@ export function InternationalNewsCard() {
     };
 
     fetchNews();
-  }, [i18n.language, isSpanish, config]);
+  }, [i18n.language, isSpanish]);
 
   // No renderizar si es español (las noticias españolas se muestran en otro componente)
   if (isSpanish) {
@@ -108,11 +98,16 @@ export function InternationalNewsCard() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-green-900 line-clamp-2">{n.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-green-900 line-clamp-2">{n.title}</h3>
+                  </div>
                   {n.summary && (
                     <p className="text-sm text-gray-700 line-clamp-2 mt-1">{n.summary}</p>
                   )}
-                  {n.date && <p className="text-xs text-gray-500 mt-1">{n.date}</p>}
+                  <div className="flex items-center gap-2 mt-1">
+                    {n.source && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">{n.source}</span>}
+                    {n.date && <span className="text-xs text-gray-500">{n.date}</span>}
+                  </div>
                 </div>
                 <ExternalLink className="w-4 h-4 text-green-600 flex-shrink-0" />
               </a>
