@@ -1,5 +1,87 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Testes Concursos Públicos</string>
-    <string name="title_activity_main">Testes Concursos Públicos</string>
+    <!-- App Name (30 caracteres máx) -->
+    <string name="app_name">Concursos Públicos Testes IA</string>
+    <string name="title_activity_main">Concursos Públicos Testes IA</string>
+    
+    <!-- Short Description (80 caracteres máx) -->
+    <string name="app_short_description">Testes IA, tutor virtual 24/7, planos de estudo e testes psicotécnicos</string>
+    
+    <!-- Full Description (4000 caracteres máx) -->
+    <string name="app_full_description">
+🎯 CONCURSOS PÚBLICOS TESTES IA - Seu Companheiro de Estudo Definitivo
+
+Prepare-se para seus concursos de forma inteligente com nosso aplicativo tudo-em-um. Mais de 10.000 candidatos já confiam em nós.
+
+✨ FUNCIONALIDADES PRINCIPAIS:
+
+📝 TESTES PERSONALIZADOS COM IA
+• Gere testes ilimitados com inteligência artificial
+• Dificuldade adaptativa ao seu nível
+• Testes por tema ou aleatórios
+• Simulados cronometrados oficiais
+• Testes psicotécnicos completos
+• Avaliação de personalidade IPF-B
+
+🤖 TUTOR VIRTUAL 24/7
+• Obtenha respostas instantâneas com IA
+• Explicações detalhadas para cada resposta
+• Técnicas de estudo personalizadas
+• Conselhos específicos para seu concurso
+
+📚 RESUMOS AUTOMÁTICOS
+• Carregue PDFs do seu edital
+• Gere resumos inteligentes
+• Fichas de estudo otimizadas
+• Economize horas de preparação
+
+📅 PLANOS DE ESTUDO PERSONALIZADOS
+• Organize sua preparação diária
+• Lembretes automáticos
+• Acompanhamento de progresso
+• Planos adaptados ao seu tempo
+
+💪 PREPARAÇÃO FÍSICA
+• WODs específicos para cada concurso
+• Rotinas de exercícios progressivas
+• Acompanhamento de desempenho
+
+📊 ESTATÍSTICAS E RANKING
+• Gráficos de evolução em tempo real
+• Análise de pontos fracos
+• Compete com candidatos de todo o país
+
+🎓 CONCURSOS DISPONÍVEIS:
+✓ Polícia Civil e Militar
+✓ Bombeiros
+✓ Correios
+✓ Assistente Administrativo
+✓ Tribunal de Justiça
+✓ Receita Federal
+✓ E muitos mais...
+
+💡 POR QUE CONCURSOS PÚBLICOS TESTES?
+
+🚀 Tecnologia IA de última geração
+📱 Estude onde quiser, quando quiser
+💰 Investimento inteligente
+🔒 Privacidade garantida
+
+📈 RESULTADOS COMPROVADOS:
+• 85% melhoram sua nota no primeiro mês
+• Milhares de aprovados
+• Avaliação de 4.8/5 estrelas
+
+🎁 TESTE GRÁTIS: 30 dias sem compromisso
+
+💪 CONQUISTE SUA VAGA!
+
+#Concursos #ConcursosPúblicos #IA #Polícia #Bombeiros #Administrativo #Estudo #Preparação
+    </string>
+    
+    <!-- Promo Text -->
+    <string name="promo_text">Prepare-se para concursos com IA: testes personalizados, tutor virtual 24/7 e planos de estudo. Mais de 10.000 usuários!</string>
+    
+    <!-- Keywords para ASO -->
+    <string name="keywords">concursos públicos, testes, preparação, polícia, bombeiros, correios, administrativo, IA, inteligência artificial, resumos, psicotécnicos</string>
 </resources>

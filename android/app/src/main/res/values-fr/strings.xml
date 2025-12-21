@@ -1,5 +1,88 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Tests Concours Fonction Publique</string>
-    <string name="title_activity_main">Tests Concours Fonction Publique</string>
+    <!-- App Name (30 caractères max) -->
+    <string name="app_name">Concours Fonction Publique IA</string>
+    <string name="title_activity_main">Concours Fonction Publique IA</string>
+    
+    <!-- Short Description (80 caractères max) -->
+    <string name="app_short_description">Tests IA, tuteur virtuel 24/7, plans d\'étude et tests psychotechniques</string>
+    
+    <!-- Full Description (4000 caractères max) -->
+    <string name="app_full_description">
+🎯 CONCOURS FONCTION PUBLIQUE IA - Votre Compagnon d\'Étude Ultime
+
+Préparez vos concours intelligemment avec notre application tout-en-un. Plus de 10 000 candidats nous font déjà confiance.
+
+✨ FONCTIONNALITÉS PRINCIPALES:
+
+📝 TESTS PERSONNALISÉS AVEC IA
+• Générez des tests illimités avec l\'intelligence artificielle
+• Difficulté adaptative selon votre niveau
+• Tests par thème ou aléatoires
+• Simulations chronométrées officielles
+• Tests psychotechniques complets
+• Évaluation de personnalité IPF-B
+
+🤖 TUTEUR VIRTUEL 24/7
+• Obtenez des réponses instantanées avec l\'IA
+• Explications détaillées pour chaque réponse
+• Techniques d\'étude personnalisées
+• Conseils spécifiques pour votre concours
+
+📚 RÉSUMÉS AUTOMATIQUES
+• Téléchargez vos PDF de programme
+• Générez des résumés intelligents
+• Fiches d\'étude optimisées
+• Économisez des heures de préparation
+
+📅 PLANS D\'ÉTUDE PERSONNALISÉS
+• Organisez votre préparation quotidienne
+• Rappels automatiques
+• Suivi de progression
+• Plans adaptés à votre emploi du temps
+
+💪 PRÉPARATION PHYSIQUE
+• WODs spécifiques pour chaque concours
+• Routines d\'exercices progressives
+• Suivi des performances
+
+📊 STATISTIQUES ET CLASSEMENT
+• Graphiques d\'évolution en temps réel
+• Analyse des points faibles
+• Compétition nationale
+
+🎓 CONCOURS DISPONIBLES:
+✓ Police Nationale
+✓ Gendarmerie
+✓ Pompiers
+✓ La Poste
+✓ Adjoint Administratif
+✓ Greffier
+✓ Impôts
+✓ Et bien d\'autres...
+
+💡 POURQUOI CONCOURS FONCTION PUBLIQUE?
+
+🚀 Technologie IA de pointe
+📱 Étudiez où vous voulez, quand vous voulez
+💰 Investissement intelligent
+🔒 Confidentialité garantie
+
+📈 RÉSULTATS PROUVÉS:
+• 85% améliorent leur note le premier mois
+• Des milliers de reçus
+• Note de 4.8/5 étoiles
+
+🎁 ESSAI GRATUIT: 30 jours sans engagement
+
+💪 DÉCROCHEZ VOTRE POSTE!
+
+#Concours #FonctionPublique #IA #Police #Pompiers #Administratif #Étude #Préparation
+    </string>
+    
+    <!-- Promo Text -->
+    <string name="promo_text">Préparez vos concours avec l\'IA: tests personnalisés, tuteur virtuel 24/7 et plans d\'étude. Plus de 10 000 utilisateurs!</string>
+    
+    <!-- Keywords pour ASO -->
+    <string name="keywords">concours, fonction publique, tests, préparation, police, gendarmerie, pompiers, administratif, IA, intelligence artificielle, résumés, psychotechniques</string>
 </resources>
