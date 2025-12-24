@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, X, FileQuestion, Upload, FileText, Languages, Zap } from 'lucide-react';
+import { Loader2, ArrowLeft, X, FileQuestion, Upload, FileText, Languages, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Textarea } from '@/components/ui/textarea';
 import { testService, type Proceso } from '@/services/testService';
 import { supabase } from '@/lib/supabaseClient';
@@ -62,6 +63,7 @@ export default function CrearTest() {
   const [useCustomProceso, setUseCustomProceso] = useState(false);
   const [useCustomSeccion, setUseCustomSeccion] = useState(false);
   const [useCustomTema, setUseCustomTema] = useState(false);
+  const [showContentSection, setShowContentSection] = useState(false);
 
   useEffect(() => {
     const loadProcesos = async () => {
@@ -460,147 +462,9 @@ export default function CrearTest() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Documento o Texto Base */}
-              <div className="space-y-4">
-                <div>
-                  <Label>{t('createTest.documentOrText')} *</Label>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t('createTest.documentOrTextDesc')}
-                  </p>
-                  
-                  {extractingText && (
-                    <div className="border-2 border-primary rounded-lg p-8 bg-primary/5">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="relative">
-                          <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                          <div className="absolute inset-0 animate-ping">
-                            <Loader2 className="h-12 w-12 text-primary/30" />
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <p className="font-semibold text-lg mb-1">{t('createTest.extractingText')}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {t('createTest.mayTakeFewSeconds')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {!extractingText && !archivo && !formData.textoBase && (
-                    <div className="space-y-4">
-                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                        <Input
-                          id="archivo"
-                          type="file"
-                          accept=".pdf,.doc,.docx,.txt"
-                          onChange={handleArchivoChange}
-                          className="hidden"
-                          disabled={extractingText || loading}
-                        />
-                        <label
-                          htmlFor="archivo"
-                          className="cursor-pointer flex flex-col items-center gap-2"
-                        >
-                          <Upload className="h-8 w-8 text-muted-foreground" />
-                          <span className="text-sm font-medium">
-                            {t('createTest.uploadDocument')}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            PDF, DOC, DOCX {t('createTest.or')} TXT
-                          </span>
-                        </label>
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">
-                            {t('createTest.orWriteText')}
-                          </span>
-                        </div>
-                      </div>
-
-                      <Textarea
-                        placeholder={t('createTest.writeOrPasteText')}
-                        value={formData.textoBase}
-                        onChange={(e) => setFormData({ ...formData, textoBase: e.target.value })}
-                        className="min-h-[200px]"
-                        disabled={extractingText || loading}
-                      />
-                    </div>
-                  )}
-
-                  {!extractingText && archivo && (
-                    <div className="border rounded-lg p-4 bg-muted/50">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-3 flex-1">
-                          <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{archivo.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {(archivo.size / 1024).toFixed(2)} KB
-                            </p>
-                            {formData.textoBase && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <div className="h-2 w-2 rounded-full bg-green-600 animate-pulse" />
-                                <p className="text-xs text-green-600 font-medium">
-                                  {t('createTest.textExtractedCorrectly', { chars: formData.textoBase.length })}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setArchivo(null);
-                            setFormData({ ...formData, textoBase: '' });
-                          }}
-                          disabled={extractingText || loading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {!archivo && formData.textoBase && (
-                    <div className="border rounded-lg p-4 bg-muted/50">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-3 flex-1">
-                          <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm">{t('createTest.textProvided')}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {formData.textoBase.length} {t('createTest.characters')}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setFormData({ ...formData, textoBase: '' });
-                          }}
-                          disabled={loading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Proceso */}
+              {/* Oposición (antes Proceso) */}
               <div className="space-y-2">
-                <Label htmlFor="proceso">{t('createTest.process')} *</Label>
+                <Label htmlFor="proceso">{t('createTest.opposition')}</Label>
                 <div className="space-y-2">
                   {!useCustomProceso ? (
                     <>
@@ -614,7 +478,7 @@ export default function CrearTest() {
                         disabled={loadingProcesos}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={loadingProcesos ? t('createTest.loading') : t('createTest.selectProcess')} />
+                          <SelectValue placeholder={loadingProcesos ? t('createTest.loading') : t('createTest.selectOpposition')} />
                         </SelectTrigger>
                         <SelectContent>
                           {isTranslating && needsTranslation && (
@@ -688,7 +552,7 @@ export default function CrearTest() {
                           <SelectValue 
                             placeholder={
                               loadingSecciones ? t('createTest.loading') :
-                              !formData.proceso && !useCustomProceso ? t('createTest.firstSelectProcess') :
+                              !formData.proceso && !useCustomProceso ? t('createTest.firstSelectOpposition') :
                               secciones.length === 0 ? t('createTest.noSectionsAvailable') :
                               t('createTest.selectSection')
                             } 
@@ -853,7 +717,7 @@ export default function CrearTest() {
 
               {/* Número de preguntas */}
               <div className="space-y-2">
-                <Label htmlFor="numPreguntas">{t('createTest.numberOfQuestions')} *</Label>
+                <Label htmlFor="numPreguntas">{t('createTest.numberOfQuestions')}</Label>
                 <Input
                   id="numPreguntas"
                   type="number"
@@ -867,6 +731,156 @@ export default function CrearTest() {
                   {t('createTest.between1And200')}
                 </p>
               </div>
+
+              {/* Contenido de referencia (opcional, colapsable) */}
+              <Collapsible open={showContentSection} onOpenChange={setShowContentSection}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      {archivo || formData.textoBase ? t('createTest.hideContent') : t('createTest.addContentButton')}
+                    </span>
+                    {showContentSection ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4 space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('createTest.documentOrTextDesc')}
+                  </p>
+                  
+                  {extractingText && (
+                    <div className="border-2 border-primary rounded-lg p-8 bg-primary/5">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative">
+                          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                          <div className="absolute inset-0 animate-ping">
+                            <Loader2 className="h-12 w-12 text-primary/30" />
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="font-semibold text-lg mb-1">{t('createTest.extractingText')}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {t('createTest.mayTakeFewSeconds')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!extractingText && !archivo && !formData.textoBase && (
+                    <div className="space-y-4">
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                        <Input
+                          id="archivo"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={handleArchivoChange}
+                          className="hidden"
+                          disabled={extractingText || loading}
+                        />
+                        <label
+                          htmlFor="archivo"
+                          className="cursor-pointer flex flex-col items-center gap-2"
+                        >
+                          <Upload className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            {t('createTest.uploadDocument')}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            PDF, DOC, DOCX {t('createTest.or')} TXT
+                          </span>
+                        </label>
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">
+                            {t('createTest.orWriteText')}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Textarea
+                        placeholder={t('createTest.writeOrPasteText')}
+                        value={formData.textoBase}
+                        onChange={(e) => setFormData({ ...formData, textoBase: e.target.value })}
+                        className="min-h-[200px]"
+                        disabled={extractingText || loading}
+                      />
+                    </div>
+                  )}
+
+                  {!extractingText && archivo && (
+                    <div className="border rounded-lg p-4 bg-muted/50">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{archivo.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {(archivo.size / 1024).toFixed(2)} KB
+                            </p>
+                            {formData.textoBase && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <div className="h-2 w-2 rounded-full bg-green-600 animate-pulse" />
+                                <p className="text-xs text-green-600 font-medium">
+                                  {t('createTest.textExtractedCorrectly', { chars: formData.textoBase.length })}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setArchivo(null);
+                            setFormData({ ...formData, textoBase: '' });
+                          }}
+                          disabled={extractingText || loading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!archivo && formData.textoBase && (
+                    <div className="border rounded-lg p-4 bg-muted/50">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <FileText className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{t('createTest.textProvided')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {formData.textoBase.length} {t('createTest.characters')}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFormData({ ...formData, textoBase: '' });
+                          }}
+                          disabled={loading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
 
               {/* Progress Indicator */}
               {(progressInfo || (loadingIA && progressIA)) && (
