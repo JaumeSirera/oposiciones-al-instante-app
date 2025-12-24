@@ -465,7 +465,7 @@ export default function CrearPsicotecnicos() {
                       </Select>
                       <Button
                         type="button"
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setUseCustomProceso(true);
@@ -473,9 +473,10 @@ export default function CrearPsicotecnicos() {
                           setSeccionesSeleccionadas([]);
                           setTemasSeleccionados([]);
                         }}
-                        className="h-auto p-0 text-xs"
+                        className="mt-2"
                       >
-                        {t('createPsychotechnics.orWriteCustom')}
+                        <FileText className="w-4 h-4 mr-2" />
+                        {t('createPsychotechnics.writeCustomOpposition')}
                       </Button>
                     </>
                   ) : (
@@ -558,16 +559,17 @@ export default function CrearPsicotecnicos() {
                       
                       <Button
                         type="button"
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setUseCustomSeccion(true);
                           setSeccionesSeleccionadas([]);
                           setTemasSeleccionados([]);
                         }}
-                        className="h-auto p-0 text-xs"
+                        className="mt-2"
                       >
-                        {t('createPsychotechnics.orWriteCustom')}
+                        <FileText className="w-4 h-4 mr-2" />
+                        {t('createPsychotechnics.writeCustomSection')}
                       </Button>
                     </>
                   ) : (
@@ -650,15 +652,16 @@ export default function CrearPsicotecnicos() {
                       
                       <Button
                         type="button"
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setUseCustomTema(true);
                           setTemasSeleccionados([]);
                         }}
-                        className="h-auto p-0 text-xs"
+                        className="mt-2"
                       >
-                        {t('createPsychotechnics.orWriteCustom')}
+                        <FileText className="w-4 h-4 mr-2" />
+                        {t('createPsychotechnics.writeCustomTopic')}
                       </Button>
                     </>
                   ) : (
