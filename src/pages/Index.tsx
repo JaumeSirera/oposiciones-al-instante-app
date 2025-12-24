@@ -13,6 +13,7 @@ import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { OfficialBulletinsCard } from '@/components/OfficialBulletinsCard';
 import { InternationalNewsCard } from '@/components/InternationalNewsCard';
 import { isSpanishLanguage } from '@/config/newsSourcesConfig';
+import QuickStartGuide from '@/components/QuickStartGuide';
 
 const BASE_FOTO_URL = 'https://oposiciones-test.com/api/uploads/procesos/';
 const PROXY_FUNCTION = 'php-api-proxy';
@@ -330,6 +331,9 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Quick Start Guide */}
+        <QuickStartGuide />
 
         {/* Call to Action - Planes de Estudio */}
         <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-xl mb-6">
