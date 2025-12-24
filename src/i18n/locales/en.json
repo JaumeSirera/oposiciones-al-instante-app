@@ -97,10 +97,7 @@
       "bullet3Title": "Real simulations:",
       "bullet3Text": "timer, ranking and detailed statistics.",
       "customTests": {
-        "title": "Create your own custom tests!",
-        "description": "Upload any document or paste text, and our AI will automatically generate questions and psychotechnics tailored to your syllabus.",
-        "questionsButton": "Generate Questions",
-        "psychoButton": "Generate Psychotechnics"
+        "highlight": "Create your own custom tests with questions and psychotechnics from any document or text!"
       }
     },
     "features": {

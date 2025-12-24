@@ -97,10 +97,7 @@
       "bullet3Title": "Simulacros reales:",
       "bullet3Text": "cronómetro, ranking y estadísticas detalladas.",
       "customTests": {
-        "title": "¡Crea tus propios tests personalizados!",
-        "description": "Sube cualquier documento o pega un texto, y nuestra IA generará automáticamente preguntas y psicotécnicos adaptados a tu temario.",
-        "questionsButton": "Generar Preguntas",
-        "psychoButton": "Generar Psicotécnicos"
+        "highlight": "¡Crea tus propios tests personalizados de preguntas y psicotécnicos a partir de cualquier documento o texto!"
       }
     },
     "features": {
