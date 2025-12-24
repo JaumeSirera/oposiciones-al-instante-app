@@ -496,7 +496,7 @@ export default function CrearTest() {
                       </Select>
                       <Button
                         type="button"
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setUseCustomProceso(true);
@@ -504,9 +504,10 @@ export default function CrearTest() {
                           setSeccionesSeleccionadas([]);
                           setTemasSeleccionados([]);
                         }}
-                        className="h-auto p-0 text-xs"
+                        className="mt-2"
                       >
-                        {t('createTest.orWriteCustom')}
+                        <FileText className="w-4 h-4 mr-2" />
+                        {t('createTest.writeCustomOpposition')}
                       </Button>
                     </>
                   ) : (
@@ -589,16 +590,17 @@ export default function CrearTest() {
                       
                       <Button
                         type="button"
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setUseCustomSeccion(true);
                           setSeccionesSeleccionadas([]);
                           setTemasSeleccionados([]);
                         }}
-                        className="h-auto p-0 text-xs"
+                        className="mt-2"
                       >
-                        {t('createTest.orWriteCustom')}
+                        <FileText className="w-4 h-4 mr-2" />
+                        {t('createTest.writeCustomSection')}
                       </Button>
                     </>
                   ) : (
@@ -680,15 +682,16 @@ export default function CrearTest() {
                       
                       <Button
                         type="button"
-                        variant="link"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setUseCustomTema(true);
                           setTemasSeleccionados([]);
                         }}
-                        className="h-auto p-0 text-xs"
+                        className="mt-2"
                       >
-                        {t('createTest.orWriteCustom')}
+                        <FileText className="w-4 h-4 mr-2" />
+                        {t('createTest.writeCustomTopic')}
                       </Button>
                     </>
                   ) : (
