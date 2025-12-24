@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Brain, TrendingUp, Users, Target, Award, Heart, Menu, X } from "lucide-react";
+import { BookOpen, Brain, TrendingUp, Users, Target, Award, Heart, Menu, X, FileText, Sparkles } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
@@ -164,6 +164,31 @@ const Landing = () => {
               <p><strong>✔ {t('landing.hero.bullet1Title')}</strong> {t('landing.hero.bullet1Text')}</p>
               <p><strong>✔ {t('landing.hero.bullet2Title')}</strong> {t('landing.hero.bullet2Text')}</p>
               <p><strong>✔ {t('landing.hero.bullet3Title')}</strong> {t('landing.hero.bullet3Text')}</p>
+            </div>
+
+            {/* Destacado: Tests personalizados */}
+            <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-purple-600/30 to-blue-600/30 backdrop-blur-md border border-white/20">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-purple-500/30">
+                  <Sparkles className="w-6 h-6 text-purple-300" />
+                </div>
+                <h3 className="text-2xl font-bold text-white">{t('landing.hero.customTests.title')}</h3>
+              </div>
+              <p className="text-gray-200 text-lg mb-6">{t('landing.hero.customTests.description')}</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/auth">
+                  <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white gap-2">
+                    <FileText className="w-5 h-5" />
+                    {t('landing.hero.customTests.questionsButton')}
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                    <Brain className="w-5 h-5" />
+                    {t('landing.hero.customTests.psychoButton')}
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
