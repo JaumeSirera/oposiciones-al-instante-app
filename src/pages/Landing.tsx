@@ -148,11 +148,16 @@ const Landing = () => {
               {t('landing.hero.subtitle')}
             </p>
             {/* Destacado: Tests personalizados */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-md border border-white/20 mb-8">
-              <div className="flex items-center justify-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-300" />
-                <p className="text-white font-medium">
+            <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-purple-600/40 to-blue-600/40 backdrop-blur-lg border-2 border-purple-400/50 mb-10 shadow-2xl shadow-purple-500/20 animate-pulse-slow">
+              <div className="flex flex-col items-center justify-center gap-3 text-center">
+                <div className="p-3 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <p className="text-xl md:text-2xl text-white font-bold leading-relaxed">
                   {t('landing.hero.customTests.highlight')}
+                </p>
+                <p className="text-purple-200 text-sm md:text-base">
+                  ✨ Sube un PDF, Word o pega texto → Obtén tests listos para practicar
                 </p>
               </div>
             </div>
