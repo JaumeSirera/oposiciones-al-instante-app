@@ -16,7 +16,8 @@ import {
   Calendar,
   Dumbbell,
   User,
-  Bell
+  Bell,
+  Mail
 } from "lucide-react";
 import {
   Sidebar,
@@ -72,6 +73,7 @@ export function AppSidebar() {
         { title: t('nav.studyPlans'), url: "/planes-estudio", icon: Calendar, notForUsuario: true },
         { title: t('nav.physicalPlans'), url: "/planes-fisicos", icon: Dumbbell, notForUsuario: true },
         { title: t('nav.reminders'), url: "/administrar-recordatorios", icon: Bell, requiresAdmin: true },
+        { title: "Email Actualización", url: "/enviar-email-actualizacion", icon: Mail, requiresSA: true },
       ]
     },
     {
@@ -93,7 +95,9 @@ export function AppSidebar() {
   const filteredMenuItems = menuItems.map(section => {
     if (section.group === t('sidebar.aiTools')) {
       // SA puede ver todo
-      if (isSuperAdmin) return section;
+      if (isSuperAdmin) {
+        return section;
+      }
       
       // Administrador puede ver herramientas IA excepto las que requieren SA
       if (isAdmin) {
