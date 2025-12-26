@@ -141,26 +141,29 @@ const Landing = () => {
 
         <section className="container mx-auto px-4 py-20 md:py-32">
           <div className="max-w-5xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 leading-tight">
               {t('landing.hero.titlePart1')}<span className="text-blue-400">{t('landing.hero.titleHighlight')}</span>{t('landing.hero.titlePart2')}
             </h1>
-            <p className="text-xl md:text-2xl text-gray-200 mb-8 leading-relaxed">
-              {t('landing.hero.subtitle')}
-            </p>
+            
             {/* Destacado: Tests personalizados */}
-            <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-purple-600/40 to-blue-600/40 backdrop-blur-lg border-2 border-purple-400/50 mb-10 shadow-2xl shadow-purple-500/20 animate-pulse-slow">
-              <div className="flex flex-col items-center justify-center gap-3 text-center">
-                <div className="p-3 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg">
-                  <Sparkles className="w-8 h-8 text-white" />
+            <div className="p-4 md:p-6 rounded-2xl bg-gradient-to-r from-purple-600/40 to-blue-600/40 backdrop-blur-lg border-2 border-purple-400/50 mb-6 shadow-2xl shadow-purple-500/20 animate-pulse-slow">
+              <div className="flex flex-col items-center justify-center gap-2 text-center">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-purple-300" />
+                  <p className="text-lg md:text-xl text-white font-bold">
+                    {t('landing.hero.customTests.highlight')}
+                  </p>
+                  <Sparkles className="w-6 h-6 text-purple-300" />
                 </div>
-                <p className="text-xl md:text-2xl text-white font-bold leading-relaxed">
-                  {t('landing.hero.customTests.highlight')}
-                </p>
-                <p className="text-purple-200 text-sm md:text-base">
+                <p className="text-purple-200 text-sm">
                   ✨ Sube un PDF, Word o pega texto → Obtén tests listos para practicar
                 </p>
               </div>
             </div>
+
+            <p className="text-xl md:text-2xl text-gray-200 mb-8 leading-relaxed">
+              {t('landing.hero.subtitle')}
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth" onClick={closeMenu}>
