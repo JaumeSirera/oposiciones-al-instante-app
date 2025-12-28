@@ -9,9 +9,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+interface Recipient {
+  email: string;
+  nombre: string;
+}
+
 interface EmailRequest {
   subject: string;
   message: string;
+  recipients: Recipient[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,7 +27,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { subject, message }: EmailRequest = await req.json();
+    const { subject, message, recipients }: EmailRequest = await req.json();
+
+    console.log(`Received request to send emails. Subject: ${subject}, Recipients: ${recipients?.length || 0}`);
 
     if (!subject || !message) {
       return new Response(
@@ -33,38 +41,31 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Fetch all users with valid emails from the external API
-    const API_BASE = "https://oposiciones-tests.es/api";
-    
-    // Get all users - this would need to be adapted to your actual API
-    // For now, we'll use a placeholder that you can customize
-    const usersResponse = await fetch(`${API_BASE}/obtener_usuarios_email.php`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    let userEmails: string[] = [];
-    
-    if (usersResponse.ok) {
-      const usersData = await usersResponse.json();
-      if (Array.isArray(usersData)) {
-        userEmails = usersData
-          .filter((user: any) => user.email && user.email.includes("@"))
-          .map((user: any) => user.email);
-      }
+    if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "No recipients provided", emailsSent: 0 }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
+
+    // Filter valid emails
+    const validRecipients = recipients.filter(r => r.email && r.email.includes("@"));
+    const userEmails = validRecipients.map(r => r.email);
 
     if (userEmails.length === 0) {
       return new Response(
-        JSON.stringify({ error: "No users found with valid emails", emailsSent: 0 }),
+        JSON.stringify({ error: "No valid email addresses", emailsSent: 0 }),
         {
           status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
+
+    console.log(`Sending emails to ${userEmails.length} recipients`);
 
     // Convert plain text message to HTML
     const htmlMessage = message
