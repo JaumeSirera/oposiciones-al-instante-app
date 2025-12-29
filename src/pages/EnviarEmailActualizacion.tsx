@@ -43,6 +43,10 @@ const EnviarEmailActualizacion = () => {
   const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [historial, setHistorial] = useState<HistorialEmail[]>([]);
+  const [historialTotal, setHistorialTotal] = useState(0);
+  const [historialOffset, setHistorialOffset] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const HISTORIAL_LIMIT = 20;
   
   const [subject, setSubject] = useState("¡Nueva actualización disponible en Play Store!");
   const [message, setMessage] = useState(
@@ -86,10 +90,20 @@ const EnviarEmailActualizacion = () => {
     }
   };
 
-  const fetchHistorial = async () => {
-    setIsLoadingHistorial(true);
+  const fetchHistorial = async (reset: boolean = true) => {
+    if (reset) {
+      setIsLoadingHistorial(true);
+      setHistorialOffset(0);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
+    const currentOffset = reset ? 0 : historialOffset;
+    
     try {
-      const response = await fetch("https://oposiciones-tests.es/api/obtener_historial_email.php?limit=50");
+      const response = await fetch(
+        `https://oposiciones-tests.es/api/obtener_historial_email.php?limit=${HISTORIAL_LIMIT}&offset=${currentOffset}`
+      );
       
       if (!response.ok) {
         throw new Error("Error al obtener historial");
@@ -101,7 +115,14 @@ const EnviarEmailActualizacion = () => {
         throw new Error(data.error || "Error desconocido");
       }
 
-      setHistorial(data.data || []);
+      if (reset) {
+        setHistorial(data.data || []);
+      } else {
+        setHistorial(prev => [...prev, ...(data.data || [])]);
+      }
+      
+      setHistorialTotal(data.total || 0);
+      setHistorialOffset(currentOffset + (data.data?.length || 0));
     } catch (error: any) {
       console.error("Error fetching historial:", error);
       toast({
@@ -111,8 +132,15 @@ const EnviarEmailActualizacion = () => {
       });
     } finally {
       setIsLoadingHistorial(false);
+      setIsLoadingMore(false);
     }
   };
+
+  const loadMoreHistorial = () => {
+    fetchHistorial(false);
+  };
+
+  const hasMoreHistorial = historialOffset < historialTotal;
 
   const guardarHistorial = async (emailData: {
     subject: string;
@@ -273,7 +301,7 @@ const EnviarEmailActualizacion = () => {
             </TabsTrigger>
             <TabsTrigger value="historial" className="flex items-center gap-2">
               <History className="w-4 h-4" />
-              Historial ({historial.length})
+              Historial ({historialTotal})
             </TabsTrigger>
           </TabsList>
 
@@ -457,7 +485,7 @@ const EnviarEmailActualizacion = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={fetchHistorial}
+                    onClick={() => fetchHistorial(true)}
                     disabled={isLoadingHistorial}
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingHistorial ? 'animate-spin' : ''}`} />
@@ -477,66 +505,95 @@ const EnviarEmailActualizacion = () => {
                     <p>No hay emails enviados aún</p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-[500px]">
-                    <div className="space-y-4">
-                      {historial.map((item) => (
-                        <div
-                          key={item.id}
-                          className="border rounded-lg p-4 hover:bg-muted/30 transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-semibold text-foreground truncate">
-                                  {item.subject}
-                                </h4>
-                                <Badge
-                                  variant={item.status === "sent" ? "default" : "destructive"}
-                                  className="shrink-0"
-                                >
-                                  {item.status === "sent" ? (
-                                    <>
-                                      <CheckCircle className="w-3 h-3 mr-1" />
-                                      Enviado
-                                    </>
-                                  ) : (
-                                    <>
-                                      <AlertCircle className="w-3 h-3 mr-1" />
-                                      Error
-                                    </>
-                                  )}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                                {item.message}
-                              </p>
-                              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Users className="w-3 h-3" />
-                                  {item.recipients_count} destinatario{item.recipients_count !== 1 ? 's' : ''}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {formatDate(item.sent_at)}
-                                </span>
-                                {item.sent_by && (
+                  <div className="space-y-4">
+                    <ScrollArea className="h-[450px]">
+                      <div className="space-y-4 pr-4">
+                        {historial.map((item) => (
+                          <div
+                            key={item.id}
+                            className="border rounded-lg p-4 hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold text-foreground truncate">
+                                    {item.subject}
+                                  </h4>
+                                  <Badge
+                                    variant={item.status === "sent" ? "default" : "destructive"}
+                                    className="shrink-0"
+                                  >
+                                    {item.status === "sent" ? (
+                                      <>
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Enviado
+                                      </>
+                                    ) : (
+                                      <>
+                                        <AlertCircle className="w-3 h-3 mr-1" />
+                                        Error
+                                      </>
+                                    )}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                  {item.message}
+                                </p>
+                                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                                   <span className="flex items-center gap-1">
-                                    <Mail className="w-3 h-3" />
-                                    {item.sent_by}
+                                    <Users className="w-3 h-3" />
+                                    {item.recipients_count} destinatario{item.recipients_count !== 1 ? 's' : ''}
                                   </span>
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {formatDate(item.sent_at)}
+                                  </span>
+                                  {item.sent_by && (
+                                    <span className="flex items-center gap-1">
+                                      <Mail className="w-3 h-3" />
+                                      {item.sent_by}
+                                    </span>
+                                  )}
+                                </div>
+                                {item.errors && (
+                                  <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive">
+                                    Error: {item.errors}
+                                  </div>
                                 )}
                               </div>
-                              {item.errors && (
-                                <div className="mt-2 p-2 bg-destructive/10 rounded text-xs text-destructive">
-                                  Error: {item.errors}
-                                </div>
-                              )}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    
+                    {/* Pagination info and load more button */}
+                    <div className="flex flex-col items-center gap-3 pt-4 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Mostrando {historial.length} de {historialTotal} registros
+                      </p>
+                      {hasMoreHistorial && (
+                        <Button
+                          variant="outline"
+                          onClick={loadMoreHistorial}
+                          disabled={isLoadingMore}
+                          className="w-full sm:w-auto"
+                        >
+                          {isLoadingMore ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Cargando...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Cargar más ({historialTotal - historial.length} restantes)
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
-                  </ScrollArea>
+                  </div>
                 )}
               </CardContent>
             </Card>
