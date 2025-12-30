@@ -57,32 +57,38 @@ const EnviarEmailActualizacion = () => {
     setIsLoadingUsers(true);
     try {
       const token = authService.getToken();
+      if (!token) {
+        throw new Error("No hay sesión activa. Inicia sesión e inténtalo de nuevo.");
+      }
+
       const response = await fetch("https://oposiciones-test.com/api/obtener_usuarios_email.php", {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error("Error al obtener usuarios");
+        const text = await response.text().catch(() => "");
+        const snippet = text ? ` ${text.slice(0, 300)}` : "";
+        throw new Error(`Error al obtener usuarios (${response.status}).${snippet}`);
       }
 
       const data = await response.json();
-      
-      if (data.error) {
+
+      if (data?.error) {
         throw new Error(data.error);
       }
 
-      setUsuarios(data);
+      setUsuarios(Array.isArray(data) ? data : []);
       // Select all users by default
-      setSelectedUsers(new Set(data.map((u: Usuario) => u.id)));
+      setSelectedUsers(new Set((Array.isArray(data) ? data : []).map((u: Usuario) => u.id)));
     } catch (error: any) {
       console.error("Error fetching users:", error);
       toast({
         title: "Error",
-        description: error.message || "No se pudieron cargar los usuarios",
+        description: error?.message || "No se pudieron cargar los usuarios",
         variant: "destructive",
       });
     } finally {
