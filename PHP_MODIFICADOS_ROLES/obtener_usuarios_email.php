@@ -69,11 +69,10 @@ try {
     // Obtener todos los usuarios con email válido
     $stmt = $conn->prepare("
         SELECT id, email, nombre 
-        FROM usuarios 
+        FROM accounts 
         WHERE email IS NOT NULL 
           AND email != '' 
           AND email LIKE '%@%'
-          AND estado = 'activo'
         ORDER BY email ASC
     ");
     $stmt->execute();
