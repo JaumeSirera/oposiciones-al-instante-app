@@ -16,7 +16,7 @@ function validarToken($claveJWT) {
     try {
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
-        
+
         if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
             return null;
         }
@@ -37,7 +37,7 @@ function validarToken($claveJWT) {
         }
 
         $payload = json_decode(base64_decode($base64Payload), true);
-        if ($payload['exp'] < time()) {
+        if (!$payload || !isset($payload['exp']) || $payload['exp'] < time()) {
             return null;
         }
 
@@ -66,18 +66,32 @@ if ($nivel !== 'SA') {
 }
 
 try {
-    // Obtener todos los usuarios con email válido
+    // Obtener todos los usuarios con email válido (tabla accounts)
     $stmt = $conn->prepare("
-        SELECT id, email, username AS nombre 
-        FROM accounts 
-        WHERE email IS NOT NULL 
-          AND email != '' 
+        SELECT id, email, username AS nombre
+        FROM accounts
+        WHERE email IS NOT NULL
+          AND email != ''
           AND email LIKE '%@%'
         ORDER BY email ASC
     ");
-    $stmt->execute();
+
+    if ($stmt === false) {
+        error_log("Error preparando consulta en obtener_usuarios_email.php: " . $conn->error);
+        http_response_code(500);
+        echo json_encode(['error' => 'Error preparando consulta', 'details' => $conn->error]);
+        exit;
+    }
+
+    if (!$stmt->execute()) {
+        error_log("Error ejecutando consulta en obtener_usuarios_email.php: " . $stmt->error);
+        http_response_code(500);
+        echo json_encode(['error' => 'Error ejecutando consulta', 'details' => $stmt->error]);
+        exit;
+    }
+
     $result = $stmt->get_result();
-    
+
     $usuarios = [];
     while ($row = $result->fetch_assoc()) {
         $usuarios[] = [
@@ -86,9 +100,9 @@ try {
             'nombre' => $row['nombre'] ?? ''
         ];
     }
-    
+
     echo json_encode($usuarios, JSON_UNESCAPED_UNICODE);
-    
+
 } catch (Exception $e) {
     error_log("Error en obtener_usuarios_email.php: " . $e->getMessage());
     http_response_code(500);
