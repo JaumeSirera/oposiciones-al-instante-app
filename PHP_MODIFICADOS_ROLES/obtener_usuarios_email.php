@@ -68,7 +68,7 @@ if ($nivel !== 'SA') {
 try {
     // Obtener todos los usuarios con email válido
     $stmt = $conn->prepare("
-        SELECT id, email, nombre 
+        SELECT id, email, username AS nombre 
         FROM accounts 
         WHERE email IS NOT NULL 
           AND email != '' 
