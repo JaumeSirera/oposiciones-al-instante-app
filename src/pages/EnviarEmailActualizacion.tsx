@@ -57,7 +57,7 @@ const EnviarEmailActualizacion = () => {
     setIsLoadingUsers(true);
     try {
       const token = authService.getToken();
-      const response = await fetch("https://oposiciones-tests.es/api/obtener_usuarios_email.php", {
+      const response = await fetch("https://oposiciones-test.com/api/obtener_usuarios_email.php", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -102,7 +102,7 @@ const EnviarEmailActualizacion = () => {
     
     try {
       const response = await fetch(
-        `https://oposiciones-tests.es/api/obtener_historial_email.php?limit=${HISTORIAL_LIMIT}&offset=${currentOffset}`
+        `https://oposiciones-test.com/api/obtener_historial_email.php?limit=${HISTORIAL_LIMIT}&offset=${currentOffset}`
       );
       
       if (!response.ok) {
@@ -151,7 +151,7 @@ const EnviarEmailActualizacion = () => {
     errors: string | null;
   }) => {
     try {
-      const response = await fetch("https://oposiciones-tests.es/api/guardar_historial_email.php", {
+      const response = await fetch("https://oposiciones-test.com/api/guardar_historial_email.php", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
