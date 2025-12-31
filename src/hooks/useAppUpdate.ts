@@ -86,6 +86,8 @@ export function useAppUpdate() {
   }, []);
 
   const openAppStore = useCallback(async () => {
+    // En Android, el plugin usa automáticamente el package name de la app
+    // Pero como fallback abrimos directamente la URL de Play Store
     if (!Capacitor.isNativePlatform()) return;
 
     try {
@@ -93,6 +95,8 @@ export function useAppUpdate() {
       await AppUpdate.openAppStore();
     } catch (error) {
       console.error('Error opening app store:', error);
+      // Fallback: abrir Play Store directamente en el navegador
+      window.open('https://play.google.com/store/apps/details?id=com.jaumesirera.TestsOposiciones', '_blank');
     }
   }, []);
 
