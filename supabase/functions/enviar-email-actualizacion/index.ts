@@ -118,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       try {
         const emailResponse = await resend.emails.send({
-          from: "Oposiciones-Test <onboarding@resend.dev>",
+          from: "Oposiciones-Test <notificaciones@oposiciones-test.com>",
           to: batch,
           subject: subject,
           html: htmlContent,
