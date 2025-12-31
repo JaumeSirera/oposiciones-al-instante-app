@@ -17,7 +17,8 @@ import {
   Dumbbell,
   User,
   Bell,
-  Mail
+  Mail,
+  Download
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,13 +32,38 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAppUpdateContext } from "@/contexts/AppUpdateContext";
+import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 
 export function AppSidebar() {
   const { open, isMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const { isSuperAdmin, isAdmin } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  
+  // Estado de actualización disponible
+  let updateAvailable = false;
+  let openAppStore: (() => Promise<void>) | null = null;
+  
+  try {
+    const updateContext = useAppUpdateContext();
+    updateAvailable = updateContext.updateAvailable;
+    openAppStore = updateContext.openAppStore;
+  } catch {
+    // El contexto no está disponible (fuera del provider)
+  }
+  
+  // Textos del badge según idioma
+  const getUpdateText = () => {
+    const lang = i18n.language;
+    if (lang === 'es') return 'Actualizar app';
+    if (lang === 'fr') return 'Mettre à jour';
+    if (lang === 'pt') return 'Atualizar app';
+    if (lang === 'de') return 'App aktualisieren';
+    if (lang === 'zh') return '更新应用';
+    return 'Update app';
+  };
 
   const menuItems = [
     {
@@ -167,6 +193,31 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+        
+        {/* Badge de actualización disponible */}
+        {updateAvailable && (
+          <div className="p-3 mt-auto border-t">
+            <button
+              onClick={() => openAppStore?.()}
+              className="w-full flex items-center gap-2 p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-primary text-sm font-medium"
+            >
+              <Download className="h-4 w-4 flex-shrink-0" />
+              {open && (
+                <span className="flex items-center gap-2">
+                  {getUpdateText()}
+                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0 animate-pulse">
+                    NEW
+                  </Badge>
+                </span>
+              )}
+              {!open && (
+                <Badge variant="destructive" className="text-[10px] px-1 py-0 absolute -top-1 -right-1">
+                  !
+                </Badge>
+              )}
+            </button>
+          </div>
+        )}
       </SidebarContent>
     </Sidebar>
   );

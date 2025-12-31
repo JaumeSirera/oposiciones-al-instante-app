@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { AppUpdateProvider, useAppUpdateContext } from "@/contexts/AppUpdateContext";
 import { AppUpdateDialog } from "@/components/AppUpdateDialog";
 import {
   DropdownMenu,
@@ -18,19 +18,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Layout() {
+function LayoutContent() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
   
-  // Hook para verificar actualizaciones de la app
   const {
-    updateInfo,
+    updateAvailable,
+    currentVersion,
+    availableVersion,
     showUpdateDialog,
     openAppStore,
     dismissUpdateDialog,
-  } = useAppUpdate();
+  } = useAppUpdateContext();
 
   const handleLogout = () => {
     logout();
@@ -91,16 +92,24 @@ export function Layout() {
       </div>
       
       {/* Diálogo de actualización de la app */}
-      {updateInfo && (
+      {updateAvailable && (
         <AppUpdateDialog
           open={showUpdateDialog}
           onDismiss={dismissUpdateDialog}
           onUpdate={openAppStore}
-          currentVersion={updateInfo.currentVersion}
-          availableVersion={updateInfo.availableVersion}
-          immediateUpdateAllowed={updateInfo.immediateUpdateAllowed}
+          currentVersion={currentVersion}
+          availableVersion={availableVersion}
+          immediateUpdateAllowed={false}
         />
       )}
     </SidebarProvider>
+  );
+}
+
+export function Layout() {
+  return (
+    <AppUpdateProvider>
+      <LayoutContent />
+    </AppUpdateProvider>
   );
 }
