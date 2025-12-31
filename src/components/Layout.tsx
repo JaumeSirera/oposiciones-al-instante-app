@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { AppUpdateDialog } from "@/components/AppUpdateDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +23,14 @@ export function Layout() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  
+  // Hook para verificar actualizaciones de la app
+  const {
+    updateInfo,
+    showUpdateDialog,
+    openAppStore,
+    dismissUpdateDialog,
+  } = useAppUpdate();
 
   const handleLogout = () => {
     logout();
@@ -79,6 +89,18 @@ export function Layout() {
           </main>
         </div>
       </div>
+      
+      {/* Diálogo de actualización de la app */}
+      {updateInfo && (
+        <AppUpdateDialog
+          open={showUpdateDialog}
+          onDismiss={dismissUpdateDialog}
+          onUpdate={openAppStore}
+          currentVersion={updateInfo.currentVersion}
+          availableVersion={updateInfo.availableVersion}
+          immediateUpdateAllowed={updateInfo.immediateUpdateAllowed}
+        />
+      )}
     </SidebarProvider>
   );
 }
