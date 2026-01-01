@@ -678,23 +678,27 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                   }
                 }
 
+                const letter = String.fromCharCode(65 + index); // A, B, C, D basado en index
+
                 return (
                   <Button
                     key={respuesta.indice}
                     variant={isSelected ? "default" : "outline"}
-                    className={buttonClass}
+                    className={`${buttonClass} h-auto min-h-[48px] py-3 px-4`}
                     onClick={() => !showExplanation && handleAnswer(respuesta.indice)}
                     disabled={showExplanation || (isTranslating && needsTranslation && !currentTranslation)}
                   >
-                    <span className="font-bold mr-2 text-blue-600">
-                      {String.fromCharCode(64 + parseInt(respuesta.indice))}.
+                    <span className="font-bold mr-3 text-blue-600 shrink-0">
+                      {letter}.
                     </span>
-                    <span className="flex-1">{getAnswerText(index)}</span>
+                    <span className="flex-1 text-left whitespace-normal break-words leading-relaxed">
+                      {getAnswerText(index)}
+                    </span>
                     {showResult && isCorrect && (
-                      <CheckCircle className="w-5 h-5 text-green-600 ml-2" />
+                      <CheckCircle className="w-5 h-5 text-green-600 ml-2 shrink-0" />
                     )}
                     {showResult && isSelected && !isCorrect && (
-                      <XCircle className="w-5 h-5 text-red-600 ml-2" />
+                      <XCircle className="w-5 h-5 text-red-600 ml-2 shrink-0" />
                     )}
                   </Button>
                 );
