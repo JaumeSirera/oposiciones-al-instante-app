@@ -724,7 +724,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                     {selectedAnswer === currentQuestion.correcta_indice ? t('quiz.correct') : t('quiz.incorrect')}
                   </h3>
                   <p className="text-gray-700">
-                    {t('quiz.correctAnswerIs')}: {String.fromCharCode(64 + parseInt(currentQuestion.correcta_indice))}. {
+                    {t('quiz.correctAnswerIs')}: {String.fromCharCode(65 + currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice))}. {
                       needsTranslation && currentTranslation
                         ? currentTranslation.respuestas[currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice)]
                         : currentQuestion.respuestas.find(r => r.indice === currentQuestion.correcta_indice)?.respuesta
