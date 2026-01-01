@@ -95,26 +95,36 @@ const Landing = () => {
               </span>
             </div>
 
-            <div className="hidden md:flex items-center gap-5">
+            <div className="hidden lg:flex items-center gap-5">
               <MenuLinks />
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Desktop: todos los botones visibles */}
+            <div className="hidden sm:flex items-center gap-3">
               <LanguageSelector />
-              <Link to="/donacion-publica" onClick={closeMenu}>
-                <Button variant="outline" size="icon" className="bg-white/10 text-white border-white/20 hover:bg-white/20 sm:w-auto sm:px-4">
-                  <Heart className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{t('landing.menu.supportProject')}</span>
+              <Link to="/donacion-publica">
+                <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20 px-4">
+                  <Heart className="w-4 h-4 mr-2" />
+                  <span>{t('landing.menu.supportProject')}</span>
                 </Button>
               </Link>
+              <Link to="/auth">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4">
+                  <Users className="w-4 h-4 mr-2" />
+                  <span>{t('landing.menu.studentAccess')}</span>
+                </Button>
+              </Link>
+            </div>
+
+            {/* Mobile: solo botón de menú y acceso rápido */}
+            <div className="flex sm:hidden items-center gap-2">
               <Link to="/auth" onClick={closeMenu}>
-                <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white sm:w-auto sm:px-4">
-                  <Users className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{t('landing.menu.studentAccess')}</span>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Users className="w-4 h-4" />
                 </Button>
               </Link>
               <button
-                className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-white border border-white/20 hover:bg-white/10"
+                className="inline-flex items-center justify-center p-2 rounded-lg text-white border border-white/20 hover:bg-white/10"
                 aria-label="Abrir menú"
                 onClick={() => setOpenMenu((v) => !v)}
               >
@@ -125,13 +135,30 @@ const Landing = () => {
             {openMenu && (
               <>
                 <div 
-                  className="md:hidden fixed inset-0 z-40" 
+                  className="sm:hidden fixed inset-0 z-40" 
                   onClick={closeMenu}
                   aria-hidden
                 />
-                <div className="md:hidden absolute left-0 right-0 top-full mt-3 rounded-xl bg-black/95 backdrop-blur border border-white/10 p-4 shadow-xl z-50">
+                <div className="sm:hidden absolute left-0 right-0 top-full mt-3 rounded-xl bg-black/95 backdrop-blur border border-white/10 p-4 shadow-xl z-50">
                   <div className="flex flex-col gap-3 text-center">
                     <MenuLinks />
+                    <div className="border-t border-white/10 pt-3 mt-1 flex flex-col gap-3">
+                      <div className="flex justify-center">
+                        <LanguageSelector />
+                      </div>
+                      <Link to="/donacion-publica" onClick={closeMenu} className="w-full">
+                        <Button variant="outline" className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20">
+                          <Heart className="w-4 h-4 mr-2" />
+                          {t('landing.menu.supportProject')}
+                        </Button>
+                      </Link>
+                      <Link to="/auth" onClick={closeMenu} className="w-full">
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                          <Users className="w-4 h-4 mr-2" />
+                          {t('landing.menu.studentAccess')}
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </>
