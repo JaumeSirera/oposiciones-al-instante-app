@@ -85,6 +85,6 @@ Prepara tus oposiciones de forma inteligente con nuestra app todo-en-uno. Más d
     <!-- Promo Text -->
     <string name="promo_text">Prepara tus oposiciones con IA: tests personalizados, profesor virtual 24/7 y planes de estudio. ¡Más de 10.000 usuarios!</string>
     
-    <!-- Keywords para ASO -->
-    <string name="keywords">oposiciones, tests, exámenes, preparación, policía, guardia civil, bomberos, correos, administrativo, IA, inteligencia artificial, resúmenes, psicotécnicos</string>
+    <!-- Keywords para ASO (términos de búsqueda clave) -->
+    <string name="keywords">oposiciones, test oposiciones, simulacros oposiciones, app oposiciones, policía nacional oposiciones, guardia civil oposiciones, bomberos oposiciones, correos oposiciones, auxiliar administrativo oposiciones, oposiciones 2025, tests psicotécnicos, profesor virtual IA, preparar oposiciones, exámenes oposiciones, temario oposiciones, academia oposiciones online</string>
 </resources>
