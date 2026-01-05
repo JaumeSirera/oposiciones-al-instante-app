@@ -83,6 +83,6 @@ Préparez vos concours intelligemment avec notre application tout-en-un. Plus de
     <!-- Promo Text -->
     <string name="promo_text">Préparez vos concours avec l\'IA: tests personnalisés, tuteur virtuel 24/7 et plans d\'étude. Plus de 10 000 utilisateurs!</string>
     
-    <!-- Keywords pour ASO -->
-    <string name="keywords">concours, fonction publique, tests, préparation, police, gendarmerie, pompiers, administratif, IA, intelligence artificielle, résumés, psychotechniques</string>
+    <!-- Keywords pour ASO (termes de recherche clés) -->
+    <string name="keywords">concours fonction publique, concours administratif, préparation concours, tests concours, police nationale concours, gendarmerie concours, pompiers concours, concours 2025, QCM concours, tuteur IA, révision concours, annales concours, entraînement concours</string>
 </resources>

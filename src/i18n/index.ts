@@ -7,7 +7,6 @@ import en from './locales/en.json';
 import fr from './locales/fr.json';
 import pt from './locales/pt.json';
 import de from './locales/de.json';
-import zh from './locales/zh.json';
 
 const resources = {
   es: { translation: es },
@@ -15,13 +14,12 @@ const resources = {
   fr: { translation: fr },
   pt: { translation: pt },
   de: { translation: de },
-  zh: { translation: zh },
 };
 
 // Update HTML lang attribute when language changes
 const updateHtmlLang = (lng: string) => {
   document.documentElement.lang = lng;
-  document.documentElement.dir = lng === 'zh' ? 'ltr' : 'ltr'; // All languages are LTR
+  document.documentElement.dir = 'ltr';
 };
 
 i18n
