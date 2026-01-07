@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
@@ -7,14 +8,110 @@
   <!-- Página Principal -->
   <url>
     <loc>https://oposiciones-test.com/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
+  <!-- Agente IA -->
+  <url>
+    <loc>https://oposiciones-test.com/agente-ia-oposiciones</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/agente-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/agente-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/agente-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/agente-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/agente-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/agente-ia-oposiciones"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Planes de Estudio IA -->
+  <url>
+    <loc>https://oposiciones-test.com/planes-de-estudio-ia</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/planes-de-estudio-ia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/planes-de-estudio-ia"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/planes-de-estudio-ia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/planes-de-estudio-ia"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/planes-de-estudio-ia"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/planes-de-estudio-ia"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Resúmenes IA -->
+  <url>
+    <loc>https://oposiciones-test.com/resumenes-ia-oposiciones</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/resumenes-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/resumenes-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/resumenes-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/resumenes-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/resumenes-ia-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/resumenes-ia-oposiciones"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Psicotécnicos Online -->
+  <url>
+    <loc>https://oposiciones-test.com/psicotecnicos-online</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/psicotecnicos-online"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/psicotecnicos-online"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/psicotecnicos-online"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/psicotecnicos-online"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/psicotecnicos-online"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/psicotecnicos-online"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Preparación Física IA -->
+  <url>
+    <loc>https://oposiciones-test.com/preparacion-fisica-ia</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/preparacion-fisica-ia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/preparacion-fisica-ia"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/preparacion-fisica-ia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/preparacion-fisica-ia"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/preparacion-fisica-ia"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/preparacion-fisica-ia"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Profesor Virtual -->
+  <url>
+    <loc>https://oposiciones-test.com/profesor-virtual-oposiciones</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/profesor-virtual-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/profesor-virtual-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/profesor-virtual-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/profesor-virtual-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/profesor-virtual-oposiciones"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/profesor-virtual-oposiciones"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- Tests -->
   <url>
     <loc>https://oposiciones-test.com/test</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/test"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/test"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/test"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/test"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/test"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/test"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -23,22 +120,26 @@
   <!-- Crear Test -->
   <url>
     <loc>https://oposiciones-test.com/crear-test</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/crear-test"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/crear-test"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/crear-test"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/crear-test"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/crear-test"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/crear-test"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Simulacro Cronometrado -->
-  <url>
-    <loc>https://oposiciones-test.com/simulacro-cronometrado</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Test Psicotécnico -->
+  <!-- Crear Psicotécnicos -->
   <url>
     <loc>https://oposiciones-test.com/crear-psicotecnicos</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/crear-psicotecnicos"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/crear-psicotecnicos"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/crear-psicotecnicos"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/crear-psicotecnicos"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/crear-psicotecnicos"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/crear-psicotecnicos"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -47,6 +148,12 @@
   <!-- Test de Personalidad -->
   <url>
     <loc>https://oposiciones-test.com/test-personalidad</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/test-personalidad"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/test-personalidad"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/test-personalidad"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/test-personalidad"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/test-personalidad"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/test-personalidad"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -55,6 +162,12 @@
   <!-- Estadísticas -->
   <url>
     <loc>https://oposiciones-test.com/estadisticas</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/estadisticas"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/estadisticas"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/estadisticas"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/estadisticas"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/estadisticas"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/estadisticas"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -63,6 +176,12 @@
   <!-- Historial -->
   <url>
     <loc>https://oposiciones-test.com/historial</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/historial"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/historial"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/historial"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/historial"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/historial"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/historial"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -71,6 +190,12 @@
   <!-- Ranking -->
   <url>
     <loc>https://oposiciones-test.com/ranking</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/ranking"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/ranking"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/ranking"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/ranking"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/ranking"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/ranking"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -79,6 +204,12 @@
   <!-- Resúmenes -->
   <url>
     <loc>https://oposiciones-test.com/resumenes</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/resumenes"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/resumenes"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/resumenes"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/resumenes"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/resumenes"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/resumenes"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -87,6 +218,12 @@
   <!-- Crear Resumen -->
   <url>
     <loc>https://oposiciones-test.com/crear-resumen</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/crear-resumen"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/crear-resumen"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/crear-resumen"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/crear-resumen"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/crear-resumen"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/crear-resumen"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -95,6 +232,12 @@
   <!-- Planes de Estudio -->
   <url>
     <loc>https://oposiciones-test.com/planes-estudio</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/planes-estudio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/planes-estudio"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/planes-estudio"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/planes-estudio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/planes-estudio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/planes-estudio"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -103,6 +246,12 @@
   <!-- Crear Plan de Estudio -->
   <url>
     <loc>https://oposiciones-test.com/crear-plan-estudio</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/crear-plan-estudio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/crear-plan-estudio"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/crear-plan-estudio"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/crear-plan-estudio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/crear-plan-estudio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/crear-plan-estudio"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -111,14 +260,82 @@
   <!-- Planes Físicos -->
   <url>
     <loc>https://oposiciones-test.com/planes-fisicos</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/planes-fisicos"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/planes-fisicos"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/planes-fisicos"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/planes-fisicos"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/planes-fisicos"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/planes-fisicos"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
+  <!-- Generar Plan Físico IA -->
+  <url>
+    <loc>https://oposiciones-test.com/generar-plan-fisico-ia</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/generar-plan-fisico-ia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/generar-plan-fisico-ia"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/generar-plan-fisico-ia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/generar-plan-fisico-ia"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/generar-plan-fisico-ia"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/generar-plan-fisico-ia"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Generar Plan IA -->
+  <url>
+    <loc>https://oposiciones-test.com/generar-plan-ia</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/generar-plan-ia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/generar-plan-ia"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/generar-plan-ia"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/generar-plan-ia"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/generar-plan-ia"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/generar-plan-ia"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Autenticación -->
+  <url>
+    <loc>https://oposiciones-test.com/auth</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/auth"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/auth"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/auth"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/auth"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/auth"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/auth"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Donación Pública -->
+  <url>
+    <loc>https://oposiciones-test.com/donacion-publica</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/donacion-publica"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/donacion-publica"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/donacion-publica"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/donacion-publica"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/donacion-publica"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/donacion-publica"/>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
   <!-- Perfil -->
   <url>
     <loc>https://oposiciones-test.com/profile</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/profile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/profile"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/profile"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/profile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/profile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/profile"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -127,17 +344,15 @@
   <!-- Política de Privacidad -->
   <url>
     <loc>https://oposiciones-test.com/privacy-policy</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://oposiciones-test.com/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://oposiciones-test.com/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://oposiciones-test.com/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://oposiciones-test.com/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://oposiciones-test.com/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://oposiciones-test.com/privacy-policy"/>
     <lastmod>2025-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
-  </url>
-
-  <!-- Donación -->
-  <url>
-    <loc>https://oposiciones-test.com/donacion</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
   </url>
 
 </urlset>
