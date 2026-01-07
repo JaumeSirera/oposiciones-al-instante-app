@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Brain, TrendingUp, Users, Target, Award, Heart, Menu, X, FileText, Sparkles } from "lucide-react";
@@ -17,6 +18,27 @@ const Landing = () => {
 
   const siteUrl = import.meta.env.VITE_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "https://oposiciones-test.com");
   const canonical = useMemo(() => `${siteUrl}/`, [siteUrl]);
+  
+  // Mapeo de idiomas a imágenes OG y locales
+  const ogImageMap: Record<string, string> = {
+    es: `${siteUrl}/og/og-image.jpg`,
+    en: `${siteUrl}/og/og-image-en.jpg`,
+    fr: `${siteUrl}/og/og-image-fr.jpg`,
+    de: `${siteUrl}/og/og-image-de.jpg`,
+    pt: `${siteUrl}/og/og-image-pt.jpg`,
+  };
+  
+  const ogLocaleMap: Record<string, string> = {
+    es: "es_ES",
+    en: "en_US",
+    fr: "fr_FR",
+    de: "de_DE",
+    pt: "pt_PT",
+  };
+  
+  const currentLang = i18n.language?.split("-")[0] || "es";
+  const ogImage = ogImageMap[currentLang] || ogImageMap.es;
+  const ogLocale = ogLocaleMap[currentLang] || ogLocaleMap.es;
 
   useEffect(() => {
     if (isAuthenticated) navigate("/dashboard", { replace: true });
@@ -63,6 +85,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen relative overflow-x-hidden">
       <Helmet>
+        <html lang={currentLang} />
         <title>{t('landing.title')}</title>
         <meta name="description" content={t('landing.metaDescription')} />
         <link rel="canonical" href={canonical} />
@@ -70,11 +93,19 @@ const Landing = () => {
         <meta property="og:title" content={t('landing.title')} />
         <meta property="og:description" content={t('landing.metaDescription')} />
         <meta property="og:url" content={canonical} />
-        <meta property="og:image" content={`${siteUrl}/og/og-image.jpg`} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="640" />
+        <meta property="og:locale" content={ogLocale} />
+        <meta property="og:locale:alternate" content="es_ES" />
+        <meta property="og:locale:alternate" content="en_US" />
+        <meta property="og:locale:alternate" content="fr_FR" />
+        <meta property="og:locale:alternate" content="de_DE" />
+        <meta property="og:locale:alternate" content="pt_PT" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={t('landing.title')} />
         <meta name="twitter:description" content={t('landing.metaDescription')} />
-        <meta name="twitter:image" content={`${siteUrl}/og/og-image.jpg`} />
+        <meta name="twitter:image" content={ogImage} />
         <script type="application/ld+json">{JSON.stringify(appJsonLd)}</script>
       </Helmet>
 
