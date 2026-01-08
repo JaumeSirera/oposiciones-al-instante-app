@@ -49,6 +49,7 @@ import RankingPage from "./pages/RankingPage";
 import Donacion from "./pages/Donacion";
 import AdministrarRecordatorios from "./pages/AdministrarRecordatorios";
 import EnviarEmailActualizacion from "./pages/EnviarEmailActualizacion";
+import Flashcards from "./pages/Flashcards";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,7 @@ function AppContent() {
         <Route path="/test-personalidad" element={<TestPersonalidad />} />
         <Route path="/administrar-recordatorios" element={<AdministrarRecordatorios />} />
         <Route path="/enviar-email-actualizacion" element={<EnviarEmailActualizacion />} />
+        <Route path="/flashcards" element={<Flashcards />} />
       </Route>
 
       {/* Fallback global */}
