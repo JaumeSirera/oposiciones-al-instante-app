@@ -67,7 +67,12 @@
     "listenExplanation": "Listen to explanation",
     "listen": "Listen",
     "stop": "Stop",
-    "audioNotSupported": "Audio not available on this device"
+    "audioNotSupported": "Audio not available on this device",
+    "createFlashcard": "Create Flashcard",
+    "flashcardAdded": "Added",
+    "flashcardCreated": "Flashcard created",
+    "flashcardCreatedDesc": "The question has been added to your flashcards for review",
+    "flashcardError": "Error creating flashcard"
   },
   "landing": {
     "title": "AI Agent for Civil Service Exams | Tests and Summaries",

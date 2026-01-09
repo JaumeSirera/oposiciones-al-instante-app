@@ -46,7 +46,12 @@
     "listenExplanation": "Écouter l'explication",
     "listen": "Écouter",
     "stop": "Arrêter",
-    "audioNotSupported": "Audio indisponible sur cet appareil"
+    "audioNotSupported": "Audio indisponible sur cet appareil",
+    "createFlashcard": "Créer Flashcard",
+    "flashcardAdded": "Ajoutée",
+    "flashcardCreated": "Flashcard créée",
+    "flashcardCreatedDesc": "La question a été ajoutée à vos flashcards pour révision",
+    "flashcardError": "Erreur lors de la création de la flashcard"
   },
   "landing": {
     "title": "Agent IA pour Concours | Tests et Résumés",
