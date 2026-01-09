@@ -46,7 +46,12 @@
     "listenExplanation": "Erklärung anhören",
     "listen": "Anhören",
     "stop": "Stopp",
-    "audioNotSupported": "Audio auf diesem Gerät nicht verfügbar"
+    "audioNotSupported": "Audio auf diesem Gerät nicht verfügbar",
+    "createFlashcard": "Flashcard erstellen",
+    "flashcardAdded": "Hinzugefügt",
+    "flashcardCreated": "Flashcard erstellt",
+    "flashcardCreatedDesc": "Die Frage wurde zu Ihren Flashcards zur Wiederholung hinzugefügt",
+    "flashcardError": "Fehler beim Erstellen der Flashcard"
   },
   "landing": {
     "title": "KI-Agent für Prüfungen | Tests und Zusammenfassungen",

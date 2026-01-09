@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap, FileText, BookOpen, Languages, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Loader2, MessageSquare, Send, Pencil, Trash2, GraduationCap, FileText, BookOpen, Languages, Volume2, VolumeX, Layers } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testService, type Pregunta, type Respuesta } from '@/services/testService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { flashcardService } from '@/services/flashcardService';
 import type { TestConfig } from './ConfigTest';
 
 interface QuizInterfaceProps {
@@ -42,6 +43,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   const [textoEditado, setTextoEditado] = useState('');
   const [explicacionProfesor, setExplicacionProfesor] = useState<string>('');
   const [cargandoProfesor, setCargandoProfesor] = useState(false);
+  const [creandoFlashcard, setCreandoFlashcard] = useState(false);
+  const [flashcardCreada, setFlashcardCreada] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const { user } = useAuth();
   const userId = user?.id;
@@ -550,6 +553,57 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
     }
   };
 
+  const handleCrearFlashcard = async () => {
+    if (!currentQuestion || !userId) return;
+    
+    setCreandoFlashcard(true);
+    
+    try {
+      // Obtener respuesta correcta
+      const respuestaCorrecta = currentQuestion.respuestas.find(
+        r => r.indice === currentQuestion.correcta_indice
+      );
+      
+      // Crear el contenido de la flashcard
+      const front = currentQuestion.pregunta;
+      const back = respuestaCorrecta 
+        ? `${String.fromCharCode(65 + currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice))}. ${respuestaCorrecta.respuesta}`
+        : currentQuestion.correcta_indice;
+      
+      const result = await flashcardService.createFlashcard({
+        user_id: userId,
+        front,
+        back,
+        category: config.secciones.length > 0 ? config.secciones[0] : 'General',
+        id_proceso: config.proceso_id,
+        source_type: 'pregunta_fallada',
+        source_id: currentQuestion.id,
+      });
+      
+      if (result.success) {
+        setFlashcardCreada(prev => new Set(prev).add(currentQuestion.id));
+        toast({
+          title: t('quiz.flashcardCreated'),
+          description: t('quiz.flashcardCreatedDesc'),
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error || t('quiz.flashcardError'),
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: t('quiz.flashcardError'),
+      });
+    } finally {
+      setCreandoFlashcard(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
@@ -720,16 +774,44 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold mb-2">
-                    {selectedAnswer === currentQuestion.correcta_indice ? t('quiz.correct') : t('quiz.incorrect')}
-                  </h3>
-                  <p className="text-gray-700">
-                    {t('quiz.correctAnswerIs')}: {String.fromCharCode(65 + currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice))}. {
-                      needsTranslation && currentTranslation
-                        ? currentTranslation.respuestas[currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice)]
-                        : currentQuestion.respuestas.find(r => r.indice === currentQuestion.correcta_indice)?.respuesta
-                    }
-                  </p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-2">
+                        {selectedAnswer === currentQuestion.correcta_indice ? t('quiz.correct') : t('quiz.incorrect')}
+                      </h3>
+                      <p className="text-gray-700">
+                        {t('quiz.correctAnswerIs')}: {String.fromCharCode(65 + currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice))}. {
+                          needsTranslation && currentTranslation
+                            ? currentTranslation.respuestas[currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice)]
+                            : currentQuestion.respuestas.find(r => r.indice === currentQuestion.correcta_indice)?.respuesta
+                        }
+                      </p>
+                    </div>
+                    {/* Botón para crear flashcard cuando se falla la pregunta */}
+                    {selectedAnswer !== currentQuestion.correcta_indice && userId && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCrearFlashcard}
+                        disabled={creandoFlashcard || flashcardCreada.has(currentQuestion.id)}
+                        className="shrink-0 border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800"
+                      >
+                        {creandoFlashcard ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : flashcardCreada.has(currentQuestion.id) ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            {t('quiz.flashcardAdded')}
+                          </>
+                        ) : (
+                          <>
+                            <Layers className="w-4 h-4 mr-1" />
+                            {t('quiz.createFlashcard')}
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                   
                   {/* Trazabilidad de fuente - solo si hay datos y el usuario acertó */}
                   {selectedAnswer === currentQuestion.correcta_indice && currentQuestion.documento && (

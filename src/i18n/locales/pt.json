@@ -46,7 +46,12 @@
     "listenExplanation": "Ouvir explicação",
     "listen": "Ouvir",
     "stop": "Parar",
-    "audioNotSupported": "Áudio não disponível neste dispositivo"
+    "audioNotSupported": "Áudio não disponível neste dispositivo",
+    "createFlashcard": "Criar Flashcard",
+    "flashcardAdded": "Adicionada",
+    "flashcardCreated": "Flashcard criada",
+    "flashcardCreatedDesc": "A pergunta foi adicionada aos seus flashcards para revisão",
+    "flashcardError": "Erro ao criar flashcard"
   },
   "landing": {
     "title": "Agente IA para Concursos | Testes e Resumos",
