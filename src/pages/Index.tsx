@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, Trophy, Clock, TrendingUp, Heart, ExternalLink, Calendar, Loader2 } from 'lucide-react';
+import { BookOpen, Trophy, Clock, TrendingUp, Heart, ExternalLink, Calendar, Loader2, Layers } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -375,6 +375,28 @@ const Index = () => {
                 </Button>
               </div>
               <Heart className="h-24 w-24 opacity-20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Call to Action - Flashcards */}
+        <Card className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-xl mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">{t('home.reviewFlashcards')}</h3>
+                <p className="opacity-90 mb-4">{t('home.flashcardsDesc')}</p>
+                <Button
+                  onClick={() => navigate('/flashcards')}
+                  variant="secondary"
+                  size="lg"
+                  className="bg-white text-amber-600 hover:bg-gray-100"
+                >
+                  <Layers className="mr-2 h-5 w-5" />
+                  {t('home.goToFlashcards')}
+                </Button>
+              </div>
+              <Layers className="h-24 w-24 opacity-20" />
             </div>
           </CardContent>
         </Card>
