@@ -18,7 +18,8 @@ import {
   User,
   Bell,
   Mail,
-  Download
+  Download,
+  Layers
 } from "lucide-react";
 import {
   Sidebar,
@@ -88,6 +89,7 @@ export function AppSidebar() {
         { title: t('nav.statistics'), url: "/estadisticas", icon: TrendingUp },
         { title: t('nav.history'), url: "/historial", icon: History },
         { title: t('nav.ranking'), url: "/ranking", icon: Award },
+        { title: t('nav.flashcards'), url: "/flashcards", icon: Layers },
       ]
     },
     {
