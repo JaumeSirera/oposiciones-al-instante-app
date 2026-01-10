@@ -337,6 +337,8 @@
     "reviewFlashcards": "Review with Flashcards",
     "flashcardsDesc": "Use spaced repetition to better memorize the questions you've missed.",
     "goToFlashcards": "Go to Flashcards",
+    "pending": "pending",
+    "pendingPlural": "pending",
     "createSummary": "Create Summary",
     "practiceMode": "Practice Test",
     "examMode": "Exam Mode",
