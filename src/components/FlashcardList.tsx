@@ -201,7 +201,7 @@ export default function FlashcardList({ userId, onUpdate }: FlashcardListProps) 
                         </span>
                       )}
                       <span className="text-xs text-muted-foreground">
-                        EF: {card.ease_factor.toFixed(2)}
+                        EF: {Number(card.ease_factor || 2.5).toFixed(2)}
                       </span>
                     </div>
                   </div>
