@@ -768,10 +768,14 @@ Deno.serve(async (req) => {
     console.log('Final body to send:', finalBody);
 
     // Forward the request to the PHP API
-    // For GET requests that come with method:"GET" in body, use actual GET
+    // For GET/DELETE requests that come with method in body, use that method
     let requestMethod = req.method;
     if (bodyData?.method === 'GET') {
       requestMethod = 'GET';
+    } else if (bodyData?.method === 'DELETE') {
+      requestMethod = 'DELETE';
+    } else if (bodyData?.method === 'PUT') {
+      requestMethod = 'PUT';
     }
     
     // Get Authorization header from incoming request
@@ -783,7 +787,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
         ...(authHeader ? { 'Authorization': authHeader } : {}),
       },
-      body: requestMethod === 'GET' ? null : finalBody,
+      body: (requestMethod === 'GET' || requestMethod === 'DELETE') ? null : finalBody,
     });
 
     const data = await response.text();
