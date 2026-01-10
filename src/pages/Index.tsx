@@ -14,6 +14,7 @@ import { OfficialBulletinsCard } from '@/components/OfficialBulletinsCard';
 import { InternationalNewsCard } from '@/components/InternationalNewsCard';
 import { isSpanishLanguage } from '@/config/newsSourcesConfig';
 import QuickStartGuide from '@/components/QuickStartGuide';
+import { useFlashcardStats } from '@/hooks/useFlashcardStats';
 
 const BASE_FOTO_URL = 'https://oposiciones-test.com/api/uploads/procesos/';
 const PROXY_FUNCTION = 'php-api-proxy';
@@ -46,6 +47,7 @@ const Index = () => {
   const { t, i18n } = useTranslation();
   
   const isSpanish = isSpanishLanguage(i18n.language);
+  const { pendingCount: flashcardPending } = useFlashcardStats();
   
   const [userStats, setUserStats] = useState({
     totalQuestions: 0,
@@ -384,7 +386,14 @@ const Index = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold mb-2">{t('home.reviewFlashcards')}</h3>
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-2xl font-bold">{t('home.reviewFlashcards')}</h3>
+                  {flashcardPending > 0 && (
+                    <Badge className="bg-white text-amber-600 hover:bg-gray-100 text-sm px-2 py-0.5">
+                      {flashcardPending} {flashcardPending === 1 ? t('home.pending') : t('home.pendingPlural')}
+                    </Badge>
+                  )}
+                </div>
                 <p className="opacity-90 mb-4">{t('home.flashcardsDesc')}</p>
                 <Button
                   onClick={() => navigate('/flashcards')}

@@ -313,6 +313,8 @@
     "reviewFlashcards": "Réviser avec Flashcards",
     "flashcardsDesc": "Utilisez la répétition espacée pour mieux mémoriser les questions que vous avez ratées.",
     "goToFlashcards": "Aller aux Flashcards",
+    "pending": "en attente",
+    "pendingPlural": "en attente",
     "createSummary": "Créer Résumé",
     "practiceMode": "Test d'Entraînement",
     "examMode": "Mode Examen",

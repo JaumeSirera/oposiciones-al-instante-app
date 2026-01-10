@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppUpdateContext } from "@/contexts/AppUpdateContext";
+import { useFlashcardStats } from "@/hooks/useFlashcardStats";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 
@@ -42,6 +43,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { isSuperAdmin, isAdmin } = useAuth();
   const { t, i18n } = useTranslation();
+  const { pendingCount } = useFlashcardStats();
   
   // Estado de actualización disponible
   let updateAvailable = false;
@@ -172,6 +174,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {section.items.map((item) => {
                   const active = isActive(item.url);
+                  const isFlashcards = item.url === '/flashcards';
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild isActive={active}>
@@ -183,9 +186,20 @@ export function AppSidebar() {
                               setOpenMobile(false);
                             }
                           }}
+                          className="flex items-center justify-between w-full"
                         >
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <div className="flex items-center gap-2">
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </div>
+                          {isFlashcards && pendingCount > 0 && (
+                            <Badge 
+                              variant="destructive" 
+                              className="text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center"
+                            >
+                              {pendingCount > 99 ? '99+' : pendingCount}
+                            </Badge>
+                          )}
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

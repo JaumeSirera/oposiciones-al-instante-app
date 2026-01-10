@@ -313,6 +313,8 @@
     "reviewFlashcards": "Mit Flashcards wiederholen",
     "flashcardsDesc": "Nutzen Sie die Spaced Repetition, um verpasste Fragen besser zu merken.",
     "goToFlashcards": "Zu Flashcards",
+    "pending": "ausstehend",
+    "pendingPlural": "ausstehend",
     "createSummary": "Zusammenfassung Erstellen",
     "practiceMode": "Übungstest",
     "examMode": "Prüfungsmodus",
