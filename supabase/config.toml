@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.fetch-international-news]
 verify_jwt = false
+
+[functions.enviar-recordatorio-flashcards]
+verify_jwt = false
