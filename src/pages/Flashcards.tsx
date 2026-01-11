@@ -14,8 +14,11 @@ import {
   RefreshCw,
   CheckCircle2,
   Clock,
-  Sparkles
+  Sparkles,
+  Bell,
+  Settings
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { flashcardService, Flashcard, FlashcardStats } from '@/services/flashcardService';
 import FlashcardReview from '@/components/FlashcardReview';
 import FlashcardCreator from '@/components/FlashcardCreator';
@@ -105,10 +108,18 @@ export default function Flashcards() {
           </h1>
           <p className="text-muted-foreground mt-1">Sistema SM-2 para memorización a largo plazo</p>
         </div>
-        <Button onClick={loadData} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Actualizar
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/flashcards/configurar-recordatorios">
+              <Bell className="h-4 w-4 mr-2" />
+              Recordatorios
+            </Link>
+          </Button>
+          <Button onClick={loadData} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       {stats && (

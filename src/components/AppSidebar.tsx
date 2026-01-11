@@ -92,6 +92,7 @@ export function AppSidebar() {
         { title: t('nav.history'), url: "/historial", icon: History },
         { title: t('nav.ranking'), url: "/ranking", icon: Award },
         { title: t('nav.flashcards'), url: "/flashcards", icon: Layers },
+        { title: t('nav.flashcardReminders'), url: "/flashcards/configurar-recordatorios", icon: Bell },
       ]
     },
     {
