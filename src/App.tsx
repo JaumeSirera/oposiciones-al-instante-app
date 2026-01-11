@@ -50,6 +50,7 @@ import Donacion from "./pages/Donacion";
 import AdministrarRecordatorios from "./pages/AdministrarRecordatorios";
 import EnviarEmailActualizacion from "./pages/EnviarEmailActualizacion";
 import Flashcards from "./pages/Flashcards";
+import ConfigurarRecordatoriosFlashcards from "./pages/ConfigurarRecordatoriosFlashcards";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,7 @@ function AppContent() {
         <Route path="/administrar-recordatorios" element={<AdministrarRecordatorios />} />
         <Route path="/enviar-email-actualizacion" element={<EnviarEmailActualizacion />} />
         <Route path="/flashcards" element={<Flashcards />} />
+        <Route path="/flashcards/configurar-recordatorios" element={<ConfigurarRecordatoriosFlashcards />} />
       </Route>
 
       {/* Fallback global */}
