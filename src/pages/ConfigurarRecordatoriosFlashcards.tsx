@@ -200,7 +200,13 @@ export default function ConfigurarRecordatoriosFlashcards() {
         toast.success("Recordatorio enviado a tu email");
         cargarHistorial();
       } else {
-        throw new Error(data.error);
+        // Mostrar mensaje de error más descriptivo
+        const errorMsg = data.error || data.details || "Error al enviar recordatorio";
+        if (errorMsg.includes("Error del servidor") || data.status === 500) {
+          toast.error("Error del servidor. Verifica que las tablas de recordatorios de flashcards estén creadas en la base de datos.");
+        } else {
+          throw new Error(errorMsg);
+        }
       }
     } catch (error: any) {
       console.error("Error:", error);
