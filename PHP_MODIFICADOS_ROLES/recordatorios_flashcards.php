@@ -3,14 +3,14 @@
  * API para gestionar recordatorios de flashcards
  * Permite configurar preferencias de notificación y obtener usuarios con flashcards pendientes
  *
- * VERSION: 2026-01-13-compat-mysqli-pdo
+ * VERSION: 2026-01-14-autodetect-columns
  */
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('X-Flashcards-Recordatorios-Version: 2026-01-13-compat-mysqli-pdo');
+header('X-Flashcards-Recordatorios-Version: 2026-01-14-autodetect-columns');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -19,26 +19,135 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once 'db.php';
 
+// Cache para columnas detectadas
+$detectedColumns = null;
+
+/**
+ * Detectar columnas de la tabla flashcards
+ */
+function detectFlashcardColumns() {
+    global $conn, $detectedColumns;
+    
+    if ($detectedColumns !== null) {
+        return $detectedColumns;
+    }
+    
+    $detectedColumns = [
+        'next_review' => null,
+        'user_id' => 'user_id'
+    ];
+    
+    try {
+        // Obtener columnas de la tabla flashcards
+        if ($conn instanceof PDO) {
+            $stmt = $conn->query("SHOW COLUMNS FROM flashcards");
+            $columns = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $columns[] = $row['Field'];
+            }
+        } elseif (isset($conn) && method_exists($conn, 'prepare')) {
+            // Es nuestro wrapper
+            $nativeConn = null;
+            // Intentar query directa
+            $columns = [];
+            try {
+                $stmt = $conn->prepare("SHOW COLUMNS FROM flashcards");
+                $stmt->execute([]);
+                $rows = $stmt->fetchAll();
+                foreach ($rows as $row) {
+                    $columns[] = $row['Field'] ?? array_values($row)[0] ?? '';
+                }
+            } catch (Exception $e) {
+                error_log("Error detecting columns: " . $e->getMessage());
+            }
+        } else {
+            $result = $conn->query("SHOW COLUMNS FROM flashcards");
+            $columns = [];
+            while ($row = $result->fetch_assoc()) {
+                $columns[] = $row['Field'];
+            }
+        }
+        
+        // Buscar columna de próxima revisión
+        $nextReviewCandidates = ['next_review', 'proxima_revision', 'siguiente_revision', 'review_date', 'fecha_revision', 'nextReview'];
+        foreach ($nextReviewCandidates as $col) {
+            if (in_array($col, $columns)) {
+                $detectedColumns['next_review'] = $col;
+                break;
+            }
+        }
+        
+        // Buscar columna de usuario
+        $userIdCandidates = ['user_id', 'id_usuario', 'usuario_id', 'userId'];
+        foreach ($userIdCandidates as $col) {
+            if (in_array($col, $columns)) {
+                $detectedColumns['user_id'] = $col;
+                break;
+            }
+        }
+        
+        error_log("Detected flashcard columns: " . json_encode($detectedColumns) . " from available: " . json_encode($columns));
+        
+    } catch (Exception $e) {
+        error_log("Error detecting flashcard columns: " . $e->getMessage());
+    }
+    
+    return $detectedColumns;
+}
+
+/**
+ * Obtener condición SQL para flashcards pendientes
+ */
+function getPendingCondition($tableAlias = 'f') {
+    $cols = detectFlashcardColumns();
+    $nextReviewCol = $cols['next_review'];
+    
+    if ($nextReviewCol === null) {
+        // Sin columna de revisión, contar todas
+        return "1=1";
+    }
+    
+    $prefix = $tableAlias ? "{$tableAlias}." : "";
+    return "({$prefix}{$nextReviewCol} IS NULL OR {$prefix}{$nextReviewCol} <= NOW())";
+}
+
+/**
+ * Obtener columna user_id
+ */
+function getUserIdColumn() {
+    $cols = detectFlashcardColumns();
+    return $cols['user_id'] ?? 'user_id';
+}
+
+/**
+ * Obtener ORDER BY para flashcards
+ */
+function getOrderByClause($tableAlias = '') {
+    $cols = detectFlashcardColumns();
+    $nextReviewCol = $cols['next_review'];
+    $prefix = $tableAlias ? "{$tableAlias}." : "";
+    
+    if ($nextReviewCol) {
+        return "ORDER BY {$prefix}{$nextReviewCol} ASC";
+    }
+    return "ORDER BY {$prefix}id ASC";
+}
+
 /**
  * Compatibilidad: si db.php devuelve mysqli, adaptamos para que funcione como PDOStatement
- * (execute([$params]), fetch(), fetchAll())
  */
 if (isset($conn) && is_object($conn) && $conn instanceof mysqli) {
     class DbCompatMysqliStatement {
         private mysqli_stmt $stmt;
         private mysqli $native;
         private ?mysqli_result $result = null;
-        private ?array $boundRow = null;
-        private ?array $boundRefs = null;
 
         public function __construct(mysqli_stmt $stmt, mysqli $native) {
             $this->stmt = $stmt;
             $this->native = $native;
         }
 
-        /** @param array<int, mixed> $params */
         public function execute(array $params = []): bool {
-            // Si hay params, hacemos bind_param y luego execute() sin argumentos
             if (!empty($params)) {
                 $types = '';
                 $values = [];
@@ -74,56 +183,22 @@ if (isset($conn) && is_object($conn) && $conn instanceof mysqli) {
                 throw new Exception('DB execute error: ' . $this->stmt->error);
             }
 
-            // Preparar resultados si es SELECT
             $this->result = null;
-            $this->boundRow = null;
-            $this->boundRefs = null;
-
             if (method_exists($this->stmt, 'get_result')) {
                 $this->result = $this->stmt->get_result();
-            } else {
-                $meta = $this->stmt->result_metadata();
-                if ($meta) {
-                    $fields = $meta->fetch_fields();
-                    $row = [];
-                    $refs = [];
-                    foreach ($fields as $field) {
-                        $row[$field->name] = null;
-                        $refs[] = &$row[$field->name];
-                    }
-                    @call_user_func_array([$this->stmt, 'bind_result'], $refs);
-                    $this->stmt->store_result();
-                    $this->boundRow = $row;
-                    $this->boundRefs = $refs;
-                }
             }
 
             return true;
         }
 
-        /** @return array<string, mixed>|null */
         public function fetch($mode = null): ?array {
             if ($this->result instanceof mysqli_result) {
                 $row = $this->result->fetch_assoc();
                 return $row ?: null;
             }
-
-            if (is_array($this->boundRow)) {
-                $ok = $this->stmt->fetch();
-                if ($ok === null || $ok === false) {
-                    return null;
-                }
-                $out = [];
-                foreach ($this->boundRow as $k => $v) {
-                    $out[$k] = $v;
-                }
-                return $out;
-            }
-
             return null;
         }
 
-        /** @return array<int, array<string, mixed>> */
         public function fetchAll($mode = null): array {
             $rows = [];
             while (true) {
@@ -136,7 +211,7 @@ if (isset($conn) && is_object($conn) && $conn instanceof mysqli) {
     }
 
     class DbCompatMysqliConnection {
-        private mysqli $native;
+        public mysqli $native;
 
         public function __construct(mysqli $native) {
             $this->native = $native;
@@ -148,6 +223,10 @@ if (isset($conn) && is_object($conn) && $conn instanceof mysqli) {
                 throw new Exception('DB prepare error: ' . $this->native->error);
             }
             return new DbCompatMysqliStatement($stmt, $this->native);
+        }
+        
+        public function query(string $sql) {
+            return $this->native->query($sql);
         }
     }
 
@@ -167,37 +246,9 @@ function inferNombreDesdeEmail(string $email): string {
     return $name !== '' ? $name : 'Usuario';
 }
 
-/**
- * Intenta ejecutar una query con varias alternativas (para compatibilidad de columnas).
- * @param array<int, string> $sqlCandidates
- * @param array<int, mixed> $params
- * @return array{0: mixed, 1: string|null} [stmt|false, error]
- */
-function db_prepare_safe(array $sqlCandidates, array $params = []): array {
-    global $conn;
-
-    $lastErr = null;
-    foreach ($sqlCandidates as $sql) {
-        try {
-            $stmt = $conn->prepare($sql);
-            if ($stmt === false) {
-                $lastErr = 'prepare() devolvió false';
-                continue;
-            }
-            if (!empty($params)) {
-                $stmt->execute($params);
-            }
-            return [$stmt, null];
-        } catch (Throwable $e) {
-            $lastErr = $e->getMessage();
-            continue;
-        }
-    }
-
-    return [false, $lastErr ?? 'Error desconocido preparando consulta'];
-}
-
 function insertarHistorial(int $id_usuario, int $pending_count): void {
+    global $conn;
+    
     $sqls = [
         "INSERT INTO recordatorios_flashcards_historial (id_usuario, fecha_envio, pending_count) VALUES (?, NOW(), ?)",
         "INSERT INTO recordatorios_flashcards_historial (user_id, fecha_envio, flashcards_pendientes) VALUES (?, NOW(), ?)",
@@ -205,46 +256,40 @@ function insertarHistorial(int $id_usuario, int $pending_count): void {
         "INSERT INTO recordatorios_flashcards_historial (user_id, fecha_envio, pending_count) VALUES (?, NOW(), ?)"
     ];
 
-    [$stmt, $err] = db_prepare_safe($sqls, [$id_usuario, $pending_count]);
-    if ($stmt === false) {
-        throw new Exception('No se pudo insertar historial: ' . $err);
+    $lastErr = null;
+    foreach ($sqls as $sql) {
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$id_usuario, $pending_count]);
+            return; // Éxito
+        } catch (Exception $e) {
+            $lastErr = $e->getMessage();
+            continue;
+        }
     }
+    
+    error_log("No se pudo insertar historial: " . $lastErr);
 }
 
-/** @return array<int, array<string, mixed>> */
 function seleccionarHistorial(int $id_usuario, int $limit): array {
     global $conn;
 
     $sqls = [
-        "SELECT id_usuario, fecha_envio, pending_count FROM recordatorios_flashcards_historial WHERE id_usuario = ? ORDER BY fecha_envio DESC LIMIT ?",
-        "SELECT user_id AS id_usuario, fecha_envio, flashcards_pendientes AS pending_count FROM recordatorios_flashcards_historial WHERE user_id = ? ORDER BY fecha_envio DESC LIMIT ?",
-        "SELECT id_usuario, fecha_envio, flashcards_pendientes AS pending_count FROM recordatorios_flashcards_historial WHERE id_usuario = ? ORDER BY fecha_envio DESC LIMIT ?",
-        "SELECT user_id AS id_usuario, fecha_envio, pending_count FROM recordatorios_flashcards_historial WHERE user_id = ? ORDER BY fecha_envio DESC LIMIT ?"
+        "SELECT * FROM recordatorios_flashcards_historial WHERE id_usuario = ? ORDER BY fecha_envio DESC LIMIT ?",
+        "SELECT * FROM recordatorios_flashcards_historial WHERE user_id = ? ORDER BY fecha_envio DESC LIMIT ?"
     ];
 
-    [$stmt, $err] = db_prepare_safe($sqls, [$id_usuario, $limit]);
-    if ($stmt === false) {
-        throw new Exception('No se pudo obtener historial: ' . $err);
+    foreach ($sqls as $sql) {
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$id_usuario, $limit]);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            continue;
+        }
     }
-
-    // Compat: DbCompatMysqliStatement y PDOStatement soportan fetchAll().
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return is_array($rows) ? $rows : [];
-}
-
-function getBackendConfig(): array {
-    // Usar las mismas variables/valores que ya usas en los recordatorios de planes.
-    $baseUrl = getenv('BACKEND_FUNCTIONS_URL') ?: '';
-    $publicKey = getenv('BACKEND_PUBLIC_KEY') ?: '';
-
-    if ($baseUrl === '' || $publicKey === '') {
-        throw new Exception('Faltan BACKEND_FUNCTIONS_URL y/o BACKEND_PUBLIC_KEY (usa los mismos valores que en recordatorios de planes).');
-    }
-
-    return [
-        'baseUrl' => rtrim($baseUrl, '/'),
-        'publicKey' => $publicKey,
-    ];
+    
+    return [];
 }
 
 // Obtener acción
@@ -274,12 +319,74 @@ try {
         case 'obtener_historial':
             obtenerHistorial();
             break;
+        case 'version':
+            echo json_encode([
+                'success' => true, 
+                'version' => '2026-01-14-autodetect-columns',
+                'detected_columns' => detectFlashcardColumns()
+            ]);
+            break;
+        case 'debug_columns':
+            debugColumns();
+            break;
         default:
             echo json_encode(['success' => false, 'error' => 'Acción no válida']);
     }
 } catch (Exception $e) {
+    error_log("Error en recordatorios_flashcards.php: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+}
+
+/**
+ * Debug: mostrar columnas detectadas
+ */
+function debugColumns() {
+    global $conn;
+    
+    $flashcardCols = [];
+    $historialCols = [];
+    
+    try {
+        if ($conn instanceof PDO) {
+            $stmt = $conn->query("SHOW COLUMNS FROM flashcards");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $flashcardCols[] = $row['Field'];
+            }
+            $stmt = $conn->query("SHOW COLUMNS FROM recordatorios_flashcards_historial");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $historialCols[] = $row['Field'];
+            }
+        } elseif (isset($conn->native)) {
+            $result = $conn->native->query("SHOW COLUMNS FROM flashcards");
+            while ($row = $result->fetch_assoc()) {
+                $flashcardCols[] = $row['Field'];
+            }
+            $result = $conn->native->query("SHOW COLUMNS FROM recordatorios_flashcards_historial");
+            while ($row = $result->fetch_assoc()) {
+                $historialCols[] = $row['Field'];
+            }
+        } else {
+            $result = $conn->query("SHOW COLUMNS FROM flashcards");
+            while ($row = $result->fetch_assoc()) {
+                $flashcardCols[] = $row['Field'];
+            }
+            $result = $conn->query("SHOW COLUMNS FROM recordatorios_flashcards_historial");
+            while ($row = $result->fetch_assoc()) {
+                $historialCols[] = $row['Field'];
+            }
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        return;
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'flashcards_columns' => $flashcardCols,
+        'historial_columns' => $historialCols,
+        'detected' => detectFlashcardColumns()
+    ]);
 }
 
 /**
@@ -295,15 +402,11 @@ function obtenerConfiguracion() {
         return;
     }
 
-    $stmt = $conn->prepare("
-        SELECT * FROM recordatorios_flashcards_config 
-        WHERE id_usuario = ?
-    ");
+    $stmt = $conn->prepare("SELECT * FROM recordatorios_flashcards_config WHERE id_usuario = ?");
     $stmt->execute([(int)$id_usuario]);
-    $config = $stmt->fetch(PDO::FETCH_ASSOC);
+    $config = $stmt->fetch();
 
     if (!$config) {
-        // Configuración por defecto
         $config = [
             'id_usuario' => (int)$id_usuario,
             'activo' => 1,
@@ -340,10 +443,9 @@ function guardarConfiguracion() {
 
     $id_usuario = (int)$id_usuario;
 
-    // Verificar si existe configuración
     $stmt = $conn->prepare("SELECT id FROM recordatorios_flashcards_config WHERE id_usuario = ?");
     $stmt->execute([$id_usuario]);
-    $exists = $stmt->fetch(PDO::FETCH_ASSOC);
+    $exists = $stmt->fetch();
 
     if ($exists) {
         $stmt = $conn->prepare("
@@ -371,9 +473,11 @@ function obtenerUsuariosConPendientes() {
     global $conn;
 
     $hora_actual = date('H:i');
-    $dia_semana = date('N'); // 1 = Lunes, 7 = Domingo
+    $dia_semana = date('N');
+    
+    $pendingCond = getPendingCondition('f');
+    $userIdCol = getUserIdColumn();
 
-    // NOTA: evitamos depender de accounts.nombre (en algunas BBDD no existe)
     $stmt = $conn->prepare("
         SELECT 
             rfc.id_usuario,
@@ -382,8 +486,8 @@ function obtenerUsuariosConPendientes() {
             rfc.ultimo_envio,
             a.email,
             (SELECT COUNT(*) FROM flashcards f 
-             WHERE f.user_id = rfc.id_usuario 
-             AND (f.next_review IS NULL OR f.next_review <= NOW())) as pending_count
+             WHERE f.{$userIdCol} = rfc.id_usuario 
+             AND {$pendingCond}) as pending_count
         FROM recordatorios_flashcards_config rfc
         INNER JOIN accounts a ON a.id = rfc.id_usuario
         WHERE rfc.activo = 1
@@ -397,20 +501,22 @@ function obtenerUsuariosConPendientes() {
         HAVING pending_count >= rfc.min_pendientes
     ");
     $stmt->execute([$hora_actual, $dia_semana]);
-    $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $usuarios = $stmt->fetchAll();
 
-    // Para cada usuario, obtener preview de flashcards + nombre derivado
+    $pendingCondNoAlias = getPendingCondition('');
+    $orderBy = getOrderByClause('');
+
     foreach ($usuarios as &$usuario) {
         $stmtPreview = $conn->prepare("
             SELECT id, front, category 
             FROM flashcards 
-            WHERE user_id = ? 
-            AND (next_review IS NULL OR next_review <= NOW())
-            ORDER BY next_review ASC
+            WHERE {$userIdCol} = ? 
+            AND {$pendingCondNoAlias}
+            {$orderBy}
             LIMIT 3
         ");
         $stmtPreview->execute([(int)$usuario['id_usuario']]);
-        $usuario['flashcards_preview'] = $stmtPreview->fetchAll(PDO::FETCH_ASSOC);
+        $usuario['flashcards_preview'] = $stmtPreview->fetchAll();
         $usuario['nombre'] = inferNombreDesdeEmail((string)($usuario['email'] ?? ''));
     }
 
@@ -433,22 +539,15 @@ function marcarEnviado() {
 
     $id_usuario = (int)$id_usuario;
 
-    $stmt = $conn->prepare("
-        UPDATE recordatorios_flashcards_config 
-        SET ultimo_envio = NOW()
-        WHERE id_usuario = ?
-    ");
+    $stmt = $conn->prepare("UPDATE recordatorios_flashcards_config SET ultimo_envio = NOW() WHERE id_usuario = ?");
     $stmt->execute([$id_usuario]);
 
-    // Calcular pendientes y guardar historial (compat columnas)
-    $stmtCnt = $conn->prepare("
-        SELECT COUNT(*) AS pending_count
-        FROM flashcards
-        WHERE user_id = ?
-        AND (next_review IS NULL OR next_review <= NOW())
-    ");
+    $pendingCond = getPendingCondition('');
+    $userIdCol = getUserIdColumn();
+    
+    $stmtCnt = $conn->prepare("SELECT COUNT(*) AS pending_count FROM flashcards WHERE {$userIdCol} = ? AND {$pendingCond}");
     $stmtCnt->execute([$id_usuario]);
-    $row = $stmtCnt->fetch(PDO::FETCH_ASSOC);
+    $row = $stmtCnt->fetch();
     $pending = (int)($row['pending_count'] ?? 0);
 
     insertarHistorial($id_usuario, $pending);
@@ -471,17 +570,19 @@ function enviarRecordatorioAhora() {
     }
 
     $id_usuario = (int)$id_usuario;
+    
+    $pendingCond = getPendingCondition('f');
+    $userIdCol = getUserIdColumn();
 
-    // Obtener datos del usuario (sin depender de accounts.nombre)
     $stmt = $conn->prepare("
         SELECT a.email,
         (SELECT COUNT(*) FROM flashcards f 
-         WHERE f.user_id = ? 
-         AND (f.next_review IS NULL OR f.next_review <= NOW())) as pending_count
+         WHERE f.{$userIdCol} = ? 
+         AND {$pendingCond}) as pending_count
         FROM accounts a WHERE a.id = ?
     ");
     $stmt->execute([$id_usuario, $id_usuario]);
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    $usuario = $stmt->fetch();
 
     if (!$usuario) {
         echo json_encode(['success' => false, 'error' => 'Usuario no encontrado']);
@@ -503,22 +604,23 @@ function enviarRecordatorioAhora() {
 
     $nombre = inferNombreDesdeEmail($email);
 
-    // Obtener preview de flashcards
+    $pendingCondNoAlias = getPendingCondition('');
+    $orderBy = getOrderByClause('');
+    
     $stmtPreview = $conn->prepare("
         SELECT id, front, category 
         FROM flashcards 
-        WHERE user_id = ? 
-        AND (next_review IS NULL OR next_review <= NOW())
-        ORDER BY next_review ASC
+        WHERE {$userIdCol} = ? 
+        AND {$pendingCondNoAlias}
+        {$orderBy}
         LIMIT 3
     ");
     $stmtPreview->execute([$id_usuario]);
-    $flashcards_preview = $stmtPreview->fetchAll(PDO::FETCH_ASSOC);
+    $flashcards_preview = $stmtPreview->fetchAll();
 
-    // Llamar a la función del backend
-    $cfg = getBackendConfig();
-    $endpoint = $cfg['baseUrl'] . '/enviar-recordatorio-flashcards';
-    $publicKey = $cfg['publicKey'];
+    // Llamar a la edge function
+    $supabaseUrl = 'https://yrjwyeuqfleqhbveohrf.supabase.co/functions/v1/enviar-recordatorio-flashcards';
+    $supabaseKey = getenv('SUPABASE_ANON_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlyand5ZXVxZmxlcWhidmVvaHJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5NjM1OTUsImV4cCI6MjA3NTUzOTU5NX0.QeAWfPjecNzz_d1MY1UHYmVN9bYl23rzot9gDsUtXKY';
 
     $payload = [
         'email_usuario' => $email,
@@ -527,14 +629,13 @@ function enviarRecordatorioAhora() {
         'flashcards_preview' => $flashcards_preview
     ];
 
-    $ch = curl_init($endpoint);
+    $ch = curl_init($supabaseUrl);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
         CURLOPT_HTTPHEADER => [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . $publicKey,
-            'apikey: ' . $publicKey
+            'Authorization: Bearer ' . $supabaseKey
         ],
         CURLOPT_POSTFIELDS => json_encode($payload),
         CURLOPT_TIMEOUT => 30
@@ -551,20 +652,13 @@ function enviarRecordatorioAhora() {
 
     $result = json_decode($response, true);
 
-    if (is_array($result) && ($result['success'] ?? false)) {
-        // Marcar como enviado
-        $stmt = $conn->prepare("
-            UPDATE recordatorios_flashcards_config 
-            SET ultimo_envio = NOW()
-            WHERE id_usuario = ?
-        ");
+    if (isset($result['success']) && $result['success']) {
+        $stmt = $conn->prepare("UPDATE recordatorios_flashcards_config SET ultimo_envio = NOW() WHERE id_usuario = ?");
         $stmt->execute([$id_usuario]);
-
-        // Guardar en historial (compat columnas)
         insertarHistorial($id_usuario, $pending_count);
     }
 
-    echo json_encode($result);
+    echo json_encode($result ?: ['success' => false, 'error' => 'Respuesta inválida del servidor']);
 }
 
 /**
@@ -572,19 +666,13 @@ function enviarRecordatorioAhora() {
  */
 function obtenerHistorial() {
     $id_usuario = $_GET['id_usuario'] ?? null;
-    $limit = $_GET['limit'] ?? 20;
+    $limit = (int)($_GET['limit'] ?? 20);
 
     if (!$id_usuario) {
         echo json_encode(['success' => false, 'error' => 'id_usuario requerido']);
         return;
     }
 
-    $id_usuario = (int)$id_usuario;
-    $limit = (int)$limit;
-    if ($limit <= 0) $limit = 20;
-    if ($limit > 200) $limit = 200;
-
-    $historial = seleccionarHistorial($id_usuario, $limit);
-
+    $historial = seleccionarHistorial((int)$id_usuario, $limit);
     echo json_encode(['success' => true, 'historial' => $historial]);
 }
