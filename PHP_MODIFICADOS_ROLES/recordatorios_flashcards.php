@@ -140,7 +140,8 @@ if (isset($conn) && is_object($conn) && $conn instanceof mysqli) {
     class DbCompatMysqliStatement {
         private mysqli_stmt $stmt;
         private mysqli $native;
-        private ?mysqli_result $result = null;
+        /** @var mysqli_result|null|false */
+        private $result = null;
 
         public function __construct(mysqli_stmt $stmt, mysqli $native) {
             $this->stmt = $stmt;
@@ -185,7 +186,12 @@ if (isset($conn) && is_object($conn) && $conn instanceof mysqli) {
 
             $this->result = null;
             if (method_exists($this->stmt, 'get_result')) {
-                $this->result = $this->stmt->get_result();
+                $res = $this->stmt->get_result();
+                // get_result() returns false for non-SELECT queries (INSERT, UPDATE, DELETE)
+                // Only store if it's a valid mysqli_result
+                if ($res instanceof mysqli_result) {
+                    $this->result = $res;
+                }
             }
 
             return true;
