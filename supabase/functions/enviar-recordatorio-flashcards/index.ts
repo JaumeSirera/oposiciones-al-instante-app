@@ -91,14 +91,14 @@ serve(async (req) => {
       </div>
       
       <div style="text-align: center;">
-        <a href="https://oposiciones-test.com/flashcards" class="cta-button">
+        <a href="https://oposiciones-test.com/#/flashcards" class="cta-button">
           Comenzar Repaso
         </a>
       </div>
       
       <div class="footer">
         <p style="margin-bottom: 10px;">
-          <a href="https://oposiciones-test.com/configuracion" style="color: #6b7280;">
+          <a href="https://oposiciones-test.com/#/flashcards/configurar-recordatorios" style="color: #6b7280;">
             Configurar frecuencia de recordatorios
           </a>
         </p>

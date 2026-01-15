@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -54,67 +54,105 @@ import ConfigurarRecordatoriosFlashcards from "./pages/ConfigurarRecordatoriosFl
 
 const queryClient = new QueryClient();
 
+/**
+ * Permite que enlaces compartidos desde email funcionen incluso si el servidor
+ * no está configurado para soportar rutas SPA (p. ej. /flashcards devuelve 404).
+ *
+ * Ejemplo: https://tu-dominio.com/#/flashcards
+ */
+function HashRouteBridge() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const hash = window.location.hash || "";
+    if (!hash.startsWith("#/")) return;
+
+    // Soporta también variantes tipo: #/flashcards?foo=bar
+    const target = hash.slice(1); // "/flashcards?foo=bar"
+
+    // Reescribir URL para que BrowserRouter la entienda
+    window.history.replaceState(null, "", target);
+
+    // Navegar dentro de la app (por si React Router ya está montado)
+    navigate(target, { replace: true });
+  }, [navigate]);
+
+  return null;
+}
+
 // Componente interno que usa el hook después de BrowserRouter
 function AppContent() {
   useAndroidBackButton();
-  
+
   return (
-    <Routes>
-      {/* Públicas */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/auth/reset-password" element={<ResetPassword />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+    <>
+      <HashRouteBridge />
+      <Routes>
+        {/* Públicas */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
-      {/* Públicas SEO */}
-      <Route path="/agente-ia-oposiciones" element={<AgenteIA />} />
-      <Route path="/planes-de-estudio-ia" element={<PlanesIA />} />
-      <Route path="/resumenes-ia-oposiciones" element={<ResumenesIA />} />
-      <Route path="/psicotecnicos-online" element={<Psicotecnicos />} />
-      <Route path="/preparacion-fisica-ia" element={<PreparacionFisicaIA />} />
-      <Route path="/profesor-virtual-oposiciones" element={<ProfesorVirtual />} />
-      <Route path="/donacion-publica" element={<DonacionPublica />} />
+        {/* Públicas SEO */}
+        <Route path="/agente-ia-oposiciones" element={<AgenteIA />} />
+        <Route path="/planes-de-estudio-ia" element={<PlanesIA />} />
+        <Route path="/resumenes-ia-oposiciones" element={<ResumenesIA />} />
+        <Route path="/psicotecnicos-online" element={<Psicotecnicos />} />
+        <Route path="/preparacion-fisica-ia" element={<PreparacionFisicaIA />} />
+        <Route path="/profesor-virtual-oposiciones" element={<ProfesorVirtual />} />
+        <Route path="/donacion-publica" element={<DonacionPublica />} />
 
-      {/* Protegidas */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/dashboard" element={<Index />} />
-        <Route path="/test" element={<TestPage mode="simulacion" />} />
-        <Route path="/simulacro" element={<TestPage mode="examen" />} />
-        <Route path="/test-psicotecnico" element={<TestPage mode="simulacion" isPsicotecnico />} />
-        <Route path="/simulacro-psicotecnico" element={<TestPage mode="examen" isPsicotecnico />} />
-        <Route path="/estadisticas" element={<EstadisticasPage />} />
-        <Route path="/historial" element={<HistorialPage />} />
-        <Route path="/ranking" element={<RankingPage />} />
-        <Route path="/donacion" element={<Donacion />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/resumenes" element={<Resumenes />} />
-        <Route path="/resumenes/:id" element={<ResumenDetalle />} />
-        <Route path="/crear-resumen" element={<CrearResumen />} />
-        <Route path="/crear-test" element={<CrearTest />} />
-        <Route path="/crear-psicotecnicos" element={<CrearPsicotecnicos />} />
-        <Route path="/planes-estudio" element={<PlanesEstudio />} />
-        <Route path="/crear-plan-estudio" element={<CrearPlanEstudio />} />
-        <Route path="/generar-plan-ia" element={<GenerarPlanIA />} />
-        <Route path="/plan-estudio/:id" element={<PlanEstudioDetalle />} />
-        <Route path="/planes-fisicos" element={<PlanesFisicos />} />
-        <Route path="/generar-plan-fisico-ia" element={<GenerarPlanFisicoIA />} />
-        <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
-        <Route path="/test-personalidad" element={<TestPersonalidad />} />
-        <Route path="/administrar-recordatorios" element={<AdministrarRecordatorios />} />
-        <Route path="/enviar-email-actualizacion" element={<EnviarEmailActualizacion />} />
-        <Route path="/flashcards" element={<Flashcards />} />
-        <Route path="/flashcards/configurar-recordatorios" element={<ConfigurarRecordatoriosFlashcards />} />
-      </Route>
+        {/* Protegidas */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/dashboard" element={<Index />} />
+          <Route path="/test" element={<TestPage mode="simulacion" />} />
+          <Route path="/simulacro" element={<TestPage mode="examen" />} />
+          <Route
+            path="/test-psicotecnico"
+            element={<TestPage mode="simulacion" isPsicotecnico />}
+          />
+          <Route
+            path="/simulacro-psicotecnico"
+            element={<TestPage mode="examen" isPsicotecnico />}
+          />
+          <Route path="/estadisticas" element={<EstadisticasPage />} />
+          <Route path="/historial" element={<HistorialPage />} />
+          <Route path="/ranking" element={<RankingPage />} />
+          <Route path="/donacion" element={<Donacion />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/resumenes" element={<Resumenes />} />
+          <Route path="/resumenes/:id" element={<ResumenDetalle />} />
+          <Route path="/crear-resumen" element={<CrearResumen />} />
+          <Route path="/crear-test" element={<CrearTest />} />
+          <Route path="/crear-psicotecnicos" element={<CrearPsicotecnicos />} />
+          <Route path="/planes-estudio" element={<PlanesEstudio />} />
+          <Route path="/crear-plan-estudio" element={<CrearPlanEstudio />} />
+          <Route path="/generar-plan-ia" element={<GenerarPlanIA />} />
+          <Route path="/plan-estudio/:id" element={<PlanEstudioDetalle />} />
+          <Route path="/planes-fisicos" element={<PlanesFisicos />} />
+          <Route path="/generar-plan-fisico-ia" element={<GenerarPlanFisicoIA />} />
+          <Route path="/planes-fisicos/:id" element={<PlanFisicoDetalle />} />
+          <Route path="/test-personalidad" element={<TestPersonalidad />} />
+          <Route path="/administrar-recordatorios" element={<AdministrarRecordatorios />} />
+          <Route path="/enviar-email-actualizacion" element={<EnviarEmailActualizacion />} />
+          <Route path="/flashcards" element={<Flashcards />} />
+          <Route
+            path="/flashcards/configurar-recordatorios"
+            element={<ConfigurarRecordatoriosFlashcards />}
+          />
+        </Route>
 
-      {/* Fallback global */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* Fallback global */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }
 
@@ -137,3 +175,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
