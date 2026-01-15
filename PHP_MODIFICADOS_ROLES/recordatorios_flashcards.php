@@ -325,6 +325,9 @@ try {
         case 'obtener_historial':
             obtenerHistorial();
             break;
+        case 'obtener_todos':
+            obtenerTodosRecordatorios();
+            break;
         case 'version':
             echo json_encode([
                 'success' => true, 
@@ -681,4 +684,100 @@ function obtenerHistorial() {
 
     $historial = seleccionarHistorial((int)$id_usuario, $limit);
     echo json_encode(['success' => true, 'historial' => $historial]);
+}
+
+/**
+ * Obtener todas las configuraciones e historial (para usuarios SA)
+ * Si se proporciona id_usuario, filtra por ese usuario
+ */
+function obtenerTodosRecordatorios() {
+    global $conn;
+    
+    $id_usuario = $_GET['id_usuario'] ?? null;
+    
+    try {
+        // Obtener configuraciones
+        if ($id_usuario) {
+            // Filtrar por usuario específico
+            $stmt = $conn->prepare("
+                SELECT rfc.*, a.email as email_usuario, a.nombre as nombre_usuario
+                FROM recordatorios_flashcards_config rfc
+                LEFT JOIN accounts a ON a.id = rfc.id_usuario
+                WHERE rfc.id_usuario = ?
+                ORDER BY rfc.updated_at DESC
+            ");
+            $stmt->execute([(int)$id_usuario]);
+        } else {
+            // Obtener todos (modo SA)
+            $stmt = $conn->prepare("
+                SELECT rfc.*, a.email as email_usuario, a.nombre as nombre_usuario
+                FROM recordatorios_flashcards_config rfc
+                LEFT JOIN accounts a ON a.id = rfc.id_usuario
+                ORDER BY rfc.updated_at DESC
+                LIMIT 100
+            ");
+            $stmt->execute([]);
+        }
+        $configs = $stmt->fetchAll();
+        
+        // Inferir nombre desde email si no está disponible
+        foreach ($configs as &$config) {
+            if (empty($config['nombre_usuario']) && !empty($config['email_usuario'])) {
+                $config['nombre_usuario'] = inferNombreDesdeEmail($config['email_usuario']);
+            }
+        }
+        
+        // Obtener historial reciente
+        if ($id_usuario) {
+            $historial = seleccionarHistorial((int)$id_usuario, 50);
+            // Añadir info de usuario al historial
+            foreach ($historial as &$h) {
+                $h['nombre_usuario'] = $configs[0]['nombre_usuario'] ?? null;
+                $h['email_usuario'] = $configs[0]['email_usuario'] ?? null;
+            }
+        } else {
+            // Obtener historial de todos los usuarios (últimos 50 envíos)
+            $sqlHistorial = "
+                SELECT h.*, a.email as email_usuario, a.nombre as nombre_usuario
+                FROM recordatorios_flashcards_historial h
+                LEFT JOIN accounts a ON a.id = h.id_usuario OR a.id = h.user_id
+                ORDER BY h.fecha_envio DESC
+                LIMIT 50
+            ";
+            
+            try {
+                $stmtH = $conn->prepare($sqlHistorial);
+                $stmtH->execute([]);
+                $historial = $stmtH->fetchAll();
+                
+                // Inferir nombres
+                foreach ($historial as &$h) {
+                    if (empty($h['nombre_usuario']) && !empty($h['email_usuario'])) {
+                        $h['nombre_usuario'] = inferNombreDesdeEmail($h['email_usuario']);
+                    }
+                    // Normalizar campo id_usuario
+                    if (!isset($h['id_usuario']) && isset($h['user_id'])) {
+                        $h['id_usuario'] = $h['user_id'];
+                    }
+                    // Normalizar pending_count
+                    if (!isset($h['pending_count']) && isset($h['flashcards_pendientes'])) {
+                        $h['pending_count'] = $h['flashcards_pendientes'];
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("Error obteniendo historial global: " . $e->getMessage());
+                $historial = [];
+            }
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'configs' => $configs,
+            'historial' => $historial
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("Error en obtenerTodosRecordatorios: " . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
 }
