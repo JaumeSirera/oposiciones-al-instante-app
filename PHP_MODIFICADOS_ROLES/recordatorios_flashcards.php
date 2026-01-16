@@ -702,7 +702,7 @@ function obtenerTodosRecordatorios() {
         if ($id_usuario) {
             // Filtrar por usuario específico
             $stmt = $conn->prepare("
-                SELECT rfc.*, a.email as email_usuario, a.nombre as nombre_usuario
+                SELECT rfc.*, a.email as email_usuario, a.username as nombre_usuario
                 FROM recordatorios_flashcards_config rfc
                 LEFT JOIN accounts a ON a.id = rfc.id_usuario
                 WHERE rfc.id_usuario = ?
@@ -712,7 +712,7 @@ function obtenerTodosRecordatorios() {
         } else {
             // Obtener todos (modo SA)
             $stmt = $conn->prepare("
-                SELECT rfc.*, a.email as email_usuario, a.nombre as nombre_usuario
+                SELECT rfc.*, a.email as email_usuario, a.username as nombre_usuario
                 FROM recordatorios_flashcards_config rfc
                 LEFT JOIN accounts a ON a.id = rfc.id_usuario
                 ORDER BY rfc.updated_at DESC
@@ -740,7 +740,7 @@ function obtenerTodosRecordatorios() {
         } else {
             // Obtener historial de todos los usuarios (últimos 50 envíos)
             $sqlHistorial = "
-                SELECT h.*, a.email as email_usuario, a.nombre as nombre_usuario
+                SELECT h.*, a.email as email_usuario, a.username as nombre_usuario
                 FROM recordatorios_flashcards_historial h
                 LEFT JOIN accounts a ON a.id = h.id_usuario OR a.id = h.user_id
                 ORDER BY h.fecha_envio DESC
