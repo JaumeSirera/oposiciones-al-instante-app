@@ -170,22 +170,26 @@ export default function AdministrarRecordatorios() {
       setLoadingFlashcards(true);
       const token = localStorage.getItem("auth_token");
       
-      // Construir endpoint según rol
-      const params = new URLSearchParams();
-      params.append("action", "obtener_todos");
+      // Construir parámetros para el POST
+      const bodyParams: Record<string, any> = {
+        endpoint: "recordatorios_flashcards.php",
+        method: "POST",
+        action: "obtener_todos",
+      };
       
       // Si no es SA, filtrar por id_usuario
       if (!isSA && user?.id) {
-        params.append("id_usuario", user.id.toString());
+        bodyParams.id_usuario = user.id.toString();
       }
 
+      console.log("Cargando flashcards con params:", bodyParams, "isSA:", isSA);
+
       const { data, error } = await supabase.functions.invoke("php-api-proxy", {
-        body: {
-          endpoint: `recordatorios_flashcards.php?${params.toString()}`,
-          method: "GET",
-        },
+        body: bodyParams,
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+
+      console.log("Respuesta flashcards:", data);
 
       if (error) throw error;
 
@@ -194,6 +198,7 @@ export default function AdministrarRecordatorios() {
         setHistorialFlashcards(data.historial || []);
       } else {
         console.error("Error cargando flashcards:", data.error);
+        toast.error(data.error || "Error al cargar recordatorios de flashcards");
       }
     } catch (error: any) {
       console.error("Error:", error);

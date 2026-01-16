@@ -693,7 +693,9 @@ function obtenerHistorial() {
 function obtenerTodosRecordatorios() {
     global $conn;
     
-    $id_usuario = $_GET['id_usuario'] ?? null;
+    // Leer id_usuario de GET o del body JSON
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id_usuario = $_GET['id_usuario'] ?? $input['id_usuario'] ?? null;
     
     try {
         // Obtener configuraciones
