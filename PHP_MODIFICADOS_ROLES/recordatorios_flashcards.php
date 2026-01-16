@@ -416,7 +416,8 @@ function obtenerConfiguracion() {
     $config = $stmt->fetch();
 
     if (!$config) {
-        $config = [
+        // Crear registro por defecto automáticamente
+        $defaultConfig = [
             'id_usuario' => (int)$id_usuario,
             'activo' => 1,
             'frecuencia' => 'diario',
@@ -425,6 +426,34 @@ function obtenerConfiguracion() {
             'min_pendientes' => 5,
             'ultimo_envio' => null
         ];
+        
+        try {
+            $stmtInsert = $conn->prepare("
+                INSERT INTO recordatorios_flashcards_config 
+                (id_usuario, activo, frecuencia, hora_envio, dias_semana, min_pendientes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+            $stmtInsert->execute([
+                $defaultConfig['id_usuario'],
+                $defaultConfig['activo'],
+                $defaultConfig['frecuencia'],
+                $defaultConfig['hora_envio'],
+                $defaultConfig['dias_semana'],
+                $defaultConfig['min_pendientes']
+            ]);
+            
+            // Volver a obtener el registro recién creado
+            $stmt = $conn->prepare("SELECT * FROM recordatorios_flashcards_config WHERE id_usuario = ?");
+            $stmt->execute([(int)$id_usuario]);
+            $config = $stmt->fetch();
+            
+            if (!$config) {
+                $config = $defaultConfig;
+            }
+        } catch (Exception $e) {
+            error_log("Error creando config por defecto: " . $e->getMessage());
+            $config = $defaultConfig;
+        }
     }
 
     echo json_encode(['success' => true, 'config' => $config]);
