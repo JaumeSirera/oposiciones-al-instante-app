@@ -1470,6 +1470,47 @@ if ($method === 'GET' && $action === 'listar') {
     exit;
 }
 
+/** ===================== 1b) LISTAR TODOS (SOLO SA) ===================== **/
+if ($method === 'GET' && $action === 'listar_todos') {
+    // Verificar que el usuario es SA (Super Admin)
+    $nivel = $payload['nivel'] ?? '';
+    if ($nivel !== 'SA') {
+        echo json_encode(['success'=>false, 'error'=>'No autorizado. Solo SA puede ver todos los planes.']);
+        exit;
+    }
+
+    try {
+        // Obtener TODOS los planes físicos con información del usuario
+        $stmt = $conn->prepare("
+            SELECT pf.*, a.username as usuario_nombre, a.email as usuario_email
+            FROM planes_fisicos pf
+            LEFT JOIN accounts a ON pf.id_usuario = a.id
+            ORDER BY pf.fecha_inicio DESC
+        ");
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $planes = [];
+        while ($row = $res->fetch_assoc()) {
+            $plan_id = intval($row['id']);
+            $uid = intval($row['id_usuario']);
+            $row['tieneIA'] = false; $row['resumen'] = null; $row['ia_avance_ratio'] = 0;
+
+            [$plan_dec, $resumen, $num_semanas] = ultimo_plan_ia_fisico($conn, $plan_id);
+            if ($plan_dec) {
+                $row['tieneIA'] = true; $row['resumen'] = $resumen;
+                [, $ratio] = avance_ratio_fisico($conn, $plan_id, $uid, $num_semanas);
+                $row['ia_avance_ratio'] = $ratio;
+            }
+            $planes[] = $row;
+        }
+        echo json_encode(['success'=>true, 'planes'=>$planes], JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        error_log("listar_todos planes_fisicos error: ".$e->getMessage());
+        echo json_encode(['success'=>false, 'error'=>'Error listando todos los planes físicos']);
+    }
+    exit;
+}
+
 /** ===================== 2) CREAR ===================== **/
 if ($method === 'POST' && $action === 'crear') {
     $uid = intval($data['id_usuario'] ?? 0);

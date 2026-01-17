@@ -76,9 +76,12 @@ class PlanesService {
     return response.json();
   }
 
-  async listarPlanes(userId: number): Promise<Plan[]> {
+  async listarPlanes(userId: number, verTodos: boolean = false): Promise<Plan[]> {
     try {
-      const data = await this.callAPI(`planes_estudio.php?action=listar&id_usuario=${userId}`, {
+      const endpoint = verTodos 
+        ? `planes_estudio.php?action=listar_todos`
+        : `planes_estudio.php?action=listar&id_usuario=${userId}`;
+      const data = await this.callAPI(endpoint, {
         method: 'GET',
       });
       return data.success && Array.isArray(data.planes) ? data.planes : [];
