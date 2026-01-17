@@ -7,26 +7,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { Plus, Calendar, BookOpen, TrendingUp } from "lucide-react";
+import { Plus, Calendar, BookOpen, TrendingUp, User } from "lucide-react";
 import { toast } from "sonner";
+
+interface PlanExtendido extends Plan {
+  usuario_nombre?: string;
+  usuario_email?: string;
+}
 
 export default function PlanesEstudio() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
-  const [planes, setPlanes] = useState<Plan[]>([]);
+  const [planes, setPlanes] = useState<PlanExtendido[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     cargarPlanes();
-  }, [user]);
+  }, [user, isSuperAdmin]);
 
   const cargarPlanes = async () => {
     if (!user?.id) return;
     
     setLoading(true);
     try {
-      const data = await planesService.listarPlanes(user.id);
+      // Si es SA, cargar todos los planes
+      const data = await planesService.listarPlanes(user.id, isSuperAdmin);
       setPlanes(data);
     } catch (error) {
       toast.error(t('studyPlans.errorLoading'));
@@ -65,7 +71,9 @@ export default function PlanesEstudio() {
         <div>
           <h1 className="text-3xl font-bold">{t('studyPlans.title')}</h1>
           <p className="text-muted-foreground mt-1">
-            {t('studyPlans.subtitle')}
+            {isSuperAdmin 
+              ? t('studyPlans.subtitleSA', 'Visualizando todos los planes de estudio de todos los usuarios')
+              : t('studyPlans.subtitle')}
           </p>
         </div>
         <div className="flex gap-3">
@@ -110,6 +118,15 @@ export default function PlanesEstudio() {
                 <CardDescription className="line-clamp-2">
                   {plan.descripcion || t('studyPlans.noDescription')}
                 </CardDescription>
+                {isSuperAdmin && plan.usuario_nombre && (
+                  <div className="flex items-center gap-1 text-xs text-primary mt-2">
+                    <User className="h-3 w-3" />
+                    <span>{plan.usuario_nombre}</span>
+                    {plan.usuario_email && (
+                      <span className="text-muted-foreground">({plan.usuario_email})</span>
+                    )}
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { Calendar as CalendarIcon, Dumbbell, Pencil, Trash2, Plus, Sparkles } from 'lucide-react';
+import { Calendar as CalendarIcon, Dumbbell, Pencil, Trash2, Plus, Sparkles, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -19,12 +19,15 @@ import { supabase } from '@/lib/supabaseClient';
 
 interface PlanFisico {
   id: number;
+  id_usuario?: number;
   titulo: string;
   descripcion: string;
   tipo_prueba: string;
   fecha_inicio: string;
   fecha_fin: string;
   ia_avance_ratio: number;
+  usuario_nombre?: string;
+  usuario_email?: string;
 }
 
 export default function PlanesFisicos() {
@@ -60,14 +63,21 @@ export default function PlanesFisicos() {
     }
   }, [user]);
 
+  const isSA = user?.nivel === 'SA';
+
   const fetchPlanes = async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
+      // Si es SA, cargar todos los planes físicos
+      const endpoint = isSA 
+        ? `planes_fisicos.php?action=listar_todos`
+        : `planes_fisicos.php?action=listar&id_usuario=${user.id}`;
+      
       const { data, error } = await supabase.functions.invoke('php-api-proxy', {
         body: {
-          endpoint: `planes_fisicos.php?action=listar&id_usuario=${user.id}`,
+          endpoint,
           method: 'GET'
         },
         headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -246,7 +256,9 @@ export default function PlanesFisicos() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">{t('physicalPlans.title')}</h1>
         <p className="text-muted-foreground">
-          {t('physicalPlans.subtitle')}
+          {isSA 
+            ? t('physicalPlans.subtitleSA', 'Visualizando todos los planes físicos de todos los usuarios')
+            : t('physicalPlans.subtitle')}
         </p>
       </div>
 
@@ -289,6 +301,15 @@ export default function PlanesFisicos() {
                   <div className="flex-1">
                     <CardTitle className="text-lg">{plan.titulo}</CardTitle>
                     <CardDescription>{plan.tipo_prueba}</CardDescription>
+                    {isSA && plan.usuario_nombre && (
+                      <div className="flex items-center gap-1 text-xs text-primary mt-2">
+                        <User className="h-3 w-3" />
+                        <span>{plan.usuario_nombre}</span>
+                        {plan.usuario_email && (
+                          <span className="text-muted-foreground">({plan.usuario_email})</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button
