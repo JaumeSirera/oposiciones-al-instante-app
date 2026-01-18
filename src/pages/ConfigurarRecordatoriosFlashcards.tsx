@@ -37,7 +37,7 @@ import {
   BrainCircuit
 } from "lucide-react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS, fr, de, pt } from "date-fns/locale";
 import { useFlashcardStats } from "@/hooks/useFlashcardStats";
 
 interface Config {
@@ -56,18 +56,8 @@ interface HistorialItem {
   pending_count: number;
 }
 
-const DIAS_SEMANA = [
-  { value: "1", label: "Lunes" },
-  { value: "2", label: "Martes" },
-  { value: "3", label: "Miércoles" },
-  { value: "4", label: "Jueves" },
-  { value: "5", label: "Viernes" },
-  { value: "6", label: "Sábado" },
-  { value: "7", label: "Domingo" },
-];
-
 export default function ConfigurarRecordatoriosFlashcards() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { pendingCount, loading: statsLoading } = useFlashcardStats();
   
@@ -83,6 +73,22 @@ export default function ConfigurarRecordatoriosFlashcards() {
   const [horaEnvio, setHoraEnvio] = useState("09:00");
   const [diasSeleccionados, setDiasSeleccionados] = useState<string[]>(["1", "2", "3", "4", "5"]);
   const [minPendientes, setMinPendientes] = useState(5);
+
+  // Get locale for date-fns based on current language
+  const getDateLocale = () => {
+    const locales: Record<string, typeof es> = { es, en: enUS, fr, de, pt };
+    return locales[i18n.language] || es;
+  };
+
+  const DIAS_SEMANA = [
+    { value: "1", label: t('flashcardReminders.monday') },
+    { value: "2", label: t('flashcardReminders.tuesday') },
+    { value: "3", label: t('flashcardReminders.wednesday') },
+    { value: "4", label: t('flashcardReminders.thursday') },
+    { value: "5", label: t('flashcardReminders.friday') },
+    { value: "6", label: t('flashcardReminders.saturday') },
+    { value: "7", label: t('flashcardReminders.sunday') },
+  ];
 
   useEffect(() => {
     if (user?.id) {
@@ -115,7 +121,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Error al cargar configuración");
+      toast.error(t('flashcardReminders.loadError'));
     } finally {
       setLoading(false);
     }
@@ -166,13 +172,13 @@ export default function ConfigurarRecordatoriosFlashcards() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success("Configuración guardada correctamente");
+        toast.success(t('flashcardReminders.configSaved'));
       } else {
         throw new Error(data.error);
       }
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error("Error al guardar configuración");
+      toast.error(t('flashcardReminders.configError'));
     } finally {
       setSaving(false);
     }
@@ -197,20 +203,19 @@ export default function ConfigurarRecordatoriosFlashcards() {
       if (error) throw error;
 
       if (data.success) {
-        toast.success("Recordatorio enviado a tu email");
+        toast.success(t('flashcardReminders.reminderSent'));
         cargarHistorial();
       } else {
-        // Mostrar mensaje de error más descriptivo
-        const errorMsg = data.error || data.details || "Error al enviar recordatorio";
+        const errorMsg = data.error || data.details || t('flashcardReminders.reminderError');
         if (errorMsg.includes("Error del servidor") || data.status === 500) {
-          toast.error("Error del servidor. Verifica que las tablas de recordatorios de flashcards estén creadas en la base de datos.");
+          toast.error(t('flashcardReminders.serverError'));
         } else {
           throw new Error(errorMsg);
         }
       }
     } catch (error: any) {
       console.error("Error:", error);
-      toast.error(error.message || "Error al enviar recordatorio");
+      toast.error(error.message || t('flashcardReminders.reminderError'));
     } finally {
       setSending(false);
     }
@@ -235,16 +240,16 @@ export default function ConfigurarRecordatoriosFlashcards() {
   return (
     <>
       <Helmet>
-        <title>Configurar Recordatorios de Flashcards | Oposiciones Test</title>
+        <title>{t('flashcardReminders.pageTitle')}</title>
       </Helmet>
 
       <div className="container mx-auto py-8 px-4 space-y-6 max-w-3xl">
         <div className="flex items-center gap-3">
           <BrainCircuit className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold">Recordatorios de Flashcards</h1>
+            <h1 className="text-3xl font-bold">{t('flashcardReminders.title')}</h1>
             <p className="text-muted-foreground">
-              Configura notificaciones por email cuando tengas flashcards pendientes
+              {t('flashcardReminders.subtitle')}
             </p>
           </div>
         </div>
@@ -254,7 +259,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Estado actual
+              {t('flashcardReminders.currentStatus')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -262,11 +267,11 @@ export default function ConfigurarRecordatoriosFlashcards() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Badge variant={pendingCount > 0 ? "default" : "secondary"}>
-                    {statsLoading ? "..." : pendingCount} pendientes
+                    {statsLoading ? "..." : pendingCount} {t('flashcardReminders.pending')}
                   </Badge>
                   {config?.ultimo_envio && (
                     <span className="text-sm text-muted-foreground">
-                      Último envío: {format(new Date(config.ultimo_envio), "dd MMM yyyy HH:mm", { locale: es })}
+                      {t('flashcardReminders.lastSent')}: {format(new Date(config.ultimo_envio), "dd MMM yyyy HH:mm", { locale: getDateLocale() })}
                     </span>
                   )}
                 </div>
@@ -281,7 +286,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
                 ) : (
                   <Send className="h-4 w-4 mr-2" />
                 )}
-                Enviar recordatorio ahora
+                {t('flashcardReminders.sendNow')}
               </Button>
             </div>
           </CardContent>
@@ -292,19 +297,19 @@ export default function ConfigurarRecordatoriosFlashcards() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Configuración de envío
+              {t('flashcardReminders.configTitle')}
             </CardTitle>
             <CardDescription>
-              Define cuándo y cómo quieres recibir los recordatorios
+              {t('flashcardReminders.configSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Activar/Desactivar */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Recordatorios activos</Label>
+                <Label>{t('flashcardReminders.activeReminders')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Recibe emails cuando tengas flashcards pendientes
+                  {t('flashcardReminders.receiveEmails')}
                 </p>
               </div>
               <Switch
@@ -317,21 +322,21 @@ export default function ConfigurarRecordatoriosFlashcards() {
               <>
                 {/* Frecuencia */}
                 <div className="space-y-2">
-                  <Label>Frecuencia</Label>
+                  <Label>{t('flashcardReminders.frequency')}</Label>
                   <Select value={frecuencia} onValueChange={setFrecuencia}>
                     <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="diario">Diario</SelectItem>
-                      <SelectItem value="semanal">Semanal</SelectItem>
+                      <SelectItem value="diario">{t('flashcardReminders.daily')}</SelectItem>
+                      <SelectItem value="semanal">{t('flashcardReminders.weekly')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Hora de envío */}
                 <div className="space-y-2">
-                  <Label>Hora de envío</Label>
+                  <Label>{t('flashcardReminders.sendTime')}</Label>
                   <Input
                     type="time"
                     value={horaEnvio}
@@ -342,7 +347,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
 
                 {/* Días de la semana */}
                 <div className="space-y-2">
-                  <Label>Días de envío</Label>
+                  <Label>{t('flashcardReminders.sendDays')}</Label>
                   <div className="flex flex-wrap gap-2">
                     {DIAS_SEMANA.map((dia) => (
                       <label
@@ -366,7 +371,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
 
                 {/* Mínimo de pendientes */}
                 <div className="space-y-2">
-                  <Label>Mínimo de flashcards pendientes para notificar</Label>
+                  <Label>{t('flashcardReminders.minPending')}</Label>
                   <Input
                     type="number"
                     min={1}
@@ -376,7 +381,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
                     className="w-full sm:w-[200px]"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Solo recibirás email si tienes al menos {minPendientes} flashcards pendientes
+                    {t('flashcardReminders.minPendingHint', { count: minPendientes })}
                   </p>
                 </div>
               </>
@@ -388,7 +393,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
               ) : (
                 <CheckCircle2 className="h-4 w-4 mr-2" />
               )}
-              Guardar configuración
+              {t('flashcardReminders.saveConfig')}
             </Button>
           </CardContent>
         </Card>
@@ -399,15 +404,15 @@ export default function ConfigurarRecordatoriosFlashcards() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
-                Historial de recordatorios
+                {t('flashcardReminders.historyTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Flashcards pendientes</TableHead>
+                    <TableHead>{t('flashcardReminders.historyDate')}</TableHead>
+                    <TableHead>{t('flashcardReminders.historyPending')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -416,7 +421,7 @@ export default function ConfigurarRecordatoriosFlashcards() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {format(new Date(item.fecha_envio), "dd MMM yyyy HH:mm", { locale: es })}
+                          {format(new Date(item.fecha_envio), "dd MMM yyyy HH:mm", { locale: getDateLocale() })}
                         </div>
                       </TableCell>
                       <TableCell>
