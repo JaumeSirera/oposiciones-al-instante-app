@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -11,11 +12,19 @@ import {
   ThumbsUp, 
   Sparkles,
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 import { Flashcard, flashcardService } from '@/services/flashcardService';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
+
+interface TranslatedFlashcard extends Flashcard {
+  translatedFront?: string;
+  translatedBack?: string;
+  translatedCategory?: string;
+}
 
 interface FlashcardReviewProps {
   flashcards: Flashcard[];
@@ -30,15 +39,67 @@ export default function FlashcardReview({
   onComplete, 
   onExit 
 }: FlashcardReviewProps) {
+  const { t, i18n } = useTranslation();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [translatedCards, setTranslatedCards] = useState<TranslatedFlashcard[]>([]);
 
-  const currentCard = flashcards[currentIndex];
+  const currentCard = translatedCards[currentIndex] || flashcards[currentIndex];
   const progress = (reviewed / flashcards.length) * 100;
+
+  // Translate flashcards content
+  useEffect(() => {
+    const translateCards = async () => {
+      if (!needsTranslation || flashcards.length === 0) {
+        setTranslatedCards(flashcards);
+        return;
+      }
+
+      // Check if cards already have translations (passed from parent)
+      if ((flashcards[0] as TranslatedFlashcard).translatedFront) {
+        setTranslatedCards(flashcards as TranslatedFlashcard[]);
+        return;
+      }
+
+      // Collect all texts to translate
+      const textsToTranslate: string[] = [];
+      flashcards.forEach(card => {
+        textsToTranslate.push(card.front);
+        textsToTranslate.push(card.back);
+        if (card.category) textsToTranslate.push(card.category);
+      });
+
+      try {
+        const translated = await translateTexts(textsToTranslate);
+        
+        // Map translations back to cards
+        let idx = 0;
+        const newTranslatedCards: TranslatedFlashcard[] = flashcards.map(card => {
+          const translatedFront = translated[idx++];
+          const translatedBack = translated[idx++];
+          const translatedCategory = card.category ? translated[idx++] : undefined;
+          return {
+            ...card,
+            translatedFront,
+            translatedBack,
+            translatedCategory,
+          };
+        });
+        
+        setTranslatedCards(newTranslatedCards);
+      } catch (error) {
+        console.error('Error translating flashcards:', error);
+        setTranslatedCards(flashcards);
+      }
+    };
+
+    translateCards();
+  }, [flashcards, needsTranslation, i18n.language]);
 
   const handleFlip = () => {
     if (!isAnimating) {
@@ -72,18 +133,34 @@ export default function FlashcardReview({
 
     } catch (error) {
       console.error('Error registering review:', error);
-      toast.error('Error al registrar la respuesta');
+      toast.error(t('flashcards.errorRecording'));
       setIsAnimating(false);
     }
   };
 
-  // Respuestas con calidad SM-2
+  // Response buttons with SM-2 quality
   const responseButtons = [
-    { quality: 0, label: 'No lo sé', icon: ThumbsDown, color: 'text-red-500 hover:bg-red-500/10' },
-    { quality: 2, label: 'Difícil', icon: Meh, color: 'text-orange-500 hover:bg-orange-500/10' },
-    { quality: 4, label: 'Bien', icon: ThumbsUp, color: 'text-green-500 hover:bg-green-500/10' },
-    { quality: 5, label: '¡Fácil!', icon: Sparkles, color: 'text-blue-500 hover:bg-blue-500/10' },
+    { quality: 0, label: t('flashcards.dontKnow'), icon: ThumbsDown, color: 'text-red-500 hover:bg-red-500/10' },
+    { quality: 2, label: t('flashcards.hard'), icon: Meh, color: 'text-orange-500 hover:bg-orange-500/10' },
+    { quality: 4, label: t('flashcards.good'), icon: ThumbsUp, color: 'text-green-500 hover:bg-green-500/10' },
+    { quality: 5, label: t('flashcards.easy'), icon: Sparkles, color: 'text-blue-500 hover:bg-blue-500/10' },
   ];
+
+  // Get card content (translated or original)
+  const getCardFront = () => {
+    const card = currentCard as TranslatedFlashcard;
+    return card.translatedFront || card.front;
+  };
+
+  const getCardBack = () => {
+    const card = currentCard as TranslatedFlashcard;
+    return card.translatedBack || card.back;
+  };
+
+  const getCardCategory = () => {
+    const card = currentCard as TranslatedFlashcard;
+    return card.translatedCategory || card.category;
+  };
 
   if (sessionComplete) {
     const accuracy = reviewed > 0 ? Math.round((correct / reviewed) * 100) : 0;
@@ -93,28 +170,28 @@ export default function FlashcardReview({
         <Card>
           <CardContent className="pt-8 pb-8 text-center">
             <CheckCircle2 className="h-20 w-20 mx-auto text-green-500 mb-6" />
-            <h2 className="text-2xl font-bold mb-2">¡Sesión completada!</h2>
+            <h2 className="text-2xl font-bold mb-2">{t('flashcards.sessionCompleteTitle')}</h2>
             <p className="text-muted-foreground mb-6">
-              Has revisado todas las tarjetas pendientes
+              {t('flashcards.reviewedAllCards')}
             </p>
             
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="text-center">
                 <p className="text-3xl font-bold text-primary">{reviewed}</p>
-                <p className="text-sm text-muted-foreground">Revisadas</p>
+                <p className="text-sm text-muted-foreground">{t('flashcards.reviewed')}</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-green-500">{correct}</p>
-                <p className="text-sm text-muted-foreground">Correctas</p>
+                <p className="text-sm text-muted-foreground">{t('flashcards.correctCount')}</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-blue-500">{accuracy}%</p>
-                <p className="text-sm text-muted-foreground">Precisión</p>
+                <p className="text-sm text-muted-foreground">{t('flashcards.precision')}</p>
               </div>
             </div>
 
             <Button onClick={onComplete} size="lg" className="w-full">
-              Volver al inicio
+              {t('flashcards.backToStart')}
             </Button>
           </CardContent>
         </Card>
@@ -132,7 +209,7 @@ export default function FlashcardReview({
       <div className="flex items-center justify-between mb-6">
         <Button variant="ghost" size="sm" onClick={onExit}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Salir
+          {t('flashcards.exit')}
         </Button>
         
         <div className="flex items-center gap-4">
@@ -140,8 +217,11 @@ export default function FlashcardReview({
             {currentIndex + 1} / {flashcards.length}
           </span>
           <Badge variant="outline">
-            {correct} correctas
+            {correct} {t('flashcards.correct')}
           </Badge>
+          {isTranslating && needsTranslation && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          )}
         </div>
       </div>
 
@@ -170,16 +250,16 @@ export default function FlashcardReview({
             style={{ backfaceVisibility: 'hidden' }}
           >
             <CardContent className="flex flex-col items-center justify-center min-h-[300px] p-8">
-              {currentCard.category && (
+              {getCardCategory() && (
                 <Badge variant="secondary" className="mb-4">
-                  {currentCard.category}
+                  {getCardCategory()}
                 </Badge>
               )}
               <p className="text-xl text-center leading-relaxed">
-                {currentCard.front}
+                {getCardFront()}
               </p>
               <p className="text-sm text-muted-foreground mt-6">
-                Toca para ver la respuesta
+                {t('flashcards.tapToReveal')}
               </p>
             </CardContent>
           </Card>
@@ -194,7 +274,7 @@ export default function FlashcardReview({
           >
             <CardContent className="flex flex-col items-center justify-center min-h-[300px] p-8">
               <p className="text-xl text-center leading-relaxed font-medium">
-                {currentCard.back}
+                {getCardBack()}
               </p>
             </CardContent>
           </Card>
@@ -205,7 +285,7 @@ export default function FlashcardReview({
       {isFlipped && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <p className="text-center text-sm text-muted-foreground mb-4">
-            ¿Cómo de bien lo sabías?
+            {t('flashcards.howWellKnew')}
           </p>
           
           <div className="grid grid-cols-4 gap-2">
@@ -230,7 +310,7 @@ export default function FlashcardReview({
         <div className="text-center">
           <Button variant="outline" onClick={handleFlip} className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            Mostrar respuesta
+            {t('flashcards.showAnswer')}
           </Button>
         </div>
       )}

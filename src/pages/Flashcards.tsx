@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   Clock,
   Sparkles,
-  Bell
+  Bell,
+  Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { flashcardService, Flashcard, FlashcardStats } from '@/services/flashcardService';
@@ -23,13 +24,22 @@ import FlashcardReview from '@/components/FlashcardReview';
 import FlashcardCreator from '@/components/FlashcardCreator';
 import FlashcardList from '@/components/FlashcardList';
 import { toast } from 'sonner';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
+
+interface TranslatedFlashcard extends Flashcard {
+  translatedFront?: string;
+  translatedBack?: string;
+  translatedCategory?: string;
+}
 
 export default function Flashcards() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   const [activeTab, setActiveTab] = useState('study');
   const [stats, setStats] = useState<FlashcardStats | null>(null);
   const [pendingCards, setPendingCards] = useState<Flashcard[]>([]);
+  const [translatedCards, setTranslatedCards] = useState<TranslatedFlashcard[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStudying, setIsStudying] = useState(false);
 
@@ -38,6 +48,49 @@ export default function Flashcards() {
       loadData();
     }
   }, [user?.id]);
+
+  // Translate pending cards content when language changes or cards load
+  useEffect(() => {
+    const translateCards = async () => {
+      if (!needsTranslation || pendingCards.length === 0) {
+        setTranslatedCards(pendingCards);
+        return;
+      }
+
+      // Collect all texts to translate
+      const textsToTranslate: string[] = [];
+      pendingCards.forEach(card => {
+        textsToTranslate.push(card.front);
+        textsToTranslate.push(card.back);
+        if (card.category) textsToTranslate.push(card.category);
+      });
+
+      try {
+        const translated = await translateTexts(textsToTranslate);
+        
+        // Map translations back to cards
+        let idx = 0;
+        const newTranslatedCards: TranslatedFlashcard[] = pendingCards.map(card => {
+          const translatedFront = translated[idx++];
+          const translatedBack = translated[idx++];
+          const translatedCategory = card.category ? translated[idx++] : undefined;
+          return {
+            ...card,
+            translatedFront,
+            translatedBack,
+            translatedCategory,
+          };
+        });
+        
+        setTranslatedCards(newTranslatedCards);
+      } catch (error) {
+        console.error('Error translating flashcards:', error);
+        setTranslatedCards(pendingCards);
+      }
+    };
+
+    translateCards();
+  }, [pendingCards, needsTranslation, i18n.language]);
 
   const loadData = async () => {
     if (!user?.id) return;
@@ -86,10 +139,15 @@ export default function Flashcards() {
     );
   }
 
+  // Get displayed cards (translated or original)
+  const displayCards = useMemo(() => {
+    return translatedCards.length > 0 ? translatedCards : pendingCards;
+  }, [translatedCards, pendingCards]);
+
   if (isStudying && pendingCards.length > 0) {
     return (
       <FlashcardReview 
-        flashcards={pendingCards}
+        flashcards={translatedCards.length > 0 ? translatedCards : pendingCards}
         userId={user.id}
         onComplete={handleStudyComplete}
         onExit={() => setIsStudying(false)}
@@ -158,7 +216,46 @@ export default function Flashcards() {
           {pendingCards.length === 0 ? (
             <Card><CardContent className="py-12 text-center"><CheckCircle2 className="h-16 w-16 mx-auto text-green-500 mb-4" /><h3 className="text-xl font-semibold mb-2">{t('flashcards.allCaughtUp')}</h3><p className="text-muted-foreground mb-6">{t('flashcards.noPendingCards')}</p><Button onClick={() => setActiveTab('create')} variant="outline"><Plus className="h-4 w-4 mr-2" />{t('flashcards.createNewCards')}</Button></CardContent></Card>
           ) : (
-            <Card><CardHeader><CardTitle className="text-lg">{t('flashcards.upcomingCards')}</CardTitle></CardHeader><CardContent><div className="space-y-3">{pendingCards.slice(0, 5).map((card, idx) => (<div key={card.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50"><div className="flex items-center gap-3"><span className="text-muted-foreground font-mono text-sm">#{idx + 1}</span><div><p className="font-medium line-clamp-1">{card.front}</p>{card.category && <Badge variant="outline" className="mt-1 text-xs">{card.category}</Badge>}</div></div><p className="text-sm text-muted-foreground">{card.repetitions === 0 ? t('flashcards.new') : `${t('flashcards.rep')}: ${card.repetitions}`}</p></div>))}</div>{pendingCards.length > 5 && <p className="text-center text-muted-foreground text-sm mt-4">{t('flashcards.moreCards', { count: pendingCards.length - 5 })}</p>}</CardContent></Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  {t('flashcards.upcomingCards')}
+                  {isTranslating && needsTranslation && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {displayCards.slice(0, 5).map((card, idx) => {
+                    const translatedCard = card as TranslatedFlashcard;
+                    return (
+                      <div key={card.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div className="flex items-center gap-3">
+                          <span className="text-muted-foreground font-mono text-sm">#{idx + 1}</span>
+                          <div>
+                            <p className="font-medium line-clamp-1">
+                              {translatedCard.translatedFront || card.front}
+                            </p>
+                            {card.category && (
+                              <Badge variant="outline" className="mt-1 text-xs">
+                                {translatedCard.translatedCategory || card.category}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {card.repetitions === 0 ? t('flashcards.new') : `${t('flashcards.rep')}: ${card.repetitions}`}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                {pendingCards.length > 5 && (
+                  <p className="text-center text-muted-foreground text-sm mt-4">
+                    {t('flashcards.moreCards', { count: pendingCards.length - 5 })}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
         <TabsContent value="create" className="mt-6"><FlashcardCreator userId={user.id} onCreated={handleFlashcardCreated} /></TabsContent>
