@@ -1356,7 +1356,32 @@
     "deleteError": "Erreur lors de la suppression",
     "updated": "Flashcard mise à jour",
     "updateError": "Erreur lors de la mise à jour",
-    "loadError2": "Erreur lors du chargement des flashcards"
+    "loadError2": "Erreur lors du chargement des flashcards",
+    "creator": {
+      "createNewCard": "Créer une nouvelle carte",
+      "questionFront": "Question (recto)",
+      "questionPlaceholder": "Écrivez la question ou le concept...",
+      "answerBack": "Réponse (verso)",
+      "answerPlaceholder": "Écrivez la réponse...",
+      "category": "Catégorie",
+      "categoryPlaceholder": "Ex: Droit Civil",
+      "tags": "Étiquettes",
+      "tagsPlaceholder": "Ex: contrats, obligations",
+      "addAndCreateAnother": "Ajouter et en créer une autre",
+      "save": "Enregistrer",
+      "preview": "Aperçu",
+      "questionPreview": "Question...",
+      "answerPreview": "Réponse...",
+      "tipsTitle": "Conseils pour de bonnes flashcards :",
+      "tip1": "Une seule idée par carte",
+      "tip2": "Questions claires et concises",
+      "tip3": "Réponses brèves et précises",
+      "tip4": "Utilisez des exemples quand c'est utile",
+      "completeBothSides": "Complétez le recto et le verso de la carte",
+      "createdSuccess": "Flashcard créée avec succès",
+      "createError": "Erreur lors de la création",
+      "addedCreateAnother": "Ajoutée ! Créez-en une autre"
+    }
   },
   "flashcardReminders": {
     "pageTitle": "Configurer les Rappels de Flashcards | Préparation Concours",

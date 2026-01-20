@@ -1468,7 +1468,32 @@
     "deleteError": "Error deleting",
     "updated": "Flashcard updated",
     "updateError": "Error updating",
-    "loadError2": "Error loading flashcards"
+    "loadError2": "Error loading flashcards",
+    "creator": {
+      "createNewCard": "Create new card",
+      "questionFront": "Question (front)",
+      "questionPlaceholder": "Write the question or concept...",
+      "answerBack": "Answer (back)",
+      "answerPlaceholder": "Write the answer...",
+      "category": "Category",
+      "categoryPlaceholder": "e.g., Civil Law",
+      "tags": "Tags",
+      "tagsPlaceholder": "e.g., contracts, obligations",
+      "addAndCreateAnother": "Add and create another",
+      "save": "Save",
+      "preview": "Preview",
+      "questionPreview": "Question...",
+      "answerPreview": "Answer...",
+      "tipsTitle": "Tips for good flashcards:",
+      "tip1": "One idea per card",
+      "tip2": "Clear and concise questions",
+      "tip3": "Brief and precise answers",
+      "tip4": "Use examples when helpful",
+      "completeBothSides": "Complete both front and back of the card",
+      "createdSuccess": "Flashcard created successfully",
+      "createError": "Error creating flashcard",
+      "addedCreateAnother": "Added! Create another"
+    }
   },
   "flashcardReminders": {
     "pageTitle": "Configure Flashcard Reminders | Civil Service Prep",

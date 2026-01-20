@@ -1356,7 +1356,32 @@
     "deleteError": "Fehler beim Löschen",
     "updated": "Flashcard aktualisiert",
     "updateError": "Fehler beim Aktualisieren",
-    "loadError2": "Fehler beim Laden"
+    "loadError2": "Fehler beim Laden",
+    "creator": {
+      "createNewCard": "Neue Karte erstellen",
+      "questionFront": "Frage (Vorderseite)",
+      "questionPlaceholder": "Schreiben Sie die Frage oder das Konzept...",
+      "answerBack": "Antwort (Rückseite)",
+      "answerPlaceholder": "Schreiben Sie die Antwort...",
+      "category": "Kategorie",
+      "categoryPlaceholder": "z.B.: Zivilrecht",
+      "tags": "Tags",
+      "tagsPlaceholder": "z.B.: Verträge, Pflichten",
+      "addAndCreateAnother": "Hinzufügen und weitere erstellen",
+      "save": "Speichern",
+      "preview": "Vorschau",
+      "questionPreview": "Frage...",
+      "answerPreview": "Antwort...",
+      "tipsTitle": "Tipps für gute Flashcards:",
+      "tip1": "Eine Idee pro Karte",
+      "tip2": "Klare und prägnante Fragen",
+      "tip3": "Kurze und präzise Antworten",
+      "tip4": "Beispiele verwenden, wenn hilfreich",
+      "completeBothSides": "Füllen Sie Vorder- und Rückseite aus",
+      "createdSuccess": "Flashcard erfolgreich erstellt",
+      "createError": "Fehler beim Erstellen",
+      "addedCreateAnother": "Hinzugefügt! Erstellen Sie eine weitere"
+    }
   },
   "flashcardReminders": {
     "pageTitle": "Flashcard-Erinnerungen konfigurieren | Prüfungsvorbereitung",

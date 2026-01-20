@@ -1526,7 +1526,32 @@
     "deleteError": "Error al eliminar",
     "updated": "Flashcard actualizada",
     "updateError": "Error al actualizar",
-    "loadError2": "Error al cargar las flashcards"
+    "loadError2": "Error al cargar las flashcards",
+    "creator": {
+      "createNewCard": "Crear nueva tarjeta",
+      "questionFront": "Pregunta (frente)",
+      "questionPlaceholder": "Escribe la pregunta o concepto...",
+      "answerBack": "Respuesta (reverso)",
+      "answerPlaceholder": "Escribe la respuesta...",
+      "category": "Categoría",
+      "categoryPlaceholder": "Ej: Derecho Civil",
+      "tags": "Etiquetas",
+      "tagsPlaceholder": "Ej: contratos, obligaciones",
+      "addAndCreateAnother": "Añadir y crear otra",
+      "save": "Guardar",
+      "preview": "Vista previa",
+      "questionPreview": "Pregunta...",
+      "answerPreview": "Respuesta...",
+      "tipsTitle": "Consejos para buenas flashcards:",
+      "tip1": "Una sola idea por tarjeta",
+      "tip2": "Preguntas claras y concisas",
+      "tip3": "Respuestas breves y precisas",
+      "tip4": "Usa ejemplos cuando ayuden",
+      "completeBothSides": "Completa el frente y reverso de la tarjeta",
+      "createdSuccess": "Flashcard creada correctamente",
+      "createError": "Error al crear la flashcard",
+      "addedCreateAnother": "¡Añadida! Crea otra"
+    }
   },
   "flashcardReminders": {
     "pageTitle": "Configurar Recordatorios de Flashcards | Oposiciones Test",
