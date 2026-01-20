@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ interface FlashcardCreatorProps {
 }
 
 export default function FlashcardCreator({ userId, onCreated }: FlashcardCreatorProps) {
+  const { t } = useTranslation();
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
   const [category, setCategory] = useState('');
@@ -24,7 +26,7 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
     e.preventDefault();
     
     if (!front.trim() || !back.trim()) {
-      toast.error('Completa el frente y reverso de la tarjeta');
+      toast.error(t('flashcards.creator.completeBothSides'));
       return;
     }
 
@@ -41,18 +43,18 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
       });
 
       if (result.success) {
-        toast.success('Flashcard creada correctamente');
+        toast.success(t('flashcards.creator.createdSuccess'));
         setFront('');
         setBack('');
         setCategory('');
         setTags('');
         onCreated?.();
       } else {
-        toast.error(result.error || 'Error al crear la flashcard');
+        toast.error(result.error || t('flashcards.creator.createError'));
       }
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al crear la flashcard');
+      toast.error(t('flashcards.creator.createError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -60,7 +62,7 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
 
   const handleQuickAdd = async () => {
     if (!front.trim() || !back.trim()) {
-      toast.error('Completa el frente y reverso de la tarjeta');
+      toast.error(t('flashcards.creator.completeBothSides'));
       return;
     }
 
@@ -76,16 +78,16 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
       });
 
       if (result.success) {
-        toast.success('¡Añadida! Crea otra');
+        toast.success(t('flashcards.creator.addedCreateAnother'));
         setFront('');
         setBack('');
         // Mantener categoría para añadir varias del mismo tema
       } else {
-        toast.error(result.error || 'Error al crear la flashcard');
+        toast.error(result.error || t('flashcards.creator.createError'));
       }
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al crear la flashcard');
+      toast.error(t('flashcards.creator.createError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -98,16 +100,16 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Crear nueva tarjeta
+            {t('flashcards.creator.createNewCard')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="front">Pregunta (frente)</Label>
+              <Label htmlFor="front">{t('flashcards.creator.questionFront')}</Label>
               <Textarea
                 id="front"
-                placeholder="Escribe la pregunta o concepto..."
+                placeholder={t('flashcards.creator.questionPlaceholder')}
                 value={front}
                 onChange={(e) => setFront(e.target.value)}
                 rows={3}
@@ -116,10 +118,10 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="back">Respuesta (reverso)</Label>
+              <Label htmlFor="back">{t('flashcards.creator.answerBack')}</Label>
               <Textarea
                 id="back"
-                placeholder="Escribe la respuesta..."
+                placeholder={t('flashcards.creator.answerPlaceholder')}
                 value={back}
                 onChange={(e) => setBack(e.target.value)}
                 rows={3}
@@ -129,20 +131,20 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Categoría</Label>
+                <Label htmlFor="category">{t('flashcards.creator.category')}</Label>
                 <Input
                   id="category"
-                  placeholder="Ej: Derecho Civil"
+                  placeholder={t('flashcards.creator.categoryPlaceholder')}
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tags">Etiquetas</Label>
+                <Label htmlFor="tags">{t('flashcards.creator.tags')}</Label>
                 <Input
                   id="tags"
-                  placeholder="Ej: contratos, obligaciones"
+                  placeholder={t('flashcards.creator.tagsPlaceholder')}
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                 />
@@ -158,7 +160,7 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
                 disabled={isSubmitting}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Añadir y crear otra
+                {t('flashcards.creator.addAndCreateAnother')}
               </Button>
               <Button 
                 type="submit" 
@@ -166,7 +168,7 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
                 disabled={isSubmitting}
               >
                 <Save className="h-4 w-4 mr-2" />
-                Guardar
+                {t('flashcards.creator.save')}
               </Button>
             </div>
           </form>
@@ -175,12 +177,12 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
 
       {/* Preview */}
       <div className="space-y-4">
-        <h3 className="font-semibold text-lg">Vista previa</h3>
+        <h3 className="font-semibold text-lg">{t('flashcards.creator.preview')}</h3>
         
         <Card className="min-h-[200px]">
           <CardContent className="flex items-center justify-center min-h-[200px] p-6">
             <p className="text-center text-lg">
-              {front || <span className="text-muted-foreground italic">Pregunta...</span>}
+              {front || <span className="text-muted-foreground italic">{t('flashcards.creator.questionPreview')}</span>}
             </p>
           </CardContent>
         </Card>
@@ -188,7 +190,7 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
         <Card className="min-h-[200px] bg-primary/5 border-primary/20">
           <CardContent className="flex items-center justify-center min-h-[200px] p-6">
             <p className="text-center text-lg font-medium">
-              {back || <span className="text-muted-foreground italic">Respuesta...</span>}
+              {back || <span className="text-muted-foreground italic">{t('flashcards.creator.answerPreview')}</span>}
             </p>
           </CardContent>
         </Card>
@@ -199,12 +201,12 @@ export default function FlashcardCreator({ userId, onCreated }: FlashcardCreator
             <div className="flex gap-3">
               <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium mb-1">Consejos para buenas flashcards:</p>
+                <p className="font-medium mb-1">{t('flashcards.creator.tipsTitle')}</p>
                 <ul className="text-muted-foreground space-y-1">
-                  <li>• Una sola idea por tarjeta</li>
-                  <li>• Preguntas claras y concisas</li>
-                  <li>• Respuestas breves y precisas</li>
-                  <li>• Usa ejemplos cuando ayuden</li>
+                  <li>• {t('flashcards.creator.tip1')}</li>
+                  <li>• {t('flashcards.creator.tip2')}</li>
+                  <li>• {t('flashcards.creator.tip3')}</li>
+                  <li>• {t('flashcards.creator.tip4')}</li>
                 </ul>
               </div>
             </div>

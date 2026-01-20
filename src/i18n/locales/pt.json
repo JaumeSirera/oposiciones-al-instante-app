@@ -1356,7 +1356,32 @@
     "deleteError": "Erro ao excluir",
     "updated": "Flashcard atualizada",
     "updateError": "Erro ao atualizar",
-    "loadError2": "Erro ao carregar flashcards"
+    "loadError2": "Erro ao carregar flashcards",
+    "creator": {
+      "createNewCard": "Criar novo cartão",
+      "questionFront": "Pergunta (frente)",
+      "questionPlaceholder": "Escreva a pergunta ou conceito...",
+      "answerBack": "Resposta (verso)",
+      "answerPlaceholder": "Escreva a resposta...",
+      "category": "Categoria",
+      "categoryPlaceholder": "Ex: Direito Civil",
+      "tags": "Tags",
+      "tagsPlaceholder": "Ex: contratos, obrigações",
+      "addAndCreateAnother": "Adicionar e criar outro",
+      "save": "Salvar",
+      "preview": "Visualização",
+      "questionPreview": "Pergunta...",
+      "answerPreview": "Resposta...",
+      "tipsTitle": "Dicas para boas flashcards:",
+      "tip1": "Uma ideia por cartão",
+      "tip2": "Perguntas claras e concisas",
+      "tip3": "Respostas breves e precisas",
+      "tip4": "Use exemplos quando ajudar",
+      "completeBothSides": "Complete a frente e o verso do cartão",
+      "createdSuccess": "Flashcard criado com sucesso",
+      "createError": "Erro ao criar flashcard",
+      "addedCreateAnother": "Adicionado! Crie outro"
+    }
   },
   "flashcardReminders": {
     "pageTitle": "Configurar Lembretes de Flashcards | Preparação para Concursos",
