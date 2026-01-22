@@ -1531,5 +1531,11 @@
     "reminderSent": "Reminder sent to your email",
     "reminderError": "Error sending reminder",
     "serverError": "Server error. Verify that the flashcard reminder tables are created in the database."
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

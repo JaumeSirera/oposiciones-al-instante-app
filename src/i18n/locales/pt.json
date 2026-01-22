@@ -1419,5 +1419,11 @@
     "reminderSent": "Lembrete enviado para seu email",
     "reminderError": "Erro ao enviar lembrete",
     "serverError": "Erro do servidor. Verifique se as tabelas de lembretes de flashcards foram criadas no banco de dados."
+  },
+  "theme": {
+    "toggle": "Alternar tema",
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema"
   }
 }

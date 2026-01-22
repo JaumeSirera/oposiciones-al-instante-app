@@ -1589,5 +1589,11 @@
     "reminderSent": "Recordatorio enviado a tu email",
     "reminderError": "Error al enviar recordatorio",
     "serverError": "Error del servidor. Verifica que las tablas de recordatorios de flashcards estén creadas en la base de datos."
+  },
+  "theme": {
+    "toggle": "Cambiar tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
   }
 }
