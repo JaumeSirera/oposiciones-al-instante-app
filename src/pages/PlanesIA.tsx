@@ -11,7 +11,7 @@ const PlanesIA: React.FC = () => {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <Helmet>
         <title>{t('planesIA.pageTitle')}</title>
         <meta name="description" content={t('planesIA.metaDescription')} />
@@ -20,45 +20,45 @@ const PlanesIA: React.FC = () => {
 
       <div className="container mx-auto px-4 py-12">
         <header className="max-w-3xl">
-          <h1 className="text-4xl font-extrabold text-gray-900">{t('planesIA.title')}</h1>
-          <p className="mt-3 text-lg text-gray-700">{t('planesIA.subtitle')}</p>
+          <h1 className="text-4xl font-extrabold text-foreground">{t('planesIA.title')}</h1>
+          <p className="mt-3 text-lg text-muted-foreground">{t('planesIA.subtitle')}</p>
         </header>
 
         <section className="mt-10 grid md:grid-cols-3 gap-6">
           <Card>
             <CardContent className="p-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <Calendar className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('planesIA.calendarByGoals')}</h3>
-              <p className="text-gray-700">{t('planesIA.calendarByGoalsDesc')}</p>
+              <h3 className="text-xl font-bold text-foreground mb-2">{t('planesIA.calendarByGoals')}</h3>
+              <p className="text-muted-foreground">{t('planesIA.calendarByGoalsDesc')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-6">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <Repeat className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Repeat className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('planesIA.spacedRepetition')}</h3>
-              <p className="text-gray-700">{t('planesIA.spacedRepetitionDesc')}</p>
+              <h3 className="text-xl font-bold text-foreground mb-2">{t('planesIA.spacedRepetition')}</h3>
+              <p className="text-muted-foreground">{t('planesIA.spacedRepetitionDesc')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-6">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <BookOpen className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
+                <BookOpen className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('planesIA.smartPriority')}</h3>
-              <p className="text-gray-700">{t('planesIA.smartPriorityDesc')}</p>
+              <h3 className="text-xl font-bold text-foreground mb-2">{t('planesIA.smartPriority')}</h3>
+              <p className="text-muted-foreground">{t('planesIA.smartPriorityDesc')}</p>
             </CardContent>
           </Card>
         </section>
 
         <section className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900">{t('planesIA.howItWorks')}</h2>
-          <ol className="mt-3 list-decimal list-inside space-y-2 text-gray-700">
+          <h2 className="text-2xl font-bold text-foreground">{t('planesIA.howItWorks')}</h2>
+          <ol className="mt-3 list-decimal list-inside space-y-2 text-muted-foreground">
             <li>{t('planesIA.step1')}</li>
             <li>{t('planesIA.step2')}</li>
             <li>{t('planesIA.step3')}</li>

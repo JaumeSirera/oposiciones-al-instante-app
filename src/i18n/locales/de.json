@@ -1419,5 +1419,11 @@
     "reminderSent": "Erinnerung an Ihre E-Mail gesendet",
     "reminderError": "Fehler beim Senden der Erinnerung",
     "serverError": "Serverfehler. Überprüfen Sie ob die Flashcard-Erinnerungstabellen in der Datenbank erstellt wurden."
+  },
+  "theme": {
+    "toggle": "Thema wechseln",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System"
   }
 }

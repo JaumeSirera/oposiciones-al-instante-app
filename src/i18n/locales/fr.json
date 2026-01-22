@@ -1419,5 +1419,11 @@
     "reminderSent": "Rappel envoyé à votre email",
     "reminderError": "Erreur lors de l'envoi du rappel",
     "serverError": "Erreur du serveur. Vérifiez que les tables de rappels de flashcards sont créées dans la base de données."
+  },
+  "theme": {
+    "toggle": "Changer de thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
   }
 }

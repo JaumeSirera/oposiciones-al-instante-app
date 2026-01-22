@@ -348,7 +348,7 @@ const Index = () => {
                   onClick={() => setShowModalPlan(true)}
                   variant="secondary"
                   size="lg"
-                  className="bg-white text-purple-600 hover:bg-gray-100"
+                  className="bg-card text-purple-600 hover:bg-muted dark:text-purple-400"
                 >
                   <Calendar className="mr-2 h-5 w-5" />
                   {t('home.createStudyPlan')}
@@ -370,7 +370,7 @@ const Index = () => {
                   onClick={() => navigate('/generar-plan-fisico-ia')}
                   variant="secondary"
                   size="lg"
-                  className="bg-white text-orange-600 hover:bg-gray-100"
+                  className="bg-card text-orange-600 hover:bg-muted dark:text-orange-400"
                 >
                   <Heart className="mr-2 h-5 w-5" />
                   {t('home.createPhysicalPlan')}
@@ -399,7 +399,7 @@ const Index = () => {
                   onClick={() => navigate('/flashcards')}
                   variant="secondary"
                   size="lg"
-                  className="bg-white text-amber-600 hover:bg-gray-100"
+                  className="bg-card text-amber-600 hover:bg-muted dark:text-amber-400"
                 >
                   <Layers className="mr-2 h-5 w-5" />
                   {t('home.goToFlashcards')}
@@ -568,9 +568,9 @@ const Index = () => {
             {!isSpanish && <OfficialBulletinsCard />}
 
             {/* Acciones rápidas */}
-            <Card className="bg-white shadow-md border-orange-100">
-              <CardHeader className="bg-gradient-to-r from-orange-50 to-white">
-                <CardTitle className="text-orange-900">{t('home.quickActions')}</CardTitle>
+            <Card className="bg-card shadow-md border-orange-100 dark:border-orange-900/50">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-card dark:from-orange-950/20 dark:to-card">
+                <CardTitle className="text-orange-900 dark:text-orange-300">{t('home.quickActions')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button 

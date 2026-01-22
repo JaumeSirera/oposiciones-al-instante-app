@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { AppUpdateProvider, useAppUpdateContext } from "@/contexts/AppUpdateContext";
 import { AppUpdateDialog } from "@/components/AppUpdateDialog";
 import {
@@ -51,6 +52,7 @@ function LayoutContent() {
             <SidebarTrigger />
             
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <LanguageSelector />
               
               <DropdownMenu>
