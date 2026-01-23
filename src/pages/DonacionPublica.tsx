@@ -30,7 +30,7 @@ const DonacionPublica = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-background">
       <div className="container mx-auto px-4 py-8">
         <Link to="/">
           <Button variant="ghost" className="mb-6">
@@ -46,8 +46,8 @@ const DonacionPublica = () => {
                 <Heart className="w-8 h-8 text-white" />
               </div>
             </div>
-            <h1 className="text-4xl font-bold mb-4">Apoya Oposiciones-Tests</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold text-foreground mb-4">Apoya Oposiciones-Tests</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Tu donación nos ayuda a mantener la plataforma gratuita y seguir mejorando 
               las herramientas para todos los opositores.
             </p>
@@ -56,35 +56,35 @@ const DonacionPublica = () => {
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleDonation(3)}>
               <CardHeader>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                  <Coffee className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center mb-2">
+                  <Coffee className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <CardTitle>Un Café</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold mb-2">3€</p>
-                <p className="text-gray-600">
+                <p className="text-3xl font-bold text-foreground mb-2">3€</p>
+                <p className="text-muted-foreground">
                   Invítanos a un café y apoya el desarrollo de nuevas funcionalidades.
                 </p>
-                <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
+                <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600">
                   Donar 3€
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-purple-300" onClick={() => handleDonation(5)}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-purple-300 dark:border-purple-700" onClick={() => handleDonation(5)}>
               <CardHeader>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
-                  <Heart className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center mb-2">
+                  <Heart className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <CardTitle>Apoyo Medio</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold mb-2">5€</p>
-                <p className="text-gray-600">
+                <p className="text-3xl font-bold text-foreground mb-2">5€</p>
+                <p className="text-muted-foreground">
                   Una ayuda significativa para mantener los servidores funcionando.
                 </p>
-                <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
+                <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600">
                   Donar 5€
                 </Button>
               </CardContent>
@@ -92,41 +92,41 @@ const DonacionPublica = () => {
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleDonation(10)}>
               <CardHeader>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-2">
-                  <Star className="w-6 h-6 text-yellow-600" />
+                <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg flex items-center justify-center mb-2">
+                  <Star className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <CardTitle>Gran Apoyo</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold mb-2">10€</p>
-                <p className="text-gray-600">
+                <p className="text-3xl font-bold text-foreground mb-2">10€</p>
+                <p className="text-muted-foreground">
                   Contribuyes de manera importante al crecimiento de la plataforma.
                 </p>
-                <Button className="w-full mt-4 bg-yellow-600 hover:bg-yellow-700">
+                <Button className="w-full mt-4 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-600">
                   Donar 10€
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-gradient-to-br from-blue-50 to-purple-50">
+          <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold mb-4">¿Por qué donar?</h2>
-              <ul className="space-y-3">
+              <h2 className="text-2xl font-bold text-foreground mb-4">¿Por qué donar?</h2>
+              <ul className="space-y-3 text-foreground">
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">✓</span>
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                   <span>Mantener la plataforma gratuita para todos los opositores</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">✓</span>
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                   <span>Desarrollar nuevas funcionalidades y herramientas</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">✓</span>
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                   <span>Cubrir los costes de servidores y mantenimiento</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">✓</span>
+                  <span className="text-blue-600 dark:text-blue-400 mr-2">✓</span>
                   <span>Mejorar la experiencia de usuario continuamente</span>
                 </li>
               </ul>

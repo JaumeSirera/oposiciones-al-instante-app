@@ -352,14 +352,14 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background">
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="flex items-center mb-8">
           <Button variant="ghost" onClick={onBack} className="mr-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t('configTest.back')}
           </Button>
-          <h1 className="text-3xl font-bold text-gray-800">
+          <h1 className="text-3xl font-bold text-foreground">
             {isPsicotecnico ? t('configTest.titlePsycho') : t('configTest.title')}
           </h1>
         </div>
