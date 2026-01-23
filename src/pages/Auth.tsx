@@ -113,7 +113,7 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background flex items-center justify-center p-4">
       <Helmet>
         <title>{t('authPage.title')}</title>
         <meta name="robots" content="noindex,nofollow" />
@@ -127,13 +127,13 @@ const Auth: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <BookOpen className="w-12 h-12 text-blue-600" />
+            <BookOpen className="w-12 h-12 text-blue-600 dark:text-blue-400" />
           </div>
           <h1 className="text-4xl font-bold">
-            <span className="text-blue-600">Oposiciones-</span>
-            <span className="text-green-600">Test</span>
+            <span className="text-blue-600 dark:text-blue-400">Oposiciones-</span>
+            <span className="text-green-600 dark:text-green-400">Test</span>
           </h1>
-          <p className="text-gray-600 mt-2">{t('authPage.subtitle')}</p>
+          <p className="text-muted-foreground mt-2">{t('authPage.subtitle')}</p>
         </div>
 
         <Card>
@@ -165,7 +165,7 @@ const Auth: React.FC = () => {
                     </div>
                     <button type="button" onClick={() => setShowRecoverDialog(true)} className="text-sm text-blue-600 hover:text-blue-700 hover:underline" disabled={isLoading}>{t('authPage.forgotPassword')}</button>
                   </div>
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600" disabled={isLoading}>
                     {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('authPage.loggingIn')}</>) : t('authPage.loginButton')}
                   </Button>
                 </form>
@@ -189,7 +189,7 @@ const Auth: React.FC = () => {
                     <Label htmlFor="register-password-confirm">{t('authPage.confirmPassword')}</Label>
                     <Input id="register-password-confirm" name="new-password-confirm" type="password" autoComplete="new-password" placeholder={t('authPage.passwordPlaceholder')} value={registerPasswordConfirm} onChange={(e) => setRegisterPasswordConfirm(e.target.value)} disabled={isLoading} required minLength={6} />
                   </div>
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600" disabled={isLoading}>
                     {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('authPage.creatingAccount')}</>) : t('authPage.registerButton')}
                   </Button>
                 </form>

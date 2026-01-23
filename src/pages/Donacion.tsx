@@ -175,7 +175,7 @@ const Donacion = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Button 
           variant="ghost" 
@@ -187,10 +187,10 @@ const Donacion = () => {
         </Button>
 
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             {t('donation.title')} 💙
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {t('donation.subtitle')}
           </p>
         </div>
@@ -235,12 +235,12 @@ const Donacion = () => {
 
               <TabsContent value="googlepay" className="space-y-4 mt-4">
                 <div className="space-y-4">
-                  <div className="bg-blue-50 p-4 rounded-lg text-center">
-                    <p className="text-sm text-gray-600 mb-2">
-                      {t('donation.youWillDonate')} <span className="font-bold text-blue-600">{selectedAmount}€</span>
+                  <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {t('donation.youWillDonate')} <span className="font-bold text-blue-600 dark:text-blue-400">{selectedAmount}€</span>
                     </p>
                   </div>
-                  <Button 
+                  <Button
                     className="w-full bg-black hover:bg-gray-800" 
                     size="lg"
                     onClick={handleGooglePay}
@@ -295,21 +295,21 @@ const Donacion = () => {
                   </div>
                 ) : (
                   <div className="space-y-4 text-center">
-                    <div className="bg-blue-50 p-6 rounded-lg">
-                      <Smartphone className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-                      <h3 className="font-semibold text-lg mb-2">{t('donation.completeDonation')}</h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {t('donation.openBizumAndSend')} <span className="font-bold text-blue-600">{selectedAmount}€</span> {t('donation.toNumber')}:
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-6 rounded-lg">
+                      <Smartphone className="w-12 h-12 mx-auto mb-4 text-blue-600 dark:text-blue-400" />
+                      <h3 className="font-semibold text-lg text-foreground mb-2">{t('donation.completeDonation')}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t('donation.openBizumAndSend')} <span className="font-bold text-blue-600 dark:text-blue-400">{selectedAmount}€</span> {t('donation.toNumber')}:
                       </p>
-                      <div className="bg-white p-4 rounded-lg border-2 border-blue-200">
-                        <p className="text-3xl font-bold text-blue-600">612345678</p>
+                      <div className="bg-background p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">612345678</p>
                       </div>
                       <p className="text-xs text-muted-foreground mt-4">
                         {t('donation.concept')}
                       </p>
                     </div>
                     
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={() => setShowBizumInfo(false)}
                       className="w-full"
@@ -342,34 +342,34 @@ const Donacion = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-blue-600 text-sm">✓</span>
+              <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-blue-600 dark:text-blue-400 text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">{t('donation.keepPlatformFree')}</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-foreground mb-1">{t('donation.keepPlatformFree')}</h3>
+                <p className="text-sm text-muted-foreground">
                   {t('donation.keepPlatformFreeDesc')}
                 </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-blue-600 text-sm">✓</span>
+              <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-blue-600 dark:text-blue-400 text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">{t('donation.newFeatures')}</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-foreground mb-1">{t('donation.newFeatures')}</h3>
+                <p className="text-sm text-muted-foreground">
                   {t('donation.newFeaturesDesc')}
                 </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-blue-600 text-sm">✓</span>
+              <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <span className="text-blue-600 dark:text-blue-400 text-sm">✓</span>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">{t('donation.supportAndImprovements')}</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-foreground mb-1">{t('donation.supportAndImprovements')}</h3>
+                <p className="text-sm text-muted-foreground">
                   {t('donation.supportAndImprovementsDesc')}
                 </p>
               </div>

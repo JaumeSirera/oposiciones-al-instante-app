@@ -49,14 +49,14 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
   };
 
   const getMedalBg = (posicion: number) => {
-    if (posicion === 1) return 'bg-yellow-50 border-yellow-200';
-    if (posicion === 2) return 'bg-gray-50 border-gray-200';
-    if (posicion === 3) return 'bg-amber-50 border-amber-200';
+    if (posicion === 1) return 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700';
+    if (posicion === 2) return 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700';
+    if (posicion === 3) return 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700';
     return '';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <Button variant="ghost" onClick={onBack}>
@@ -66,11 +66,11 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             <Trophy className="w-10 h-10 inline-block text-yellow-500 mr-2" />
             {t('ranking.title')}
           </h1>
-          <p className="text-gray-600">{t('ranking.subtitle')}</p>
+          <p className="text-muted-foreground">{t('ranking.subtitle')}</p>
         </div>
 
         <Card className="mb-8">
@@ -89,9 +89,9 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
         </Card>
 
         {loading ? (
-          <p className="text-center text-gray-600">{t('ranking.loading')}</p>
+          <p className="text-center text-muted-foreground">{t('ranking.loading')}</p>
         ) : ranking.length === 0 ? (
-          <p className="text-center text-gray-600">{t('ranking.noData')}</p>
+          <p className="text-center text-muted-foreground">{t('ranking.noData')}</p>
         ) : (
           <div className="space-y-3">
             {ranking.map((item, index) => {
@@ -105,33 +105,33 @@ const Ranking: React.FC<RankingProps> = ({ onBack }) => {
                 >
                   <CardContent className="py-4">
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white shadow">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background shadow dark:shadow-none dark:border dark:border-border">
                         {getMedalIcon(posicion) || (
-                          <span className="font-bold text-lg text-gray-700">#{posicion}</span>
+                          <span className="font-bold text-lg text-muted-foreground">#{posicion}</span>
                         )}
                       </div>
                       
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-lg">
+                          <h3 className="font-bold text-lg text-foreground">
                             {item.username || t('ranking.anonymousUser')}
                           </h3>
                           {esUsuarioActual && (
                             <Badge variant="default">{t('ranking.you')}</Badge>
                           )}
                         </div>
-                        <div className="flex gap-4 text-sm text-gray-600 mt-1">
+                        <div className="flex gap-4 text-sm text-muted-foreground mt-1">
                           <span>{t('ranking.tests')}: <strong>{item.total_tests}</strong></span>
-                          <span className="text-green-600">{t('ranking.correct')}: <strong>{item.total_aciertos}</strong></span>
-                          <span className="text-red-600">{t('ranking.incorrect')}: <strong>{item.total_fallos}</strong></span>
+                          <span className="text-green-600 dark:text-green-400">{t('ranking.correct')}: <strong>{item.total_aciertos}</strong></span>
+                          <span className="text-red-600 dark:text-red-400">{t('ranking.incorrect')}: <strong>{item.total_fallos}</strong></span>
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-green-600">
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                           {parseFloat(item.nota_media).toFixed(2)}
                         </div>
-                        <div className="text-xs text-gray-500">{t('ranking.averageScore')}</div>
+                        <div className="text-xs text-muted-foreground">{t('ranking.averageScore')}</div>
                       </div>
                     </div>
                   </CardContent>
