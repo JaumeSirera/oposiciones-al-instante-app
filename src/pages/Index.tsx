@@ -206,10 +206,10 @@ const Index = () => {
     const h = w * ratio;
 
     return (
-      <Card className="overflow-hidden bg-white shadow-md border-indigo-100">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-white">
-          <CardTitle className="text-indigo-900">Mapa de Boletines CCAA</CardTitle>
-          <CardDescription className="text-gray-600">Haz clic en una comunidad para ver su boletín oficial</CardDescription>
+      <Card className="overflow-hidden bg-card shadow-md border-indigo-100 dark:border-indigo-800">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-950/30 dark:to-card">
+          <CardTitle className="text-indigo-900 dark:text-indigo-400">Mapa de Boletines CCAA</CardTitle>
+          <CardDescription className="text-muted-foreground">Haz clic en una comunidad para ver su boletín oficial</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="flex justify-center p-6">
@@ -278,7 +278,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background">
       <ModalPlanEstudio open={showModalPlan} onOpenChange={setShowModalPlan} />
       <div className="container mx-auto px-4 py-8">
         {/* SEO H1 */}
@@ -292,44 +292,44 @@ const Index = () => {
           <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-3">
             {t('home.welcomeUser', { username: user?.username })}
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             {t('home.progressSubtitle')}
           </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-blue-100">
+          <Card className="bg-card shadow-lg hover:shadow-xl transition-shadow border-blue-100 dark:border-blue-800">
             <CardContent className="pt-6 text-center">
-              <BookOpen className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-800">{userStats.totalQuestions}</div>
-              <div className="text-sm text-gray-600">{t('home.questionsAsked')}</div>
+              <BookOpen className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{userStats.totalQuestions}</div>
+              <div className="text-sm text-muted-foreground">{t('home.questionsAsked')}</div>
             </CardContent>
           </Card>
           
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-green-100">
+          <Card className="bg-card shadow-lg hover:shadow-xl transition-shadow border-green-100 dark:border-green-800">
             <CardContent className="pt-6 text-center">
-              <Trophy className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-800">{userStats.correctAnswers}</div>
-              <div className="text-sm text-gray-600">{t('home.correctAnswers')}</div>
+              <Trophy className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{userStats.correctAnswers}</div>
+              <div className="text-sm text-muted-foreground">{t('home.correctAnswers')}</div>
             </CardContent>
           </Card>
           
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-orange-100">
+          <Card className="bg-card shadow-lg hover:shadow-xl transition-shadow border-orange-100 dark:border-orange-800">
             <CardContent className="pt-6 text-center">
-              <Clock className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-800">
+              <Clock className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">
                 {userStats.averageTime > 0 ? userStats.averageTime.toFixed(2) : '-'}
               </div>
-              <div className="text-sm text-gray-600">{t('home.averageScore')}</div>
+              <div className="text-sm text-muted-foreground">{t('home.averageScore')}</div>
             </CardContent>
           </Card>
           
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-purple-100">
+          <Card className="bg-card shadow-lg hover:shadow-xl transition-shadow border-purple-100 dark:border-purple-800">
             <CardContent className="pt-6 text-center">
-              <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-800">{userStats.streakCount}</div>
-              <div className="text-sm text-gray-600">{t('home.testsCompleted')}</div>
+              <TrendingUp className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-foreground">{userStats.streakCount}</div>
+              <div className="text-sm text-muted-foreground">{t('home.testsCompleted')}</div>
             </CardContent>
           </Card>
         </div>
@@ -415,9 +415,9 @@ const Index = () => {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Últimos Procesos */}
-            <Card className="bg-white shadow-md border-blue-100">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="text-blue-900">{t('home.yourLastProcesses')}</CardTitle>
+            <Card className="bg-card shadow-md border-blue-100 dark:border-blue-800">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/30 dark:to-card">
+                <CardTitle className="text-blue-900 dark:text-blue-400">{t('home.yourLastProcesses')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {isTranslating && needsTranslation && (
@@ -431,7 +431,7 @@ const Index = () => {
                     {(translatedProcesos.length > 0 ? translatedProcesos : procesos).map(p => (
                       <div
                         key={p.id_proceso}
-                        className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 hover:to-blue-50 transition-all cursor-pointer border border-blue-200 shadow-sm hover:shadow-md"
+                        className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/30 dark:to-card hover:from-blue-100 hover:to-blue-50 dark:hover:from-blue-900/40 dark:hover:to-card transition-all cursor-pointer border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md"
                         onClick={() => navigate('/test')}
                       >
                         {p.foto && !failedImages.has(`proceso-${p.id_proceso}`) ? (
@@ -447,12 +447,12 @@ const Index = () => {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-blue-900 line-clamp-1">{p.descripcion}</h3>
-                          <p className="text-sm text-gray-700 mt-1">
-                            <Calendar className="inline w-3 h-3 mr-1 text-blue-600" />
+                          <h3 className="font-bold text-blue-900 dark:text-blue-400 line-clamp-1">{p.descripcion}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            <Calendar className="inline w-3 h-3 mr-1 text-blue-600 dark:text-blue-400" />
                             {p.fecha_inicio} - {p.fecha_fin}
                           </p>
-                          <p className="text-xs text-blue-600 mt-1 font-medium">
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
                             {t('home.lastTest')}: {p.ultima_fecha?.substring(0, 16).replace('T', ' ')}
                           </p>
                         </div>
@@ -460,16 +460,16 @@ const Index = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-sm">{t('home.noRecentProcesses')}</p>
+                  <p className="text-muted-foreground text-sm">{t('home.noRecentProcesses')}</p>
                 )}
               </CardContent>
             </Card>
 
             {/* Noticias de Oposiciones - Solo en español */}
             {isSpanish && (
-              <Card className="bg-white shadow-md border-green-100">
-                <CardHeader className="bg-gradient-to-r from-green-50 to-white">
-                  <CardTitle className="text-green-900">{t('home.oppositionNews')}</CardTitle>
+              <Card className="bg-card shadow-md border-green-100 dark:border-green-800">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-white dark:from-green-950/30 dark:to-card">
+                  <CardTitle className="text-green-900 dark:text-green-400">{t('home.oppositionNews')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {noticias.length > 0 ? (
@@ -480,7 +480,7 @@ const Index = () => {
                           href={n.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-white hover:from-green-100 hover:to-green-50 transition-all border border-green-200 shadow-sm hover:shadow-md"
+                          className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-white dark:from-green-950/30 dark:to-card hover:from-green-100 hover:to-green-50 dark:hover:from-green-900/40 dark:hover:to-card transition-all border border-green-200 dark:border-green-800 shadow-sm hover:shadow-md"
                         >
                           {n.image && !failedImages.has(`noticia-${i}`) ? (
                             <img
@@ -495,16 +495,16 @@ const Index = () => {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-green-900 line-clamp-2">{n.title}</h3>
-                            <p className="text-sm text-gray-700 line-clamp-2 mt-1">{n.summary}</p>
-                            <p className="text-xs text-gray-500 mt-1">{n.date}</p>
+                            <h3 className="font-bold text-green-900 dark:text-green-400 line-clamp-2">{n.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{n.summary}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{n.date}</p>
                           </div>
-                          <ExternalLink className="w-4 h-4 text-green-600 flex-shrink-0" />
+                          <ExternalLink className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                         </a>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-600 text-sm">Sin noticias recientes.</p>
+                    <p className="text-muted-foreground text-sm">Sin noticias recientes.</p>
                   )}
                 </CardContent>
               </Card>
@@ -512,9 +512,9 @@ const Index = () => {
 
             {/* Últimas Oposiciones (BOE, BOCM, etc) - Solo en español */}
             {isSpanish && (
-              <Card className="bg-white shadow-md border-purple-100">
-                <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
-                  <CardTitle className="text-purple-900">Últimas Oposiciones (BOE, BOCM, etc)</CardTitle>
+              <Card className="bg-card shadow-md border-purple-100 dark:border-purple-800">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-white dark:from-purple-950/30 dark:to-card">
+                  <CardTitle className="text-purple-900 dark:text-purple-400">Últimas Oposiciones (BOE, BOCM, etc)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {rssNoticias.length > 0 ? (
@@ -525,7 +525,7 @@ const Index = () => {
                           href={n.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-white hover:from-purple-100 hover:to-purple-50 transition-all border border-purple-200 shadow-sm hover:shadow-md"
+                          className="flex gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-white dark:from-purple-950/30 dark:to-card hover:from-purple-100 hover:to-purple-50 dark:hover:from-purple-900/40 dark:hover:to-card transition-all border border-purple-200 dark:border-purple-800 shadow-sm hover:shadow-md"
                         >
                           {n.image && !failedImages.has(`rss-${i}`) ? (
                             <img
@@ -540,16 +540,16 @@ const Index = () => {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-purple-900 line-clamp-2">{n.title}</h3>
-                            <p className="text-sm text-gray-700 italic line-clamp-2 mt-1">{n.summary}</p>
-                            <p className="text-xs text-gray-500 mt-1">{n.date}</p>
+                            <h3 className="font-bold text-purple-900 dark:text-purple-400 line-clamp-2">{n.title}</h3>
+                            <p className="text-sm text-muted-foreground italic line-clamp-2 mt-1">{n.summary}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{n.date}</p>
                           </div>
-                          <ExternalLink className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                          <ExternalLink className="w-4 h-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
                         </a>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-600 text-sm">{t('home.loadingNews')}</p>
+                    <p className="text-muted-foreground text-sm">{t('home.loadingNews')}</p>
                   )}
                 </CardContent>
               </Card>
