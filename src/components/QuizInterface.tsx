@@ -606,10 +606,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-lg text-gray-600">{t('quiz.loadingQuestions')}</p>
+          <p className="text-lg text-muted-foreground">{t('quiz.loadingQuestions')}</p>
         </div>
       </div>
     );
@@ -620,7 +620,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
@@ -672,12 +672,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
               )}
             </Button>
             <div className="flex items-center gap-1 sm:gap-2">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
-              <span className={`text-sm sm:text-lg font-bold ${timeLeft <= 60 ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />
+              <span className={`text-sm sm:text-lg font-bold ${timeLeft <= 60 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-foreground'}`}>
                 {formatTime(timeLeft)}
               </span>
             </div>
-            <div className="text-xs sm:text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               {currentQuestionIndex + 1}/{questions.length}
             </div>
           </div>
@@ -686,7 +686,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
         {/* Progress Bar */}
         <div className="mb-8">
           <Progress value={progress} className="h-2" />
-          <div className="text-center mt-2 text-sm text-gray-600">
+          <div className="text-center mt-2 text-sm text-muted-foreground">
             {t('quiz.progress')}: {Math.round(progress)}%
           </div>
         </div>
@@ -724,11 +724,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 let buttonClass = "w-full justify-start text-left";
                 if (showResult) {
                   if (isSelected && isCorrect) {
-                    buttonClass += " bg-green-100 border-green-500 hover:bg-green-100";
+                    buttonClass += " bg-green-100 dark:bg-green-900/40 border-green-500 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/40";
                   } else if (isSelected && !isCorrect) {
-                    buttonClass += " bg-red-100 border-red-500 hover:bg-red-100";
+                    buttonClass += " bg-red-100 dark:bg-red-900/40 border-red-500 dark:border-red-600 hover:bg-red-100 dark:hover:bg-red-900/40";
                   } else if (isCorrect) {
-                    buttonClass += " bg-green-50 border-green-300";
+                    buttonClass += " bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700";
                   }
                 }
 
@@ -763,7 +763,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
 
         {/* Explanation */}
         {showExplanation && (
-          <Card className="mb-8 bg-blue-50 border-blue-200">
+          <Card className="mb-8 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800">
             <CardContent className="pt-6">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
@@ -776,10 +776,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold mb-2">
+                      <h3 className="font-semibold mb-2 text-foreground">
                         {selectedAnswer === currentQuestion.correcta_indice ? t('quiz.correct') : t('quiz.incorrect')}
                       </h3>
-                      <p className="text-gray-700">
+                      <p className="text-foreground">
                         {t('quiz.correctAnswerIs')}: {String.fromCharCode(65 + currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice))}. {
                           needsTranslation && currentTranslation
                             ? currentTranslation.respuestas[currentQuestion.respuestas.findIndex(r => r.indice === currentQuestion.correcta_indice)]
@@ -794,7 +794,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                         size="sm"
                         onClick={handleCrearFlashcard}
                         disabled={creandoFlashcard || flashcardCreada.has(currentQuestion.id)}
-                        className="shrink-0 border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800"
+                        className="shrink-0 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200"
                       >
                         {creandoFlashcard ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -815,12 +815,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                   
                   {/* Trazabilidad de fuente - solo si hay datos y el usuario acertó */}
                   {selectedAnswer === currentQuestion.correcta_indice && currentQuestion.documento && (
-                    <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+                    <div className="mt-4 p-3 bg-card dark:bg-card rounded-lg border border-blue-200 dark:border-blue-800">
                       <div className="flex items-center gap-2 mb-2">
-                        <BookOpen className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-800">{t('quiz.documentReference')}</span>
+                        <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-blue-800 dark:text-blue-300">{t('quiz.documentReference')}</span>
                       </div>
-                      <div className="space-y-1 text-sm text-gray-600">
+                      <div className="space-y-1 text-sm text-muted-foreground">
                         <p className="flex items-center gap-2">
                           <FileText className="w-3 h-3" />
                           <span className="font-medium">{t('quiz.document')}:</span> {currentQuestion.documento}
@@ -832,7 +832,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                           <p><span className="font-medium">{t('quiz.location')}:</span> {currentQuestion.ubicacion}</p>
                         )}
                         {currentQuestion.cita && (
-                          <div className="mt-2 p-2 bg-gray-50 rounded border-l-2 border-blue-400 italic text-gray-700">
+                          <div className="mt-2 p-2 bg-muted rounded border-l-2 border-blue-400 dark:border-blue-600 italic text-muted-foreground">
                             "{currentQuestion.cita}"
                           </div>
                         )}
@@ -856,8 +856,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
 
         {/* Score Display */}
         <div className="text-center mt-8">
-          <div className="text-lg text-gray-600">
-            {t('quiz.currentScore')}: <span className="font-bold text-blue-600">{score}/{currentQuestionIndex + (showExplanation ? 1 : 0)}</span>
+          <div className="text-lg text-muted-foreground">
+            {t('quiz.currentScore')}: <span className="font-bold text-primary">{score}/{currentQuestionIndex + (showExplanation ? 1 : 0)}</span>
           </div>
         </div>
 
@@ -955,10 +955,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
 
         {/* Profesor Virtual */}
         {selectedAnswer && (
-          <Card className="mt-8 bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+          <Card className="mt-8 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border-purple-200 dark:border-purple-800">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-purple-900">
+                <CardTitle className="flex items-center gap-2 text-purple-900 dark:text-purple-200">
                   <GraduationCap className="h-6 w-6" />
                   {t('quiz.virtualProfessor')}
                 </CardTitle>
@@ -967,7 +967,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                   disabled={cargandoProfesor}
                   variant="outline"
                   size="sm"
-                  className="border-purple-300 hover:bg-purple-100"
+                  className="border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/40"
                 >
                   {cargandoProfesor ? (
                     <>
@@ -985,7 +985,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
             </CardHeader>
             <CardContent>
               {explicacionProfesor ? (
-                <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="bg-card rounded-lg p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-2">
                     {needsTranslation && (
                       <div className="flex items-center gap-2">
@@ -1010,12 +1010,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
                       </Button>
                     )}
                   </div>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-700">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
                     {explicacionProfesor}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-purple-700">
+                <p className="text-sm text-purple-700 dark:text-purple-300">
                   {t('quiz.clickToGetExplanation')}
                 </p>
               )}
