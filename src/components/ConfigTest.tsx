@@ -566,12 +566,12 @@ const ConfigTest: React.FC<ConfigTestProps> = ({
         </Card>
 
         {/* Consejos */}
-        <div className="mt-8 bg-white rounded-lg p-6 shadow-lg">
-          <h2 className="text-xl font-semibold mb-4 flex items-center">
+        <div className="mt-8 bg-card rounded-lg p-6 shadow-lg border">
+          <h2 className="text-xl font-semibold mb-4 flex items-center text-foreground">
             <Clock className="w-5 h-5 mr-2 text-primary" />
             {t('configTest.tips')}
           </h2>
-          <div className="space-y-2 text-gray-600">
+          <div className="space-y-2 text-muted-foreground">
             <p>• {t('configTest.tipMultipleSections')}</p>
             {tipoTest === 'simulacion' ? (
               <>

@@ -107,7 +107,7 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <Button variant="ghost" onClick={onBack}>
@@ -119,46 +119,46 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {statsGlobal && (
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
               <CardHeader>
-                <CardTitle className="text-lg text-blue-700">{t('history.totalStats')}</CardTitle>
+                <CardTitle className="text-lg text-blue-700 dark:text-blue-400">{t('history.totalStats')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-2 text-foreground">
                   <p>{t('history.tests')}: <strong>{statsGlobal.total_tests}</strong></p>
-                  <p className="text-green-600">{t('history.correct')}: <strong>{statsGlobal.total_aciertos}</strong></p>
-                  <p className="text-red-600">{t('history.incorrect')}: <strong>{statsGlobal.total_fallos}</strong></p>
-                  <p className="text-lg font-bold mt-3">{t('history.averageScore')}: <span className="text-green-600">{parseFloat(statsGlobal.nota_media).toFixed(2)}</span></p>
+                  <p className="text-green-600 dark:text-green-400">{t('history.correct')}: <strong>{statsGlobal.total_aciertos}</strong></p>
+                  <p className="text-red-600 dark:text-red-400">{t('history.incorrect')}: <strong>{statsGlobal.total_fallos}</strong></p>
+                  <p className="text-lg font-bold mt-3">{t('history.averageScore')}: <span className="text-green-600 dark:text-green-400">{parseFloat(statsGlobal.nota_media).toFixed(2)}</span></p>
                 </div>
               </CardContent>
             </Card>
           )}
           {statsSim && (
-            <Card className="bg-cyan-50 border-cyan-200">
+            <Card className="bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-800">
               <CardHeader>
-                <CardTitle className="text-lg text-cyan-700">{t('history.simulationsOnly')}</CardTitle>
+                <CardTitle className="text-lg text-cyan-700 dark:text-cyan-400">{t('history.simulationsOnly')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-2 text-foreground">
                   <p>{t('history.tests')}: <strong>{statsSim.total_tests}</strong></p>
-                  <p className="text-green-600">{t('history.correct')}: <strong>{statsSim.total_aciertos}</strong></p>
-                  <p className="text-red-600">{t('history.incorrect')}: <strong>{statsSim.total_fallos}</strong></p>
-                  <p className="text-lg font-bold mt-3">{t('history.averageScore')}: <span className="text-green-600">{parseFloat(statsSim.nota_media).toFixed(2)}</span></p>
+                  <p className="text-green-600 dark:text-green-400">{t('history.correct')}: <strong>{statsSim.total_aciertos}</strong></p>
+                  <p className="text-red-600 dark:text-red-400">{t('history.incorrect')}: <strong>{statsSim.total_fallos}</strong></p>
+                  <p className="text-lg font-bold mt-3">{t('history.averageScore')}: <span className="text-green-600 dark:text-green-400">{parseFloat(statsSim.nota_media).toFixed(2)}</span></p>
                 </div>
               </CardContent>
             </Card>
           )}
           {statsExam && (
-            <Card className="bg-red-50 border-red-200">
+            <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
               <CardHeader>
-                <CardTitle className="text-lg text-red-700">{t('history.examsOnly')}</CardTitle>
+                <CardTitle className="text-lg text-red-700 dark:text-red-400">{t('history.examsOnly')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-2 text-foreground">
                   <p>{t('history.tests')}: <strong>{statsExam.total_tests}</strong></p>
-                  <p className="text-green-600">{t('history.correct')}: <strong>{statsExam.total_aciertos}</strong></p>
-                  <p className="text-red-600">{t('history.incorrect')}: <strong>{statsExam.total_fallos}</strong></p>
-                  <p className="text-lg font-bold mt-3">{t('history.averageScore')}: <span className="text-red-600">{parseFloat(statsExam.nota_media).toFixed(2)}</span></p>
+                  <p className="text-green-600 dark:text-green-400">{t('history.correct')}: <strong>{statsExam.total_aciertos}</strong></p>
+                  <p className="text-red-600 dark:text-red-400">{t('history.incorrect')}: <strong>{statsExam.total_fallos}</strong></p>
+                  <p className="text-lg font-bold mt-3">{t('history.averageScore')}: <span className="text-red-600 dark:text-red-400">{parseFloat(statsExam.nota_media).toFixed(2)}</span></p>
                 </div>
               </CardContent>
             </Card>
@@ -203,7 +203,7 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
             <div>
               <Label htmlFor="buscar">{t('history.searchByTopic')}</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="buscar"
                   placeholder={t('history.searchPlaceholder')}
@@ -224,9 +224,9 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
         <h2 className="text-2xl font-bold mb-4">{t('history.title')}</h2>
         
         {loading ? (
-          <p className="text-center text-gray-600">{t('history.loading')}</p>
+          <p className="text-center text-muted-foreground">{t('history.loading')}</p>
         ) : tests.length === 0 ? (
-          <p className="text-center text-gray-600">{t('history.noTests')}</p>
+          <p className="text-center text-muted-foreground">{t('history.noTests')}</p>
         ) : (
           <div className="space-y-4">
             {tests.map((test) => (
@@ -262,7 +262,7 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
                         </Badge>
                       )}
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted-foreground">
                       {formatDate(test.fecha_finalizacion || test.fecha_inicio)}
                     </span>
                   </div>
@@ -317,15 +317,15 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
                       {t('history.correctQuestions')}
                     </h4>
                     {parseJsonField(selectedTest.acertadas).length === 0 ? (
-                      <p className="text-gray-600">{t('history.noCorrectQuestions')}</p>
+                      <p className="text-muted-foreground">{t('history.noCorrectQuestions')}</p>
                     ) : (
                       <div className="space-y-2">
                         {parseJsonField(selectedTest.acertadas).map((p: any, i: number) => (
-                          <Card key={`acertada-${i}`} className="bg-green-50">
+                          <Card key={`acertada-${i}`} className="bg-green-50 dark:bg-green-950/30">
                             <CardContent className="pt-4">
-                              <p className="font-bold">{i + 1}. {p.pregunta}</p>
-                              <p className="text-sm mt-1">{t('history.yourAnswer')}: <span className="text-green-600 font-bold">{p.respuesta_usuario}</span></p>
-                              <p className="text-sm text-blue-600">{t('history.correctAnswer')}: {p.correcta_indice}</p>
+                              <p className="font-bold text-foreground">{i + 1}. {p.pregunta}</p>
+                              <p className="text-sm mt-1 text-foreground">{t('history.yourAnswer')}: <span className="text-green-600 dark:text-green-400 font-bold">{p.respuesta_usuario}</span></p>
+                              <p className="text-sm text-blue-600 dark:text-blue-400">{t('history.correctAnswer')}: {p.correcta_indice}</p>
                             </CardContent>
                           </Card>
                         ))}
@@ -339,15 +339,15 @@ const HistorialTests: React.FC<HistorialTestsProps> = ({ onBack }) => {
                       {t('history.incorrectQuestions')}
                     </h4>
                     {parseJsonField(selectedTest.falladas).length === 0 ? (
-                      <p className="text-gray-600">{t('history.noIncorrectQuestions')}</p>
+                      <p className="text-muted-foreground">{t('history.noIncorrectQuestions')}</p>
                     ) : (
                       <div className="space-y-2">
                         {parseJsonField(selectedTest.falladas).map((p: any, i: number) => (
-                          <Card key={`fallada-${i}`} className="bg-red-50">
+                          <Card key={`fallada-${i}`} className="bg-red-50 dark:bg-red-950/30">
                             <CardContent className="pt-4">
-                              <p className="font-bold">{i + 1}. {p.pregunta}</p>
-                              <p className="text-sm mt-1">{t('history.yourAnswer')}: <span className="text-red-600 font-bold">{p.respuesta_usuario}</span></p>
-                              <p className="text-sm text-blue-600">{t('history.correctAnswer')}: {p.correcta_indice}</p>
+                              <p className="font-bold text-foreground">{i + 1}. {p.pregunta}</p>
+                              <p className="text-sm mt-1 text-foreground">{t('history.yourAnswer')}: <span className="text-red-600 dark:text-red-400 font-bold">{p.respuesta_usuario}</span></p>
+                              <p className="text-sm text-blue-600 dark:text-blue-400">{t('history.correctAnswer')}: {p.correcta_indice}</p>
                             </CardContent>
                           </Card>
                         ))}

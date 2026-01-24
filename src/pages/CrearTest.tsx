@@ -439,7 +439,7 @@ export default function CrearTest() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Button
           variant="ghost"
