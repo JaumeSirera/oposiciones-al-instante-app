@@ -121,7 +121,7 @@ const TestPage = ({ mode, isPsicotecnico = false }: TestPageProps) => {
   // Mostrar selección de modo
   if (currentView === 'mode-selection') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-background dark:via-background dark:to-background flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">{t('test.choosePracticeMode')}</h1>
