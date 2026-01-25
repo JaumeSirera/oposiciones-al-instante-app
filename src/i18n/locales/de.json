@@ -51,7 +51,16 @@
     "flashcardAdded": "Hinzugefügt",
     "flashcardCreated": "Flashcard erstellt",
     "flashcardCreatedDesc": "Die Frage wurde zu Ihren Flashcards zur Wiederholung hinzugefügt",
-    "flashcardError": "Fehler beim Erstellen der Flashcard"
+    "flashcardError": "Fehler beim Erstellen der Flashcard",
+    "difficultyLevel": "Schwierigkeitsgrad",
+    "difficultyEasy": "Leicht",
+    "difficultyMedium": "Mittel",
+    "difficultyHard": "Schwer",
+    "difficultyAdaptive": "Adaptiv",
+    "levelUp": "Level gestiegen!",
+    "levelDown": "Level angepasst",
+    "consecutiveCorrect": "Aufeinanderfolgende Richtige",
+    "consecutiveWrong": "Aufeinanderfolgende Fehler"
   },
   "landing": {
     "title": "KI-Agent für Prüfungen | Tests und Zusammenfassungen",

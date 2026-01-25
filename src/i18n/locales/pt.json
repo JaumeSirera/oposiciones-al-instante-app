@@ -51,7 +51,16 @@
     "flashcardAdded": "Adicionada",
     "flashcardCreated": "Flashcard criada",
     "flashcardCreatedDesc": "A pergunta foi adicionada aos seus flashcards para revisão",
-    "flashcardError": "Erro ao criar flashcard"
+    "flashcardError": "Erro ao criar flashcard",
+    "difficultyLevel": "Nível de dificuldade",
+    "difficultyEasy": "Fácil",
+    "difficultyMedium": "Médio",
+    "difficultyHard": "Difícil",
+    "difficultyAdaptive": "Adaptativo",
+    "levelUp": "Subiu de nível!",
+    "levelDown": "Nível ajustado",
+    "consecutiveCorrect": "Acertos consecutivos",
+    "consecutiveWrong": "Erros consecutivos"
   },
   "landing": {
     "title": "Agente IA para Concursos | Testes e Resumos",

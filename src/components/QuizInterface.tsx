@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,9 @@ import { testService, type Pregunta, type Respuesta } from '@/services/testServi
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { useAdaptiveDifficulty } from '@/hooks/useAdaptiveDifficulty';
 import { flashcardService } from '@/services/flashcardService';
+import DifficultyIndicator from '@/components/DifficultyIndicator';
 import type { TestConfig } from './ConfigTest';
 
 interface QuizInterfaceProps {
@@ -57,6 +59,15 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
 
   // Text-to-Speech
   const { speak, stop, isPlaying, isEnabled, toggleEnabled, isSupported } = useTextToSpeech(i18n.language);
+
+  // Adaptive difficulty
+  const { 
+    currentLevel, 
+    stats: difficultyStats, 
+    recordAnswer: recordDifficultyAnswer,
+    levelHistory 
+  } = useAdaptiveDifficulty();
+  const previousLevelRef = useRef(currentLevel);
 
   const currentQuestion = questions[currentQuestionIndex];
   const currentTranslation = translatedQuestions[currentQuestionIndex];
@@ -281,9 +292,15 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
     setShowExplanation(true);
     setIsTimerActive(false);
     
-    if (answer === currentQuestion.correcta_indice) {
+    const isCorrect = answer === currentQuestion.correcta_indice;
+    
+    if (isCorrect) {
       setScore(score + 1);
     }
+
+    // Record for adaptive difficulty
+    previousLevelRef.current = currentLevel;
+    recordDifficultyAnswer(isCorrect);
 
     setUserAnswers(prev => ({
       ...prev,
@@ -630,6 +647,15 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, onComplete, onExi
             <span className="sm:hidden">{t('common.exit')}</span>
           </Button>
           <div className="flex items-center flex-wrap gap-2 sm:gap-4 w-full sm:w-auto justify-end">
+            {/* Difficulty Indicator - Always visible */}
+            <DifficultyIndicator
+              currentLevel={currentLevel}
+              consecutiveCorrect={difficultyStats.consecutiveCorrect}
+              consecutiveWrong={difficultyStats.consecutiveWrong}
+              previousLevel={previousLevelRef.current !== currentLevel ? previousLevelRef.current : undefined}
+              showStreak={true}
+            />
+            
             {config.tipo === 'examen' && (
               <Badge variant="destructive" className="text-xs sm:text-sm font-semibold">
                 {t('quiz.examMode')}
