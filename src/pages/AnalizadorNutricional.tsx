@@ -1,0 +1,412 @@
+import React, { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
+import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface NutrientInfo {
+  name: string;
+  quantity: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+}
+
+interface AnalysisResult {
+  ingredients: NutrientInfo[];
+  totals: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+  };
+  dishName: string;
+  healthScore: number;
+  recommendations: string[];
+}
+
+const AnalizadorNutricional: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(t('nutritionAnalyzer.imageTooLarge', 'La imagen es demasiado grande. Máximo 10MB.'));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target?.result as string);
+        setResult(null);
+        setError(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const analyzeImage = async () => {
+    if (!selectedImage) return;
+
+    setIsAnalyzing(true);
+    setError(null);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('analizar-plato', {
+        body: { 
+          imageBase64: selectedImage,
+          language: i18n.language
+        }
+      });
+
+      if (fnError) {
+        throw new Error(fnError.message);
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setResult(data);
+      toast.success(t('nutritionAnalyzer.analysisComplete', '¡Análisis completado!'));
+    } catch (err) {
+      console.error('Error analyzing image:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const getHealthScoreColor = (score: number) => {
+    if (score >= 8) return 'text-green-600 dark:text-green-400';
+    if (score >= 5) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
+  };
+
+  const getHealthScoreBg = (score: number) => {
+    if (score >= 8) return 'bg-green-500';
+    if (score >= 5) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  return (
+    <>
+      <Helmet>
+        <title>{t('nutritionAnalyzer.title', 'Analizador Nutricional')} | {t('appName')}</title>
+        <meta name="description" content={t('nutritionAnalyzer.description', 'Analiza el valor nutricional de tus platos con IA')} />
+      </Helmet>
+
+      <div className="container mx-auto py-6 px-4 max-w-5xl">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+              <UtensilsCrossed className="h-8 w-8" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">
+              {t('nutritionAnalyzer.title', 'Analizador Nutricional')}
+            </h1>
+          </div>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            {t('nutritionAnalyzer.subtitle', 'Sube una foto de tu plato y obtén un análisis detallado de los ingredientes, calorías, proteínas y más.')}
+          </p>
+        </div>
+
+        {/* Upload Section */}
+        <Card className="mb-6 border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors">
+          <CardContent className="p-8">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              capture="environment"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+
+            {!selectedImage ? (
+              <div 
+                className="flex flex-col items-center justify-center cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="p-6 rounded-full bg-muted mb-4">
+                  <Camera className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">
+                  {t('nutritionAnalyzer.uploadPrompt', 'Sube una foto de tu plato')}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {t('nutritionAnalyzer.uploadHint', 'Haz clic o arrastra una imagen aquí')}
+                </p>
+                <Button variant="outline" className="gap-2">
+                  <Upload className="h-4 w-4" />
+                  {t('nutritionAnalyzer.selectImage', 'Seleccionar imagen')}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative aspect-video max-h-80 mx-auto overflow-hidden rounded-lg">
+                  <img
+                    src={selectedImage}
+                    alt="Plato seleccionado"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="flex justify-center gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedImage(null);
+                      setResult(null);
+                      setError(null);
+                    }}
+                  >
+                    {t('nutritionAnalyzer.changeImage', 'Cambiar imagen')}
+                  </Button>
+                  <Button
+                    onClick={analyzeImage}
+                    disabled={isAnalyzing}
+                    className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t('nutritionAnalyzer.analyzing', 'Analizando...')}
+                      </>
+                    ) : (
+                      <>
+                        <Apple className="h-4 w-4" />
+                        {t('nutritionAnalyzer.analyze', 'Analizar plato')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Results Section */}
+        {result && (
+          <div className="space-y-6 animate-in fade-in-50 duration-500">
+            {/* Dish Name & Health Score */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <CardTitle className="text-2xl">{result.dishName}</CardTitle>
+                    <CardDescription>
+                      {result.ingredients.length} {t('nutritionAnalyzer.ingredientsDetected', 'ingredientes detectados')}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">{t('nutritionAnalyzer.healthScore', 'Puntuación saludable')}</p>
+                      <p className={`text-3xl font-bold ${getHealthScoreColor(result.healthScore)}`}>
+                        {result.healthScore}/10
+                      </p>
+                    </div>
+                    <div className="p-2 rounded-full bg-muted">
+                      <Star className={`h-6 w-6 ${getHealthScoreColor(result.healthScore)}`} />
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+
+            {/* Totals Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 border-orange-200 dark:border-orange-800">
+                <CardContent className="p-4 text-center">
+                  <Flame className="h-6 w-6 mx-auto mb-2 text-orange-600 dark:text-orange-400" />
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{result.totals.calories}</p>
+                  <p className="text-xs text-orange-600 dark:text-orange-400">{t('nutritionAnalyzer.calories', 'Calorías')}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/30 dark:to-red-900/30 border-red-200 dark:border-red-800">
+                <CardContent className="p-4 text-center">
+                  <Dumbbell className="h-6 w-6 mx-auto mb-2 text-red-600 dark:text-red-400" />
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">{result.totals.protein}g</p>
+                  <p className="text-xs text-red-600 dark:text-red-400">{t('nutritionAnalyzer.protein', 'Proteínas')}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/30 border-amber-200 dark:border-amber-800">
+                <CardContent className="p-4 text-center">
+                  <Wheat className="h-6 w-6 mx-auto mb-2 text-amber-600 dark:text-amber-400" />
+                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{result.totals.carbs}g</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400">{t('nutritionAnalyzer.carbs', 'Carbohidratos')}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/30 border-yellow-200 dark:border-yellow-800">
+                <CardContent className="p-4 text-center">
+                  <Droplets className="h-6 w-6 mx-auto mb-2 text-yellow-600 dark:text-yellow-400" />
+                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{result.totals.fat}g</p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400">{t('nutritionAnalyzer.fat', 'Grasas')}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border-green-200 dark:border-green-800 col-span-2 md:col-span-1">
+                <CardContent className="p-4 text-center">
+                  <Leaf className="h-6 w-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">{result.totals.fiber}g</p>
+                  <p className="text-xs text-green-600 dark:text-green-400">{t('nutritionAnalyzer.fiber', 'Fibra')}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Ingredients Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Apple className="h-5 w-5" />
+                  {t('nutritionAnalyzer.ingredientBreakdown', 'Desglose por ingredientes')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('nutritionAnalyzer.ingredient', 'Ingrediente')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.quantity', 'Cantidad')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.calories', 'Calorías')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.protein', 'Proteínas')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.carbs', 'Carbos')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.fat', 'Grasas')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.fiber', 'Fibra')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {result.ingredients.map((ingredient, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{ingredient.name}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">{ingredient.quantity}</TableCell>
+                          <TableCell className="text-right">{ingredient.calories}</TableCell>
+                          <TableCell className="text-right">{ingredient.protein}g</TableCell>
+                          <TableCell className="text-right">{ingredient.carbs}g</TableCell>
+                          <TableCell className="text-right">{ingredient.fat}g</TableCell>
+                          <TableCell className="text-right">{ingredient.fiber}g</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow className="font-bold bg-muted/50">
+                        <TableCell>{t('nutritionAnalyzer.total', 'TOTAL')}</TableCell>
+                        <TableCell className="text-right">-</TableCell>
+                        <TableCell className="text-right">{result.totals.calories}</TableCell>
+                        <TableCell className="text-right">{result.totals.protein}g</TableCell>
+                        <TableCell className="text-right">{result.totals.carbs}g</TableCell>
+                        <TableCell className="text-right">{result.totals.fat}g</TableCell>
+                        <TableCell className="text-right">{result.totals.fiber}g</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recommendations */}
+            {result.recommendations && result.recommendations.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-yellow-500" />
+                    {t('nutritionAnalyzer.recommendations', 'Recomendaciones')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {result.recommendations.map((rec, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <Badge variant="outline" className="mt-0.5 shrink-0">{index + 1}</Badge>
+                        <span className="text-muted-foreground">{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Macros Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('nutritionAnalyzer.macroDistribution', 'Distribución de macros')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(() => {
+                  const totalMacros = result.totals.protein + result.totals.carbs + result.totals.fat;
+                  const proteinPct = totalMacros > 0 ? Math.round((result.totals.protein / totalMacros) * 100) : 0;
+                  const carbsPct = totalMacros > 0 ? Math.round((result.totals.carbs / totalMacros) * 100) : 0;
+                  const fatPct = totalMacros > 0 ? Math.round((result.totals.fat / totalMacros) * 100) : 0;
+
+                  return (
+                    <>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500" />
+                            {t('nutritionAnalyzer.protein', 'Proteínas')}
+                          </span>
+                          <span>{proteinPct}%</span>
+                        </div>
+                        <Progress value={proteinPct} className="h-2 [&>div]:bg-red-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-amber-500" />
+                            {t('nutritionAnalyzer.carbs', 'Carbohidratos')}
+                          </span>
+                          <span>{carbsPct}%</span>
+                        </div>
+                        <Progress value={carbsPct} className="h-2 [&>div]:bg-amber-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                            {t('nutritionAnalyzer.fat', 'Grasas')}
+                          </span>
+                          <span>{fatPct}%</span>
+                        </div>
+                        <Progress value={fatPct} className="h-2 [&>div]:bg-yellow-500" />
+                      </div>
+                    </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default AnalizadorNutricional;

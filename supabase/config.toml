@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.enviar-recordatorio-flashcards]
 verify_jwt = false
+
+[functions.analizar-plato]
+verify_jwt = false

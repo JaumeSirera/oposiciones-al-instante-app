@@ -308,7 +308,8 @@
     "virtualProfessor": "Virtual Professor",
     "aiAgent": "AI Agent",
     "donation": "Donation",
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
+    "nutritionAnalyzer": "Nutrition Analyzer"
   },
   "sidebar": {
     "principal": "Main",
@@ -1546,5 +1547,31 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "nutritionAnalyzer": {
+    "title": "Nutrition Analyzer",
+    "subtitle": "Upload a photo of your dish and get a detailed analysis of ingredients, calories, protein, and more.",
+    "description": "Analyze the nutritional value of your dishes with AI",
+    "uploadPrompt": "Upload a photo of your dish",
+    "uploadHint": "Click or drag an image here",
+    "selectImage": "Select image",
+    "changeImage": "Change image",
+    "analyze": "Analyze dish",
+    "analyzing": "Analyzing...",
+    "analysisComplete": "Analysis complete!",
+    "imageTooLarge": "Image is too large. Maximum 10MB.",
+    "ingredientsDetected": "ingredients detected",
+    "healthScore": "Health score",
+    "calories": "Calories",
+    "protein": "Protein",
+    "carbs": "Carbohydrates",
+    "fat": "Fat",
+    "fiber": "Fiber",
+    "ingredientBreakdown": "Ingredient breakdown",
+    "ingredient": "Ingredient",
+    "quantity": "Quantity",
+    "total": "TOTAL",
+    "recommendations": "Recommendations",
+    "macroDistribution": "Macro distribution"
   }
 }

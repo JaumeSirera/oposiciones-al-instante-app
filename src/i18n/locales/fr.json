@@ -284,7 +284,8 @@
     "virtualProfessor": "Professeur Virtuel",
     "aiAgent": "Agent IA",
     "donation": "Donation",
-    "privacyPolicy": "Politique de confidentialité"
+    "privacyPolicy": "Politique de confidentialité",
+    "nutritionAnalyzer": "Analyseur Nutritionnel"
   },
   "sidebar": {
     "principal": "Principal",
@@ -1434,5 +1435,31 @@
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système"
+  },
+  "nutritionAnalyzer": {
+    "title": "Analyseur Nutritionnel",
+    "subtitle": "Téléchargez une photo de votre plat et obtenez une analyse détaillée des ingrédients, calories, protéines et plus.",
+    "description": "Analysez la valeur nutritionnelle de vos plats avec l'IA",
+    "uploadPrompt": "Téléchargez une photo de votre plat",
+    "uploadHint": "Cliquez ou glissez une image ici",
+    "selectImage": "Sélectionner une image",
+    "changeImage": "Changer d'image",
+    "analyze": "Analyser le plat",
+    "analyzing": "Analyse en cours...",
+    "analysisComplete": "Analyse terminée!",
+    "imageTooLarge": "L'image est trop grande. Maximum 10 Mo.",
+    "ingredientsDetected": "ingrédients détectés",
+    "healthScore": "Score santé",
+    "calories": "Calories",
+    "protein": "Protéines",
+    "carbs": "Glucides",
+    "fat": "Lipides",
+    "fiber": "Fibres",
+    "ingredientBreakdown": "Détail par ingrédient",
+    "ingredient": "Ingrédient",
+    "quantity": "Quantité",
+    "total": "TOTAL",
+    "recommendations": "Recommandations",
+    "macroDistribution": "Distribution des macros"
   }
 }
