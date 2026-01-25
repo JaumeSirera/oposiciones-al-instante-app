@@ -72,7 +72,16 @@
     "flashcardAdded": "Añadida",
     "flashcardCreated": "Flashcard creada",
     "flashcardCreatedDesc": "La pregunta se ha añadido a tus flashcards para repasar",
-    "flashcardError": "Error al crear la flashcard"
+    "flashcardError": "Error al crear la flashcard",
+    "difficultyLevel": "Nivel de dificultad",
+    "difficultyEasy": "Fácil",
+    "difficultyMedium": "Medio",
+    "difficultyHard": "Difícil",
+    "difficultyAdaptive": "Adaptativo",
+    "levelUp": "¡Subiste de nivel!",
+    "levelDown": "Nivel ajustado",
+    "consecutiveCorrect": "Aciertos seguidos",
+    "consecutiveWrong": "Fallos seguidos"
   },
   "landing": {
     "title": "Agente IA para Oposiciones | Tests para Oposiciones y Resúmenes",

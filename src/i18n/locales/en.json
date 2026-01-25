@@ -72,7 +72,16 @@
     "flashcardAdded": "Added",
     "flashcardCreated": "Flashcard created",
     "flashcardCreatedDesc": "The question has been added to your flashcards for review",
-    "flashcardError": "Error creating flashcard"
+    "flashcardError": "Error creating flashcard",
+    "difficultyLevel": "Difficulty level",
+    "difficultyEasy": "Easy",
+    "difficultyMedium": "Medium",
+    "difficultyHard": "Hard",
+    "difficultyAdaptive": "Adaptive",
+    "levelUp": "Level up!",
+    "levelDown": "Level adjusted",
+    "consecutiveCorrect": "Consecutive correct",
+    "consecutiveWrong": "Consecutive wrong"
   },
   "landing": {
     "title": "AI Agent for Civil Service Exams | Tests and Summaries",
