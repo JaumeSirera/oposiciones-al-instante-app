@@ -284,7 +284,8 @@
     "virtualProfessor": "Virtueller Professor",
     "aiAgent": "KI-Agent",
     "donation": "Spende",
-    "privacyPolicy": "Datenschutzrichtlinie"
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "nutritionAnalyzer": "Ernährungsanalyse"
   },
   "sidebar": {
     "principal": "Hauptmenü",
@@ -1434,5 +1435,31 @@
     "light": "Hell",
     "dark": "Dunkel",
     "system": "System"
+  },
+  "nutritionAnalyzer": {
+    "title": "Ernährungsanalyse",
+    "subtitle": "Laden Sie ein Foto Ihres Gerichts hoch und erhalten Sie eine detaillierte Analyse der Zutaten, Kalorien, Proteine und mehr.",
+    "description": "Analysieren Sie den Nährwert Ihrer Gerichte mit KI",
+    "uploadPrompt": "Laden Sie ein Foto Ihres Gerichts hoch",
+    "uploadHint": "Klicken oder ziehen Sie ein Bild hierher",
+    "selectImage": "Bild auswählen",
+    "changeImage": "Bild ändern",
+    "analyze": "Gericht analysieren",
+    "analyzing": "Analysiere...",
+    "analysisComplete": "Analyse abgeschlossen!",
+    "imageTooLarge": "Das Bild ist zu groß. Maximal 10 MB.",
+    "ingredientsDetected": "Zutaten erkannt",
+    "healthScore": "Gesundheitswert",
+    "calories": "Kalorien",
+    "protein": "Protein",
+    "carbs": "Kohlenhydrate",
+    "fat": "Fett",
+    "fiber": "Ballaststoffe",
+    "ingredientBreakdown": "Aufschlüsselung nach Zutaten",
+    "ingredient": "Zutat",
+    "quantity": "Menge",
+    "total": "GESAMT",
+    "recommendations": "Empfehlungen",
+    "macroDistribution": "Makroverteilung"
   }
 }

@@ -52,6 +52,7 @@ import AdministrarRecordatorios from "./pages/AdministrarRecordatorios";
 import EnviarEmailActualizacion from "./pages/EnviarEmailActualizacion";
 import Flashcards from "./pages/Flashcards";
 import ConfigurarRecordatoriosFlashcards from "./pages/ConfigurarRecordatoriosFlashcards";
+import AnalizadorNutricional from "./pages/AnalizadorNutricional";
 
 const queryClient = new QueryClient();
 
@@ -147,6 +148,8 @@ function AppContent() {
           <Route
             path="/flashcards/configurar-recordatorios"
             element={<ConfigurarRecordatoriosFlashcards />}
+          />
+          <Route path="/analizador-nutricional" element={<AnalizadorNutricional />}
           />
         </Route>
 

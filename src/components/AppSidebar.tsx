@@ -19,7 +19,8 @@ import {
   Bell,
   Mail,
   Download,
-  Layers
+  Layers,
+  UtensilsCrossed
 } from "lucide-react";
 import {
   Sidebar,
@@ -93,6 +94,7 @@ export function AppSidebar() {
         { title: t('nav.ranking'), url: "/ranking", icon: Award },
         { title: t('nav.flashcards'), url: "/flashcards", icon: Layers },
         { title: t('nav.flashcardReminders'), url: "/flashcards/configurar-recordatorios", icon: Bell },
+        { title: t('nav.nutritionAnalyzer'), url: "/analizador-nutricional", icon: UtensilsCrossed },
       ]
     },
     {
