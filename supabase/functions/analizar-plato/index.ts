@@ -16,6 +16,8 @@ interface NutrientInfo {
   saturatedFat: number;
   transFat: number;
   fiber: number;
+  cholesterol: number;
+  sodium: number;
 }
 
 interface AnalysisResult {
@@ -29,6 +31,8 @@ interface AnalysisResult {
     saturatedFat: number;
     transFat: number;
     fiber: number;
+    cholesterol: number;
+    sodium: number;
   };
   dishName: string;
   healthScore: number;
@@ -65,7 +69,7 @@ serve(async (req) => {
     };
     const targetLang = langNames[language] || 'Spanish';
 
-    const systemPrompt = `You are a professional nutritionist AI that analyzes food images. 
+const systemPrompt = `You are a professional nutritionist AI that analyzes food images. 
 Your task is to identify all visible ingredients in the dish and provide detailed nutritional information.
 
 IMPORTANT: Respond in ${targetLang}.
@@ -84,7 +88,9 @@ You must return a valid JSON object with this exact structure:
       "fat": number (grams) - total fat,
       "saturatedFat": number (grams) - saturated fat content,
       "transFat": number (grams) - trans fat content (partially hydrogenated oils),
-      "fiber": number (grams)
+      "fiber": number (grams),
+      "cholesterol": number (milligrams) - cholesterol content from animal products,
+      "sodium": number (milligrams) - sodium/salt content
     }
   ],
   "totals": {
@@ -95,7 +101,9 @@ You must return a valid JSON object with this exact structure:
     "fat": total fat (g),
     "saturatedFat": total saturated fat (g),
     "transFat": total trans fat (g),
-    "fiber": total fiber (g)
+    "fiber": total fiber (g),
+    "cholesterol": total cholesterol (mg),
+    "sodium": total sodium (mg)
   },
   "healthScore": number from 1-10 (10 being healthiest),
   "recommendations": ["Array of 2-3 brief health recommendations based on the dish"]
@@ -105,6 +113,8 @@ IMPORTANT:
 - For sugar analysis, include all types of sugars (sucrose, glucose, fructose, lactose, maltose). Even if carbs are 0, check for any sugar alcohols or natural sugars present.
 - For saturated fat, include fats from animal sources, tropical oils (coconut, palm), and dairy products.
 - For trans fat, include naturally occurring trans fats and those from partially hydrogenated oils. If no trans fats are detected, use 0.
+- For cholesterol, include content from eggs, meat, dairy, and seafood. Plant-based foods have 0 cholesterol.
+- For sodium, include salt, MSG, and naturally occurring sodium. Consider added seasonings and processed ingredients.
 
 Be accurate with nutritional values. If you cannot identify an ingredient clearly, make a reasonable estimate based on visual appearance.
 Respond ONLY with the JSON object, no additional text.`;
