@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
-import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle } from "lucide-react";
+import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle, Candy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,6 +17,7 @@ interface NutrientInfo {
   calories: number;
   protein: number;
   carbs: number;
+  sugar: number;
   fat: number;
   fiber: number;
 }
@@ -27,6 +28,7 @@ interface AnalysisResult {
     calories: number;
     protein: number;
     carbs: number;
+    sugar: number;
     fat: number;
     fiber: number;
   };
@@ -240,7 +242,7 @@ const AnalizadorNutricional: React.FC = () => {
             </Card>
 
             {/* Totals Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
               <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 border-orange-200 dark:border-orange-800">
                 <CardContent className="p-4 text-center">
                   <Flame className="h-6 w-6 mx-auto mb-2 text-orange-600 dark:text-orange-400" />
@@ -265,6 +267,14 @@ const AnalizadorNutricional: React.FC = () => {
                 </CardContent>
               </Card>
 
+              <Card className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950/30 dark:to-pink-900/30 border-pink-200 dark:border-pink-800">
+                <CardContent className="p-4 text-center">
+                  <Candy className="h-6 w-6 mx-auto mb-2 text-pink-600 dark:text-pink-400" />
+                  <p className="text-2xl font-bold text-pink-700 dark:text-pink-300">{result.totals.sugar}g</p>
+                  <p className="text-xs text-pink-600 dark:text-pink-400">{t('nutritionAnalyzer.sugar', 'Azúcar')}</p>
+                </CardContent>
+              </Card>
+
               <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/30 dark:to-yellow-900/30 border-yellow-200 dark:border-yellow-800">
                 <CardContent className="p-4 text-center">
                   <Droplets className="h-6 w-6 mx-auto mb-2 text-yellow-600 dark:text-yellow-400" />
@@ -273,7 +283,7 @@ const AnalizadorNutricional: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border-green-200 dark:border-green-800 col-span-2 md:col-span-1">
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border-green-200 dark:border-green-800">
                 <CardContent className="p-4 text-center">
                   <Leaf className="h-6 w-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
                   <p className="text-2xl font-bold text-green-700 dark:text-green-300">{result.totals.fiber}g</p>
@@ -300,6 +310,7 @@ const AnalizadorNutricional: React.FC = () => {
                         <TableHead className="text-right">{t('nutritionAnalyzer.calories', 'Calorías')}</TableHead>
                         <TableHead className="text-right">{t('nutritionAnalyzer.protein', 'Proteínas')}</TableHead>
                         <TableHead className="text-right">{t('nutritionAnalyzer.carbs', 'Carbos')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.sugar', 'Azúcar')}</TableHead>
                         <TableHead className="text-right">{t('nutritionAnalyzer.fat', 'Grasas')}</TableHead>
                         <TableHead className="text-right">{t('nutritionAnalyzer.fiber', 'Fibra')}</TableHead>
                       </TableRow>
@@ -312,6 +323,7 @@ const AnalizadorNutricional: React.FC = () => {
                           <TableCell className="text-right">{ingredient.calories}</TableCell>
                           <TableCell className="text-right">{ingredient.protein}g</TableCell>
                           <TableCell className="text-right">{ingredient.carbs}g</TableCell>
+                          <TableCell className="text-right">{ingredient.sugar}g</TableCell>
                           <TableCell className="text-right">{ingredient.fat}g</TableCell>
                           <TableCell className="text-right">{ingredient.fiber}g</TableCell>
                         </TableRow>
@@ -322,6 +334,7 @@ const AnalizadorNutricional: React.FC = () => {
                         <TableCell className="text-right">{result.totals.calories}</TableCell>
                         <TableCell className="text-right">{result.totals.protein}g</TableCell>
                         <TableCell className="text-right">{result.totals.carbs}g</TableCell>
+                        <TableCell className="text-right">{result.totals.sugar}g</TableCell>
                         <TableCell className="text-right">{result.totals.fat}g</TableCell>
                         <TableCell className="text-right">{result.totals.fiber}g</TableCell>
                       </TableRow>
