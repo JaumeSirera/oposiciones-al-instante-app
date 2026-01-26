@@ -19,6 +19,8 @@ interface NutrientInfo {
   carbs: number;
   sugar: number;
   fat: number;
+  saturatedFat: number;
+  transFat: number;
   fiber: number;
 }
 
@@ -30,6 +32,8 @@ interface AnalysisResult {
     carbs: number;
     sugar: number;
     fat: number;
+    saturatedFat: number;
+    transFat: number;
     fiber: number;
   };
   dishName: string;
@@ -280,6 +284,9 @@ const AnalizadorNutricional: React.FC = () => {
                   <Droplets className="h-6 w-6 mx-auto mb-2 text-yellow-600 dark:text-yellow-400" />
                   <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{result.totals.fat}g</p>
                   <p className="text-xs text-yellow-600 dark:text-yellow-400">{t('nutritionAnalyzer.fat', 'Grasas')}</p>
+                  <p className="text-[10px] text-yellow-500 dark:text-yellow-500 mt-1">
+                    {t('nutritionAnalyzer.saturatedFat', 'Sat')}: {result.totals.saturatedFat || 0}g | {t('nutritionAnalyzer.transFat', 'Trans')}: {result.totals.transFat || 0}g
+                  </p>
                 </CardContent>
               </Card>
 
@@ -312,6 +319,8 @@ const AnalizadorNutricional: React.FC = () => {
                         <TableHead className="text-right">{t('nutritionAnalyzer.carbs', 'Carbos')}</TableHead>
                         <TableHead className="text-right">{t('nutritionAnalyzer.sugar', 'Azúcar')}</TableHead>
                         <TableHead className="text-right">{t('nutritionAnalyzer.fat', 'Grasas')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.saturatedFatShort', 'G.Sat')}</TableHead>
+                        <TableHead className="text-right">{t('nutritionAnalyzer.transFatShort', 'G.Trans')}</TableHead>
                         <TableHead className="text-right">{t('nutritionAnalyzer.fiber', 'Fibra')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -325,6 +334,8 @@ const AnalizadorNutricional: React.FC = () => {
                           <TableCell className="text-right">{ingredient.carbs}g</TableCell>
                           <TableCell className="text-right">{ingredient.sugar}g</TableCell>
                           <TableCell className="text-right">{ingredient.fat}g</TableCell>
+                          <TableCell className="text-right">{ingredient.saturatedFat || 0}g</TableCell>
+                          <TableCell className="text-right">{ingredient.transFat || 0}g</TableCell>
                           <TableCell className="text-right">{ingredient.fiber}g</TableCell>
                         </TableRow>
                       ))}
@@ -336,6 +347,8 @@ const AnalizadorNutricional: React.FC = () => {
                         <TableCell className="text-right">{result.totals.carbs}g</TableCell>
                         <TableCell className="text-right">{result.totals.sugar}g</TableCell>
                         <TableCell className="text-right">{result.totals.fat}g</TableCell>
+                        <TableCell className="text-right">{result.totals.saturatedFat || 0}g</TableCell>
+                        <TableCell className="text-right">{result.totals.transFat || 0}g</TableCell>
                         <TableCell className="text-right">{result.totals.fiber}g</TableCell>
                       </TableRow>
                     </TableBody>

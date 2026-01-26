@@ -13,6 +13,8 @@ interface NutrientInfo {
   carbs: number;
   sugar: number;
   fat: number;
+  saturatedFat: number;
+  transFat: number;
   fiber: number;
 }
 
@@ -24,6 +26,8 @@ interface AnalysisResult {
     carbs: number;
     sugar: number;
     fat: number;
+    saturatedFat: number;
+    transFat: number;
     fiber: number;
   };
   dishName: string;
@@ -77,7 +81,9 @@ You must return a valid JSON object with this exact structure:
       "protein": number (grams),
       "carbs": number (grams),
       "sugar": number (grams) - this includes sugars, glucose, sucrose, fructose. If no carbs, analyze glucose/sucrose content separately,
-      "fat": number (grams),
+      "fat": number (grams) - total fat,
+      "saturatedFat": number (grams) - saturated fat content,
+      "transFat": number (grams) - trans fat content (partially hydrogenated oils),
       "fiber": number (grams)
     }
   ],
@@ -87,13 +93,18 @@ You must return a valid JSON object with this exact structure:
     "carbs": total carbs (g),
     "sugar": total sugar (g) - sum of all sugars from ingredients,
     "fat": total fat (g),
+    "saturatedFat": total saturated fat (g),
+    "transFat": total trans fat (g),
     "fiber": total fiber (g)
   },
   "healthScore": number from 1-10 (10 being healthiest),
   "recommendations": ["Array of 2-3 brief health recommendations based on the dish"]
 }
 
-IMPORTANT: For sugar analysis, include all types of sugars (sucrose, glucose, fructose, lactose, maltose). Even if carbs are 0, check for any sugar alcohols or natural sugars present.
+IMPORTANT: 
+- For sugar analysis, include all types of sugars (sucrose, glucose, fructose, lactose, maltose). Even if carbs are 0, check for any sugar alcohols or natural sugars present.
+- For saturated fat, include fats from animal sources, tropical oils (coconut, palm), and dairy products.
+- For trans fat, include naturally occurring trans fats and those from partially hydrogenated oils. If no trans fats are detected, use 0.
 
 Be accurate with nutritional values. If you cannot identify an ingredient clearly, make a reasonable estimate based on visual appearance.
 Respond ONLY with the JSON object, no additional text.`;
