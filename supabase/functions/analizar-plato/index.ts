@@ -11,6 +11,7 @@ interface NutrientInfo {
   calories: number;
   protein: number;
   carbs: number;
+  sugar: number;
   fat: number;
   fiber: number;
 }
@@ -21,6 +22,7 @@ interface AnalysisResult {
     calories: number;
     protein: number;
     carbs: number;
+    sugar: number;
     fat: number;
     fiber: number;
   };
@@ -74,6 +76,7 @@ You must return a valid JSON object with this exact structure:
       "calories": number,
       "protein": number (grams),
       "carbs": number (grams),
+      "sugar": number (grams) - this includes sugars, glucose, sucrose, fructose. If no carbs, analyze glucose/sucrose content separately,
       "fat": number (grams),
       "fiber": number (grams)
     }
@@ -82,12 +85,15 @@ You must return a valid JSON object with this exact structure:
     "calories": total calories,
     "protein": total protein (g),
     "carbs": total carbs (g),
+    "sugar": total sugar (g) - sum of all sugars from ingredients,
     "fat": total fat (g),
     "fiber": total fiber (g)
   },
   "healthScore": number from 1-10 (10 being healthiest),
   "recommendations": ["Array of 2-3 brief health recommendations based on the dish"]
 }
+
+IMPORTANT: For sugar analysis, include all types of sugars (sucrose, glucose, fructose, lactose, maltose). Even if carbs are 0, check for any sugar alcohols or natural sugars present.
 
 Be accurate with nutritional values. If you cannot identify an ingredient clearly, make a reasonable estimate based on visual appearance.
 Respond ONLY with the JSON object, no additional text.`;
