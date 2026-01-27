@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
-import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle, Candy, Heart, Sparkles } from "lucide-react";
+import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle, Candy, Heart, Sparkles, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,6 +10,9 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { nutritionHistoryService, NutritionAnalysis } from "@/services/nutritionHistoryService";
+import NutritionHistory from "@/components/NutritionHistory";
 
 interface NutrientInfo {
   name: string;
@@ -47,8 +50,10 @@ interface AnalysisResult {
 
 const AnalizadorNutricional: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +107,50 @@ const AnalizadorNutricional: React.FC = () => {
       toast.error(errorMessage);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleSaveAnalysis = async () => {
+    if (!result || !user?.id) {
+      toast.error(t('nutritionHistory.loginRequired', 'Inicia sesión para guardar el análisis'));
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await nutritionHistoryService.guardarAnalisis({
+        id_usuario: user.id,
+        dish_name: result.dishName,
+        image_base64: selectedImage || undefined,
+        ingredients: result.ingredients,
+        totals: result.totals,
+        health_score: result.healthScore,
+        recommendations: result.recommendations || [],
+      });
+
+      if (response.success) {
+        toast.success(t('nutritionHistory.saved', '¡Análisis guardado en el historial!'));
+      } else {
+        toast.error(response.error || t('nutritionHistory.errorSaving', 'Error al guardar'));
+      }
+    } catch (err) {
+      console.error('Error saving analysis:', err);
+      toast.error(t('nutritionHistory.errorSaving', 'Error al guardar'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLoadFromHistory = (analysis: NutritionAnalysis) => {
+    setResult({
+      dishName: analysis.dish_name,
+      ingredients: analysis.ingredients,
+      totals: analysis.totals,
+      healthScore: analysis.health_score,
+      recommendations: analysis.recommendations,
+    });
+    if (analysis.image_base64) {
+      setSelectedImage(analysis.image_base64);
     }
   };
 
@@ -244,6 +293,22 @@ const AnalizadorNutricional: React.FC = () => {
                     <div className="p-2 rounded-full bg-muted">
                       <Star className={`h-6 w-6 ${getHealthScoreColor(result.healthScore)}`} />
                     </div>
+                    {user && (
+                      <Button
+                        onClick={handleSaveAnalysis}
+                        disabled={isSaving}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Save className="h-4 w-4" />
+                        )}
+                        {t('nutritionHistory.save', 'Guardar')}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -454,6 +519,13 @@ const AnalizadorNutricional: React.FC = () => {
                 })()}
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* History Section */}
+        {user && (
+          <div className="mt-6">
+            <NutritionHistory onSelectAnalysis={handleLoadFromHistory} />
           </div>
         )}
       </div>
