@@ -709,7 +709,7 @@ Deno.serve(async (req) => {
       return await handleGenerarPsicotecnicos(bodyData, corsHeaders);
     }
     
-    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_test_realizado.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php' || cleanEndpoint === 'planes_fisicos.php' || cleanEndpoint === 'recordatorios_plan.php' || cleanEndpoint === 'obtener_plan_json.php' || cleanEndpoint === 'guardar_preguntas_generadas.php' || cleanEndpoint === 'flashcards.php' || cleanEndpoint === 'recordatorios_flashcards.php') {
+    if (cleanEndpoint === 'procesos.php' || cleanEndpoint === 'crear_proceso.php' || cleanEndpoint === 'procesos_por_rol.php' || cleanEndpoint === 'procesos_usuario.php' || cleanEndpoint === 'preguntas_auxiliares.php' || cleanEndpoint === 'test_progreso.php' || cleanEndpoint === 'genera_test.php' || cleanEndpoint === 'comentarios.php' || cleanEndpoint === 'historial_tests.php' || cleanEndpoint === 'estadisticas_usuario.php' || cleanEndpoint === 'ranking_usuarios.php' || cleanEndpoint === 'guardar_test_realizado.php' || cleanEndpoint === 'listar_resumenes.php' || cleanEndpoint === 'detalle_resumen.php' || cleanEndpoint === 'tecnica_resumen.php' || cleanEndpoint === 'generar_resumen.php' || cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'guardar_plan_ia.php' || cleanEndpoint === 'plan_ia_personal.php' || cleanEndpoint === 'ultimos_procesos.php' || cleanEndpoint === 'proxy_noticias_oposiciones.php' || cleanEndpoint === 'noticias_oposiciones_multifuente.php' || cleanEndpoint === 'planes_fisicos.php' || cleanEndpoint === 'recordatorios_plan.php' || cleanEndpoint === 'obtener_plan_json.php' || cleanEndpoint === 'guardar_preguntas_generadas.php' || cleanEndpoint === 'flashcards.php' || cleanEndpoint === 'recordatorios_flashcards.php' || cleanEndpoint === 'historial_nutricional.php') {
       // Direct API calls to specific endpoints
       const baseUrl = 'https://oposiciones-test.com/api/';
       
@@ -717,9 +717,9 @@ Deno.serve(async (req) => {
       const queryParams: string[] = [];
       if (endpointParams) queryParams.push(endpointParams);
       
-      // For planes_estudio.php, planes_fisicos.php, recordatorios_plan.php, flashcards.php or recordatorios_flashcards.php, extract action from body and add to URL
+      // For planes_estudio.php, planes_fisicos.php, recordatorios_plan.php, flashcards.php, recordatorios_flashcards.php or historial_nutricional.php, extract action from body and add to URL
       // But NOT for test_progreso.php - it needs action in body
-      if ((cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'planes_fisicos.php' || cleanEndpoint === 'recordatorios_plan.php' || cleanEndpoint === 'flashcards.php' || cleanEndpoint === 'recordatorios_flashcards.php') && bodyData?.action) {
+      if ((cleanEndpoint === 'planes_estudio.php' || cleanEndpoint === 'planes_fisicos.php' || cleanEndpoint === 'recordatorios_plan.php' || cleanEndpoint === 'flashcards.php' || cleanEndpoint === 'recordatorios_flashcards.php' || cleanEndpoint === 'historial_nutricional.php') && bodyData?.action) {
         queryParams.push(`action=${bodyData.action}`);
       }
       
