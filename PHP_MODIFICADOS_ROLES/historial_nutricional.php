@@ -1,34 +1,49 @@
 <?php
-/**
- * API para gestionar el historial de análisis nutricionales
- * Acciones: guardar, listar, detalle, eliminar, listar_todos (SA)
- */
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=utf-8");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+    http_response_code(204);
+    exit();
 }
 
-require_once 'conexion.php';
-require_once 'auth.php';
+require 'db.php';
+require 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 
 // Verificar autenticación
-$payload = verificarToken();
-if (!$payload) {
+$headers = getallheaders();
+$authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+$token = str_replace('Bearer ', '', $authHeader);
+
+if (empty($token)) {
     echo json_encode(['success' => false, 'error' => 'No autorizado']);
     exit;
 }
 
-$userId = $payload['id'] ?? null;
-$nivel = $payload['nivel'] ?? '';
+// Decodificar token
+$tokenParts = explode('.', $token);
+if (count($tokenParts) !== 3) {
+    echo json_encode(['success' => false, 'error' => 'Token inválido']);
+    exit;
+}
+
+$payload = json_decode(base64_decode($tokenParts[1]), true);
+$userId = isset($payload['id']) ? $payload['id'] : null;
+$nivel = isset($payload['nivel']) ? $payload['nivel'] : '';
+
+if (!$userId) {
+    echo json_encode(['success' => false, 'error' => 'Usuario no identificado']);
+    exit;
+}
 
 /**
  * GUARDAR ANÁLISIS NUTRICIONAL
@@ -36,13 +51,13 @@ $nivel = $payload['nivel'] ?? '';
 if ($method === 'POST' && $action === 'guardar') {
     $input = json_decode(file_get_contents('php://input'), true);
     
-    $id_usuario = $input['id_usuario'] ?? null;
-    $dish_name = $input['dish_name'] ?? '';
-    $image_base64 = $input['image_base64'] ?? null;
-    $ingredients = $input['ingredients'] ?? [];
-    $totals = $input['totals'] ?? [];
-    $health_score = $input['health_score'] ?? 0;
-    $recommendations = $input['recommendations'] ?? [];
+    $id_usuario = isset($input['id_usuario']) ? $input['id_usuario'] : null;
+    $dish_name = isset($input['dish_name']) ? $input['dish_name'] : '';
+    $image_base64 = isset($input['image_base64']) ? $input['image_base64'] : null;
+    $ingredients = isset($input['ingredients']) ? $input['ingredients'] : [];
+    $totals = isset($input['totals']) ? $input['totals'] : [];
+    $health_score = isset($input['health_score']) ? $input['health_score'] : 0;
+    $recommendations = isset($input['recommendations']) ? $input['recommendations'] : [];
     
     if (!$id_usuario || !$dish_name) {
         echo json_encode(['success' => false, 'error' => 'Faltan datos obligatorios']);
@@ -78,7 +93,7 @@ if ($method === 'POST' && $action === 'guardar') {
  * LISTAR ANÁLISIS DEL USUARIO
  */
 if ($method === 'GET' && $action === 'listar') {
-    $id_usuario = $_GET['id_usuario'] ?? null;
+    $id_usuario = isset($_GET['id_usuario']) ? $_GET['id_usuario'] : null;
     
     if (!$id_usuario) {
         echo json_encode(['success' => false, 'error' => 'Falta id_usuario']);
@@ -138,7 +153,7 @@ if ($method === 'GET' && $action === 'listar_todos') {
  * OBTENER DETALLE DE UN ANÁLISIS
  */
 if ($method === 'GET' && $action === 'detalle') {
-    $id = $_GET['id'] ?? null;
+    $id = isset($_GET['id']) ? $_GET['id'] : null;
     
     if (!$id) {
         echo json_encode(['success' => false, 'error' => 'Falta id del análisis']);
@@ -175,7 +190,7 @@ if ($method === 'GET' && $action === 'detalle') {
  */
 if ($method === 'DELETE' || ($method === 'POST' && $action === 'eliminar')) {
     $input = json_decode(file_get_contents('php://input'), true);
-    $id = $input['id'] ?? $_GET['id'] ?? null;
+    $id = isset($input['id']) ? $input['id'] : (isset($_GET['id']) ? $_GET['id'] : null);
     
     if (!$id) {
         echo json_encode(['success' => false, 'error' => 'Falta id del análisis']);
