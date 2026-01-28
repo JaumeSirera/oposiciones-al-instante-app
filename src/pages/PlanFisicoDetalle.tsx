@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, Dumbbell, Sparkles, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Dumbbell, Sparkles, Image as ImageIcon, Loader2, Apple } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, fr, de, pt, zhCN } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { NutritionPlanTab } from '@/components/NutritionPlanTab';
 
 const API_BASE = 'https://oposiciones-test.com/api';
 
@@ -526,131 +528,155 @@ export default function PlanFisicoDetalle() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('physicalPlans.detail.trainingPlan')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isTranslating && needsTranslation && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {t('common.translatingContent')}
-            </div>
-          )}
-          <Accordion type="single" collapsible className="w-full">
-            {Array.from({ length: totalSemanas }).map((_, idx) => {
-              const displayPlan = translatedPlanIA.length > 0 ? translatedPlanIA : planIA;
-              const semana = displayPlan[idx] as Semana | undefined;
-              const semanaN = idx + 1;
+      <Tabs defaultValue="training" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="training" className="flex items-center gap-2">
+            <Dumbbell className="h-4 w-4" />
+            {t('physicalPlans.detail.trainingPlan')}
+          </TabsTrigger>
+          <TabsTrigger value="nutrition" className="flex items-center gap-2">
+            <Apple className="h-4 w-4" />
+            {t('nutritionPlan.title')}
+          </TabsTrigger>
+        </TabsList>
 
-              return (
-                <AccordionItem key={idx} value={`semana-${idx}`}>
-                  <AccordionTrigger>
-                    {semana
-                      ? `${semana.titulo || `${t('common.week')} ${semanaN}`} (${format(
-                          new Date(semana.fecha_inicio || ''),
-                          'dd/MM/yyyy',
-                          { locale: currentLocale }
-                        )} → ${format(new Date(semana.fecha_fin || ''), 'dd/MM/yyyy', {
-                          locale: currentLocale,
-                        })})`
-                      : `${t('common.week')} ${semanaN} (${t('physicalPlans.detail.notGenerated')})`}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4 pt-4">
-                      <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id={`week-${idx}`}
-                            checked={avance[idx] || false}
-                            onCheckedChange={(checked) => toggleAvance(idx, checked as boolean)}
-                          />
-                          <label htmlFor={`week-${idx}`} className="text-sm">{t('physicalPlans.detail.markWeekCompleted', { week: semanaN })}</label>
-                        </div>
+        <TabsContent value="training">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('physicalPlans.detail.trainingPlan')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isTranslating && needsTranslation && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('common.translatingContent')}
+                </div>
+              )}
+              <Accordion type="single" collapsible className="w-full">
+                {Array.from({ length: totalSemanas }).map((_, idx) => {
+                  const displayPlan = translatedPlanIA.length > 0 ? translatedPlanIA : planIA;
+                  const semana = displayPlan[idx] as Semana | undefined;
+                  const semanaN = idx + 1;
 
-                        {loadingWeek === idx ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleGenerarSemana(idx)}
-                          >
-                            <Sparkles className="h-4 w-4 mr-2" />
-                            {semana ? t('physicalPlans.detail.regenerate') : t('physicalPlans.detail.generate')} {t('physicalPlans.detail.withAI')}
-                          </Button>
-                        )}
-                      </div>
-
-                      {semana ? (
-                        <>
-                          {semana.resumen && (
-                            <div className="p-3 bg-muted rounded">
-                              <h4 className="font-semibold mb-1">{t('physicalPlans.detail.weekFocus')}</h4>
-                              <p className="text-sm">{semana.resumen}</p>
+                  return (
+                    <AccordionItem key={idx} value={`semana-${idx}`}>
+                      <AccordionTrigger>
+                        {semana
+                          ? `${semana.titulo || `${t('common.week')} ${semanaN}`} (${format(
+                              new Date(semana.fecha_inicio || ''),
+                              'dd/MM/yyyy',
+                              { locale: currentLocale }
+                            )} → ${format(new Date(semana.fecha_fin || ''), 'dd/MM/yyyy', {
+                              locale: currentLocale,
+                            })})`
+                          : `${t('common.week')} ${semanaN} (${t('physicalPlans.detail.notGenerated')})`}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-4 pt-4">
+                          <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id={`week-${idx}`}
+                                checked={avance[idx] || false}
+                                onCheckedChange={(checked) => toggleAvance(idx, checked as boolean)}
+                              />
+                              <label htmlFor={`week-${idx}`} className="text-sm">{t('physicalPlans.detail.markWeekCompleted', { week: semanaN })}</label>
                             </div>
-                          )}
 
-                          {semana.glosario && semana.glosario.length > 0 && (
-                            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded border">
-                              <h4 className="font-semibold mb-2">{t('physicalPlans.detail.glossary')}</h4>
-                              {semana.glosario.map((g, i) => (
-                                <div key={i} className="mb-2">
-                                  <p className="font-medium text-sm">{g.termino}</p>
-                                  <p className="text-sm text-muted-foreground">{g.significado}</p>
+                            {loadingWeek === idx ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGenerarSemana(idx)}
+                              >
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                {semana ? t('physicalPlans.detail.regenerate') : t('physicalPlans.detail.generate')} {t('physicalPlans.detail.withAI')}
+                              </Button>
+                            )}
+                          </div>
+
+                          {semana ? (
+                            <>
+                              {semana.resumen && (
+                                <div className="p-3 bg-muted rounded">
+                                  <h4 className="font-semibold mb-1">{t('physicalPlans.detail.weekFocus')}</h4>
+                                  <p className="text-sm">{semana.resumen}</p>
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              )}
 
-                          {Array.isArray(semana.sesiones) &&
-                            semana.sesiones.map((ses, sidx) => (
-                              <div key={sidx} className="space-y-3">
-                                <h4 className="font-bold text-lg">{ses.dia || `${t('physicalPlans.detail.session')} ${sidx + 1}`}</h4>
-                                {Array.isArray(ses.bloques) &&
-                                  ses.bloques.map((bloq, bidx) => (
-                                    <div key={bidx} className="border-l-4 border-primary pl-4 space-y-2">
-                                      <h5 className="font-semibold">{bloq.tipo || `${t('physicalPlans.detail.block')} ${bidx + 1}`}</h5>
-                                      {bloq.descripcion && (
-                                        <p className="text-sm text-muted-foreground">{bloq.descripcion}</p>
-                                      )}
-                                      {bloq.explicacion_neofita && (
-                                        <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
-                                          <p className="text-sm">
-                                            <span className="font-medium">{t('physicalPlans.detail.easyExplanation')}:</span>{' '}
-                                            {bloq.explicacion_neofita}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {Array.isArray(bloq.ejercicios) &&
-                                        bloq.ejercicios.map((ej, eidx) =>
-                                          renderEjercicio(
-                                            ej,
-                                            eidx,
-                                            bloq.tipo,
-                                            idx,
-                                            ses.dia || `Dia${sidx + 1}`,
-                                            bidx
-                                          )
-                                        )}
+                              {semana.glosario && semana.glosario.length > 0 && (
+                                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded border">
+                                  <h4 className="font-semibold mb-2">{t('physicalPlans.detail.glossary')}</h4>
+                                  {semana.glosario.map((g, i) => (
+                                    <div key={i} className="mb-2">
+                                      <p className="font-medium text-sm">{g.termino}</p>
+                                      <p className="text-sm text-muted-foreground">{g.significado}</p>
                                     </div>
                                   ))}
-                              </div>
-                            ))}
-                        </>
-                      ) : (
-                        <p className="text-muted-foreground text-center py-4">
-                          {t('physicalPlans.detail.weekNotGenerated')}
-                        </p>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
-        </CardContent>
-      </Card>
+                                </div>
+                              )}
+
+                              {Array.isArray(semana.sesiones) &&
+                                semana.sesiones.map((ses, sidx) => (
+                                  <div key={sidx} className="space-y-3">
+                                    <h4 className="font-bold text-lg">{ses.dia || `${t('physicalPlans.detail.session')} ${sidx + 1}`}</h4>
+                                    {Array.isArray(ses.bloques) &&
+                                      ses.bloques.map((bloq, bidx) => (
+                                        <div key={bidx} className="border-l-4 border-primary pl-4 space-y-2">
+                                          <h5 className="font-semibold">{bloq.tipo || `${t('physicalPlans.detail.block')} ${bidx + 1}`}</h5>
+                                          {bloq.descripcion && (
+                                            <p className="text-sm text-muted-foreground">{bloq.descripcion}</p>
+                                          )}
+                                          {bloq.explicacion_neofita && (
+                                            <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
+                                              <p className="text-sm">
+                                                <span className="font-medium">{t('physicalPlans.detail.easyExplanation')}:</span>{' '}
+                                                {bloq.explicacion_neofita}
+                                              </p>
+                                            </div>
+                                          )}
+                                          {Array.isArray(bloq.ejercicios) &&
+                                            bloq.ejercicios.map((ej, eidx) =>
+                                              renderEjercicio(
+                                                ej,
+                                                eidx,
+                                                bloq.tipo,
+                                                idx,
+                                                ses.dia || `Dia${sidx + 1}`,
+                                                bidx
+                                              )
+                                            )}
+                                        </div>
+                                      ))}
+                                  </div>
+                                ))}
+                            </>
+                          ) : (
+                            <p className="text-muted-foreground text-center py-4">
+                              {t('physicalPlans.detail.weekNotGenerated')}
+                            </p>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="nutrition">
+          <NutritionPlanTab 
+            planFisicoId={Number(id)} 
+            tipoPrueba={plan.tipo_prueba}
+            nivelFisico={plan.nivel_fisico}
+            diasSemana={plan.dias_semana}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
