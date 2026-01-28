@@ -16,34 +16,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require 'db.php';
 require 'config.php';
 
-$method = $_SERVER['REQUEST_METHOD'];
-$action = isset($_GET['action']) ? $_GET['action'] : '';
+// Función para validar token (igual que en otros ficheros)
+function validarToken($claveJWT) {
+    try {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? '';
+        
+        if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            return null;
+        }
 
-// Verificar autenticación
-$headers = getallheaders();
-$authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
-$token = str_replace('Bearer ', '', $authHeader);
+        $token = $matches[1];
+        $partes = explode('.', $token);
+        if (count($partes) !== 3) {
+            return null;
+        }
 
-if (empty($token)) {
+        $base64Header = $partes[0];
+        $base64Payload = $partes[1];
+        $base64Firma = $partes[2];
+        $firmaEsperada = base64_encode(hash_hmac('sha256', "$base64Header.$base64Payload", $claveJWT, true));
+
+        if (!hash_equals($firmaEsperada, $base64Firma)) {
+            return null;
+        }
+
+        $payload = json_decode(base64_decode($base64Payload), true);
+        if ($payload['exp'] < time()) {
+            return null;
+        }
+
+        return $payload;
+    } catch (Exception $e) {
+        error_log("Error validando token: " . $e->getMessage());
+        return null;
+    }
+}
+
+// Validar token
+$payload = validarToken($claveJWT);
+if (!$payload) {
+    http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'No autorizado']);
     exit;
 }
 
-// Decodificar token
-$tokenParts = explode('.', $token);
-if (count($tokenParts) !== 3) {
-    echo json_encode(['success' => false, 'error' => 'Token inválido']);
-    exit;
-}
+$userId = $payload['id'] ?? null;
+$nivel = $payload['nivel'] ?? '';
 
-$payload = json_decode(base64_decode($tokenParts[1]), true);
-$userId = isset($payload['id']) ? $payload['id'] : null;
-$nivel = isset($payload['nivel']) ? $payload['nivel'] : '';
-
-if (!$userId) {
-    echo json_encode(['success' => false, 'error' => 'Usuario no identificado']);
-    exit;
-}
+$method = $_SERVER['REQUEST_METHOD'];
+$action = isset($_GET['action']) ? $_GET['action'] : '';
 
 /**
  * GUARDAR ANÁLISIS NUTRICIONAL
@@ -72,11 +94,11 @@ if ($method === 'POST' && $action === 'guardar') {
     $query = "INSERT INTO historial_nutricional (id_usuario, dish_name, image_base64, ingredients, totals, health_score, recommendations, fecha_analisis) 
               VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
     
-    $stmt = $conexion->prepare($query);
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("issssis", $id_usuario, $dish_name, $image_base64, $ingredients_json, $totals_json, $health_score, $recommendations_json);
     
     if ($stmt->execute()) {
-        $id_analisis = $conexion->insert_id;
+        $id_analisis = $conn->insert_id;
         echo json_encode([
             'success' => true, 
             'id' => $id_analisis,
@@ -105,7 +127,7 @@ if ($method === 'GET' && $action === 'listar') {
               WHERE id_usuario = ? 
               ORDER BY fecha_analisis DESC";
     
-    $stmt = $conexion->prepare($query);
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $id_usuario);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -137,7 +159,7 @@ if ($method === 'GET' && $action === 'listar_todos') {
               ORDER BY hn.fecha_analisis DESC
               LIMIT 100";
     
-    $result = $conexion->query($query);
+    $result = $conn->query($query);
     
     $historial = [];
     while ($row = $result->fetch_assoc()) {
@@ -161,7 +183,7 @@ if ($method === 'GET' && $action === 'detalle') {
     }
     
     $query = "SELECT * FROM historial_nutricional WHERE id = ?";
-    $stmt = $conexion->prepare($query);
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -199,7 +221,7 @@ if ($method === 'DELETE' || ($method === 'POST' && $action === 'eliminar')) {
     
     // Verificar que el análisis pertenece al usuario (o es SA)
     $checkQuery = "SELECT id_usuario FROM historial_nutricional WHERE id = ?";
-    $checkStmt = $conexion->prepare($checkQuery);
+    $checkStmt = $conn->prepare($checkQuery);
     $checkStmt->bind_param("i", $id);
     $checkStmt->execute();
     $checkResult = $checkStmt->get_result();
@@ -216,7 +238,7 @@ if ($method === 'DELETE' || ($method === 'POST' && $action === 'eliminar')) {
     $checkStmt->close();
     
     $query = "DELETE FROM historial_nutricional WHERE id = ?";
-    $stmt = $conexion->prepare($query);
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
