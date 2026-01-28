@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.analizar-plato]
 verify_jwt = false
+
+[functions.generar-plan-nutricional]
+verify_jwt = false
