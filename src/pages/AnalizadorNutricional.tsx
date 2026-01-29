@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
-import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle, Candy, Heart, Sparkles, Save } from "lucide-react";
+import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle, Candy, Heart, Sparkles, Save, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { nutritionHistoryService, NutritionAnalysis } from "@/services/nutritionHistoryService";
 import NutritionHistory from "@/components/NutritionHistory";
-
+import { useCapacitorCamera } from "@/hooks/useCapacitorCamera";
 interface NutrientInfo {
   name: string;
   quantity: string;
@@ -57,6 +57,9 @@ const AnalizadorNutricional: React.FC = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Capacitor camera hook for native platforms
+  const { takePhoto, pickFromGallery, isNativePlatform, isLoading: isCameraLoading, error: cameraError, clearError } = useCapacitorCamera();
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,6 +76,26 @@ const AnalizadorNutricional: React.FC = () => {
         setError(null);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    clearError();
+    const imageData = await takePhoto();
+    if (imageData) {
+      setSelectedImage(imageData);
+      setResult(null);
+      setError(null);
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    clearError();
+    const imageData = await pickFromGallery();
+    if (imageData) {
+      setSelectedImage(imageData);
+      setResult(null);
+      setError(null);
     }
   };
 
@@ -195,16 +218,12 @@ const AnalizadorNutricional: React.FC = () => {
               type="file"
               ref={fileInputRef}
               accept="image/*"
-              capture="environment"
               onChange={handleImageSelect}
               className="hidden"
             />
 
             {!selectedImage ? (
-              <div 
-                className="flex flex-col items-center justify-center cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
+              <div className="flex flex-col items-center justify-center">
                 <div className="p-6 rounded-full bg-muted mb-4">
                   <Camera className="h-12 w-12 text-muted-foreground" />
                 </div>
@@ -212,12 +231,61 @@ const AnalizadorNutricional: React.FC = () => {
                   {t('nutritionAnalyzer.uploadPrompt', 'Sube una foto de tu plato')}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {t('nutritionAnalyzer.uploadHint', 'Haz clic o arrastra una imagen aquí')}
+                  {isNativePlatform 
+                    ? t('nutritionAnalyzer.uploadHintMobile', 'Toma una foto o selecciona de la galería')
+                    : t('nutritionAnalyzer.uploadHint', 'Haz clic o arrastra una imagen aquí')
+                  }
                 </p>
-                <Button variant="outline" className="gap-2">
-                  <Upload className="h-4 w-4" />
-                  {t('nutritionAnalyzer.selectImage', 'Seleccionar imagen')}
-                </Button>
+                
+                {/* Camera error message */}
+                {cameraError && (
+                  <Alert variant="destructive" className="mb-4 max-w-sm">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{cameraError}</AlertDescription>
+                  </Alert>
+                )}
+                
+                {/* Native platform: Show camera and gallery buttons */}
+                {isNativePlatform ? (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      variant="default" 
+                      className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                      onClick={handleTakePhoto}
+                      disabled={isCameraLoading}
+                    >
+                      {isCameraLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4" />
+                      )}
+                      {t('nutritionAnalyzer.takePhoto', 'Tomar foto')}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="gap-2"
+                      onClick={handlePickFromGallery}
+                      disabled={isCameraLoading}
+                    >
+                      {isCameraLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ImageIcon className="h-4 w-4" />
+                      )}
+                      {t('nutritionAnalyzer.selectFromGallery', 'Galería')}
+                    </Button>
+                  </div>
+                ) : (
+                  /* Web platform: Show file upload button */
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {t('nutritionAnalyzer.selectImage', 'Seleccionar imagen')}
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -228,7 +296,7 @@ const AnalizadorNutricional: React.FC = () => {
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="flex justify-center gap-4">
+                <div className="flex justify-center gap-4 flex-wrap">
                   <Button
                     variant="outline"
                     onClick={() => {
