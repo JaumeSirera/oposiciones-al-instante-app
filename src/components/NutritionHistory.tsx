@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { nutritionHistoryService, NutritionHistoryItem, NutritionAnalysis } from '@/services/nutritionHistoryService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { toast } from 'sonner';
 
 const localeMap: Record<string, typeof es> = {
@@ -29,9 +30,16 @@ interface NutritionHistoryProps {
 const NutritionHistory: React.FC<NutritionHistoryProps> = ({ onSelectAnalysis }) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
   const [historial, setHistorial] = useState<NutritionHistoryItem[]>([]);
+  const [translatedDishNames, setTranslatedDishNames] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<NutritionAnalysis | null>(null);
+  const [translatedDetail, setTranslatedDetail] = useState<{
+    dishName: string;
+    ingredients: string[];
+    recommendations: string[];
+  } | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   
@@ -59,8 +67,57 @@ const NutritionHistory: React.FC<NutritionHistoryProps> = ({ onSelectAnalysis })
     }
   }, [isOpen, user?.id]);
 
+  // Traducir nombres de platos del historial
+  useEffect(() => {
+    const translateDishNames = async () => {
+      if (!needsTranslation || historial.length === 0) {
+        setTranslatedDishNames({});
+        return;
+      }
+      
+      const dishNames = historial.map(item => item.dish_name);
+      const translated = await translateTexts(dishNames);
+      
+      const namesMap: Record<number, string> = {};
+      historial.forEach((item, idx) => {
+        namesMap[item.id] = translated[idx] || item.dish_name;
+      });
+      setTranslatedDishNames(namesMap);
+    };
+    
+    translateDishNames();
+  }, [historial, needsTranslation, i18n.language]);
+
+  // Traducir detalle cuando se selecciona
+  useEffect(() => {
+    const translateDetail = async () => {
+      if (!selectedDetail || !needsTranslation) {
+        setTranslatedDetail(null);
+        return;
+      }
+      
+      const textsToTranslate = [
+        selectedDetail.dish_name,
+        ...selectedDetail.ingredients.map(i => i.name),
+        ...(selectedDetail.recommendations || [])
+      ];
+      
+      const translated = await translateTexts(textsToTranslate);
+      
+      const ingredientCount = selectedDetail.ingredients.length;
+      setTranslatedDetail({
+        dishName: translated[0],
+        ingredients: translated.slice(1, 1 + ingredientCount),
+        recommendations: translated.slice(1 + ingredientCount)
+      });
+    };
+    
+    translateDetail();
+  }, [selectedDetail, needsTranslation, i18n.language]);
+
   const handleViewDetail = async (id: number) => {
     setLoadingDetail(true);
+    setTranslatedDetail(null);
     try {
       const detail = await nutritionHistoryService.obtenerDetalle(id);
       if (detail) {
@@ -154,7 +211,10 @@ const NutritionHistory: React.FC<NutritionHistoryProps> = ({ onSelectAnalysis })
                     {historial.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium max-w-[200px] truncate">
-                          {item.dish_name}
+                          {translatedDishNames[item.id] || item.dish_name}
+                          {isTranslating && needsTranslation && !translatedDishNames[item.id] && (
+                            <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <span className="flex items-center justify-end gap-1">
@@ -196,7 +256,12 @@ const NutritionHistory: React.FC<NutritionHistoryProps> = ({ onSelectAnalysis })
                               </DialogTrigger>
                               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                                 <DialogHeader>
-                                  <DialogTitle>{selectedDetail?.dish_name || item.dish_name}</DialogTitle>
+                                  <DialogTitle>
+                                    {translatedDetail?.dishName || selectedDetail?.dish_name || item.dish_name}
+                                    {isTranslating && needsTranslation && !translatedDetail && (
+                                      <Loader2 className="inline h-4 w-4 ml-2 animate-spin" />
+                                    )}
+                                  </DialogTitle>
                                   <DialogDescription>
                                     {t('nutritionHistory.detailDescription', 'Detalle completo del análisis')}
                                   </DialogDescription>
@@ -243,7 +308,9 @@ const NutritionHistory: React.FC<NutritionHistoryProps> = ({ onSelectAnalysis })
                                           <TableBody>
                                             {selectedDetail.ingredients.map((ing, idx) => (
                                               <TableRow key={idx}>
-                                                <TableCell>{ing.name}</TableCell>
+                                                <TableCell>
+                                                  {translatedDetail?.ingredients[idx] || ing.name}
+                                                </TableCell>
                                                 <TableCell className="text-right">{ing.calories}</TableCell>
                                                 <TableCell className="text-right">{ing.protein}g</TableCell>
                                                 <TableCell className="text-right">{ing.carbs}g</TableCell>
@@ -263,7 +330,7 @@ const NutritionHistory: React.FC<NutritionHistoryProps> = ({ onSelectAnalysis })
                                           {selectedDetail.recommendations.map((rec, idx) => (
                                             <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
                                               <Badge variant="outline" className="shrink-0">{idx + 1}</Badge>
-                                              {rec}
+                                              {translatedDetail?.recommendations[idx] || rec}
                                             </li>
                                           ))}
                                         </ul>
