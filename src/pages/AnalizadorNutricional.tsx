@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
 import { Camera, Upload, Loader2, UtensilsCrossed, Apple, Flame, Dumbbell, Wheat, Droplets, Leaf, Star, AlertCircle, Candy, Heart, Sparkles, Save, ImageIcon } from "lucide-react";
@@ -14,6 +14,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { nutritionHistoryService, NutritionAnalysis } from "@/services/nutritionHistoryService";
 import NutritionHistory from "@/components/NutritionHistory";
 import { useCapacitorCamera } from "@/hooks/useCapacitorCamera";
+import { useTranslateContent } from "@/hooks/useTranslateContent";
+
 interface NutrientInfo {
   name: string;
   quantity: string;
@@ -60,6 +62,51 @@ const AnalizadorNutricional: React.FC = () => {
   
   // Capacitor camera hook for native platforms
   const { takePhoto, pickFromGallery, isNativePlatform, isLoading: isCameraLoading, error: cameraError, clearError } = useCapacitorCamera();
+  
+  // Translation hook for dynamic content
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  
+  // Translated content state
+  const [translatedDishName, setTranslatedDishName] = useState<string>('');
+  const [translatedIngredients, setTranslatedIngredients] = useState<string[]>([]);
+  const [translatedRecommendations, setTranslatedRecommendations] = useState<string[]>([]);
+  
+  // Translate dynamic content when result changes or language changes
+  useEffect(() => {
+    const translateContent = async () => {
+      if (!result) {
+        setTranslatedDishName('');
+        setTranslatedIngredients([]);
+        setTranslatedRecommendations([]);
+        return;
+      }
+      
+      if (!needsTranslation) {
+        // If Spanish, use original content
+        setTranslatedDishName(result.dishName);
+        setTranslatedIngredients(result.ingredients.map(i => i.name));
+        setTranslatedRecommendations(result.recommendations || []);
+        return;
+      }
+      
+      // Collect all texts to translate
+      const textsToTranslate = [
+        result.dishName,
+        ...result.ingredients.map(i => i.name),
+        ...(result.recommendations || [])
+      ];
+      
+      const translated = await translateTexts(textsToTranslate);
+      
+      // Distribute translated texts back
+      let idx = 0;
+      setTranslatedDishName(translated[idx++]);
+      setTranslatedIngredients(result.ingredients.map(() => translated[idx++]));
+      setTranslatedRecommendations((result.recommendations || []).map(() => translated[idx++]));
+    };
+    
+    translateContent();
+  }, [result, i18n.language, needsTranslation, translateTexts]);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -346,7 +393,16 @@ const AnalizadorNutricional: React.FC = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div>
-                    <CardTitle className="text-2xl">{result.dishName}</CardTitle>
+                    <CardTitle className="text-2xl">
+                      {isTranslating ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {result.dishName}
+                        </span>
+                      ) : (
+                        translatedDishName || result.dishName
+                      )}
+                    </CardTitle>
                     <CardDescription>
                       {result.ingredients.length} {t('nutritionAnalyzer.ingredientsDetected', 'ingredientes detectados')}
                     </CardDescription>
@@ -482,7 +538,9 @@ const AnalizadorNutricional: React.FC = () => {
                     <TableBody>
                       {result.ingredients.map((ingredient, index) => (
                         <TableRow key={index}>
-                          <TableCell className="font-medium">{ingredient.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {translatedIngredients[index] || ingredient.name}
+                          </TableCell>
                           <TableCell className="text-right text-muted-foreground">{ingredient.quantity}</TableCell>
                           <TableCell className="text-right">{ingredient.calories}</TableCell>
                           <TableCell className="text-right">{ingredient.protein}g</TableCell>
@@ -530,7 +588,9 @@ const AnalizadorNutricional: React.FC = () => {
                     {result.recommendations.map((rec, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <Badge variant="outline" className="mt-0.5 shrink-0">{index + 1}</Badge>
-                        <span className="text-muted-foreground">{rec}</span>
+                        <span className="text-muted-foreground">
+                          {translatedRecommendations[index] || rec}
+                        </span>
                       </li>
                     ))}
                   </ul>
