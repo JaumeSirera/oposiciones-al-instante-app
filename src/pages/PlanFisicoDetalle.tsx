@@ -88,6 +88,8 @@ export default function PlanFisicoDetalle() {
   // Estados para traducciones
   const [translatedResumen, setTranslatedResumen] = useState<string | null>(null);
   const [translatedPlanIA, setTranslatedPlanIA] = useState<Semana[]>([]);
+  const [translatedPlanTitle, setTranslatedPlanTitle] = useState<string>('');
+  const [translatedPlanDescription, setTranslatedPlanDescription] = useState<string>('');
 
   useEffect(() => {
     if (id && user) {
@@ -101,7 +103,20 @@ export default function PlanFisicoDetalle() {
       if (!needsTranslation) {
         setTranslatedResumen(resumenIA);
         setTranslatedPlanIA(planIA);
+        setTranslatedPlanTitle(plan?.titulo || '');
+        setTranslatedPlanDescription(plan?.descripcion || '');
         return;
+      }
+
+      // Traducir título y descripción del plan principal
+      if (plan?.titulo || plan?.descripcion) {
+        const textsToTranslate = [plan.titulo || '', plan.descripcion || ''].filter(Boolean);
+        const translated = await translateTexts(textsToTranslate);
+        if (plan.titulo) setTranslatedPlanTitle(translated[0] || plan.titulo);
+        if (plan.descripcion) {
+          const descIdx = plan.titulo ? 1 : 0;
+          setTranslatedPlanDescription(translated[descIdx] || plan.descripcion);
+        }
       }
 
       // Traducir resumen
@@ -205,7 +220,7 @@ export default function PlanFisicoDetalle() {
     };
 
     translateContent();
-  }, [planIA, resumenIA, i18n.language, needsTranslation, translateTexts]);
+  }, [planIA, resumenIA, plan, i18n.language, needsTranslation, translateTexts]);
 
   const fetchPlan = async () => {
     if (!id || !user?.id) return;
@@ -483,13 +498,18 @@ export default function PlanFisicoDetalle() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-2xl">{plan.titulo}</CardTitle>
+          <CardTitle className="text-2xl">
+            {translatedPlanTitle || plan.titulo}
+            {isTranslating && needsTranslation && !translatedPlanTitle && (
+              <Loader2 className="inline h-5 w-5 ml-2 animate-spin" />
+            )}
+          </CardTitle>
           <p className="text-muted-foreground">{plan.tipo_prueba}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <h3 className="font-semibold mb-1">{t('physicalPlans.detail.description')}</h3>
-            <p className="text-muted-foreground">{plan.descripcion || '-'}</p>
+            <p className="text-muted-foreground">{translatedPlanDescription || plan.descripcion || '-'}</p>
           </div>
 
           <Separator />
