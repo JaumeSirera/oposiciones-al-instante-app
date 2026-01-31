@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabaseClient';
 import { authService } from '@/services/authService';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -82,27 +83,151 @@ interface Props {
 
 const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'] as const;
 
-const DIAS_LABELS: Record<string, string> = {
-  lunes: 'Lunes',
-  martes: 'Martes',
-  miercoles: 'Miércoles',
-  jueves: 'Jueves',
-  viernes: 'Viernes',
-  sabado: 'Sábado',
-  domingo: 'Domingo'
-};
-
 export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSemana }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  
   const [plan, setPlan] = useState<PlanNutricional | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>('lunes');
 
+  // Estados para contenido traducido
+  const [translatedObjetivo, setTranslatedObjetivo] = useState<string>('');
+  const [translatedPlanSemanal, setTranslatedPlanSemanal] = useState<PlanSemanal | null>(null);
+  const [translatedRecomendaciones, setTranslatedRecomendaciones] = useState<Recomendaciones | null>(null);
+
+  // Días traducidos
+  const DIAS_LABELS: Record<string, string> = {
+    lunes: t('nutritionPlan.days.monday', 'Lunes'),
+    martes: t('nutritionPlan.days.tuesday', 'Martes'),
+    miercoles: t('nutritionPlan.days.wednesday', 'Miércoles'),
+    jueves: t('nutritionPlan.days.thursday', 'Jueves'),
+    viernes: t('nutritionPlan.days.friday', 'Viernes'),
+    sabado: t('nutritionPlan.days.saturday', 'Sábado'),
+    domingo: t('nutritionPlan.days.sunday', 'Domingo')
+  };
+
   useEffect(() => {
     fetchPlan();
   }, [planFisicoId]);
+
+  // Efecto para traducir el plan nutricional
+  useEffect(() => {
+    const translatePlan = async () => {
+      if (!plan) return;
+
+      if (!needsTranslation) {
+        setTranslatedObjetivo(plan.objetivo);
+        setTranslatedPlanSemanal(plan.plan_semanal);
+        setTranslatedRecomendaciones(plan.recomendaciones);
+        return;
+      }
+
+      // Recopilar todos los textos a traducir
+      const textsToTranslate: string[] = [];
+      const textMapping: { type: string; dia?: string; meal?: string; idx?: number; field?: string }[] = [];
+
+      // Objetivo
+      if (plan.objetivo) {
+        textsToTranslate.push(plan.objetivo);
+        textMapping.push({ type: 'objetivo' });
+      }
+
+      // Plan semanal - platos e ingredientes
+      DIAS_SEMANA.forEach((dia) => {
+        const diaData = plan.plan_semanal[dia as keyof PlanSemanal];
+        if (!diaData) return;
+
+        // Desayuno
+        if (diaData.desayuno) {
+          textsToTranslate.push(diaData.desayuno.plato);
+          textMapping.push({ type: 'plato', dia, meal: 'desayuno' });
+          textsToTranslate.push(diaData.desayuno.ingredientes.join(', '));
+          textMapping.push({ type: 'ingredientes', dia, meal: 'desayuno' });
+        }
+        // Almuerzo
+        if (diaData.almuerzo) {
+          textsToTranslate.push(diaData.almuerzo.plato);
+          textMapping.push({ type: 'plato', dia, meal: 'almuerzo' });
+          textsToTranslate.push(diaData.almuerzo.ingredientes.join(', '));
+          textMapping.push({ type: 'ingredientes', dia, meal: 'almuerzo' });
+        }
+        // Cena
+        if (diaData.cena) {
+          textsToTranslate.push(diaData.cena.plato);
+          textMapping.push({ type: 'plato', dia, meal: 'cena' });
+          textsToTranslate.push(diaData.cena.ingredientes.join(', '));
+          textMapping.push({ type: 'ingredientes', dia, meal: 'cena' });
+        }
+        // Snacks
+        diaData.snacks?.forEach((snack, idx) => {
+          textsToTranslate.push(snack.plato);
+          textMapping.push({ type: 'snack_plato', dia, idx });
+          textsToTranslate.push(snack.ingredientes.join(', '));
+          textMapping.push({ type: 'snack_ingredientes', dia, idx });
+        });
+      });
+
+      // Recomendaciones
+      const recKeys: (keyof Recomendaciones)[] = [
+        'pre_entreno', 'post_entreno', 'hidratacion', 'suplementos',
+        'timing_comidas', 'alimentos_recomendados', 'alimentos_evitar'
+      ];
+      recKeys.forEach((key) => {
+        plan.recomendaciones[key]?.forEach((rec, idx) => {
+          textsToTranslate.push(rec);
+          textMapping.push({ type: 'recomendacion', field: key, idx });
+        });
+      });
+
+      // Traducir todo
+      const translated = await translateTexts(textsToTranslate);
+
+      // Reconstruir plan traducido
+      let tIdx = 0;
+      let newObjetivo = plan.objetivo;
+
+      // Clonar plan semanal
+      const newPlanSemanal: any = {};
+      DIAS_SEMANA.forEach((dia) => {
+        const orig = plan.plan_semanal[dia as keyof PlanSemanal];
+        if (orig) {
+          newPlanSemanal[dia] = JSON.parse(JSON.stringify(orig));
+        }
+      });
+
+      // Clonar recomendaciones
+      const newRecomendaciones: any = JSON.parse(JSON.stringify(plan.recomendaciones));
+
+      // Aplicar traducciones
+      textMapping.forEach((map, i) => {
+        const tr = translated[i];
+        if (!tr) return;
+
+        if (map.type === 'objetivo') {
+          newObjetivo = tr;
+        } else if (map.type === 'plato' && map.dia && map.meal) {
+          newPlanSemanal[map.dia][map.meal].plato = tr;
+        } else if (map.type === 'ingredientes' && map.dia && map.meal) {
+          newPlanSemanal[map.dia][map.meal].ingredientes = tr.split(', ');
+        } else if (map.type === 'snack_plato' && map.dia !== undefined && map.idx !== undefined) {
+          newPlanSemanal[map.dia].snacks[map.idx].plato = tr;
+        } else if (map.type === 'snack_ingredientes' && map.dia !== undefined && map.idx !== undefined) {
+          newPlanSemanal[map.dia].snacks[map.idx].ingredientes = tr.split(', ');
+        } else if (map.type === 'recomendacion' && map.field && map.idx !== undefined) {
+          newRecomendaciones[map.field][map.idx] = tr;
+        }
+      });
+
+      setTranslatedObjetivo(newObjetivo);
+      setTranslatedPlanSemanal(newPlanSemanal as PlanSemanal);
+      setTranslatedRecomendaciones(newRecomendaciones as Recomendaciones);
+    };
+
+    translatePlan();
+  }, [plan, i18n.language, needsTranslation, translateTexts]);
 
   const fetchPlan = async () => {
     setLoading(true);
@@ -200,7 +325,12 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
             {icon}
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold">{comida.plato}</h4>
+            <h4 className="font-semibold flex items-center gap-2">
+              {comida.plato}
+              {isTranslating && needsTranslation && (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              )}
+            </h4>
             <div className="flex flex-wrap gap-2 mt-2">
               <Badge variant="outline">{comida.calorias} kcal</Badge>
               <Badge variant="secondary" className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
@@ -273,7 +403,12 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
     );
   }
 
-  const totalDiario = plan.plan_semanal[selectedDay as keyof PlanSemanal];
+  // Usar datos traducidos si están disponibles
+  const displayPlanSemanal = translatedPlanSemanal || plan.plan_semanal;
+  const displayRecomendaciones = translatedRecomendaciones || plan.recomendaciones;
+  const displayObjetivo = translatedObjetivo || plan.objetivo;
+
+  const totalDiario = displayPlanSemanal[selectedDay as keyof PlanSemanal];
   const calDia = totalDiario 
     ? totalDiario.desayuno.calorias + totalDiario.almuerzo.calorias + totalDiario.cena.calorias + 
       (totalDiario.snacks?.reduce((acc, s) => acc + s.calorias, 0) || 0)
@@ -289,8 +424,11 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
               <CardTitle className="flex items-center gap-2">
                 <Apple className="h-5 w-5" />
                 {t('nutritionPlan.title')}
+                {isTranslating && needsTranslation && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
               </CardTitle>
-              <CardDescription>{plan.objetivo}</CardDescription>
+              <CardDescription>{displayObjetivo}</CardDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleGenerar} disabled={generating}>
@@ -362,8 +500,8 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
           </Card>
 
           {/* Comidas del día */}
-          {plan.plan_semanal[selectedDay as keyof PlanSemanal] && (
-            renderDia(plan.plan_semanal[selectedDay as keyof PlanSemanal])
+          {displayPlanSemanal[selectedDay as keyof PlanSemanal] && (
+            renderDia(displayPlanSemanal[selectedDay as keyof PlanSemanal])
           )}
         </TabsContent>
 
@@ -378,7 +516,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
               </AccordionTrigger>
               <AccordionContent>
                 <ul className="space-y-2">
-                  {plan.recomendaciones.pre_entreno?.map((rec, idx) => (
+                  {displayRecomendaciones.pre_entreno?.map((rec, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{rec}</span>
@@ -397,7 +535,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
               </AccordionTrigger>
               <AccordionContent>
                 <ul className="space-y-2">
-                  {plan.recomendaciones.post_entreno?.map((rec, idx) => (
+                  {displayRecomendaciones.post_entreno?.map((rec, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{rec}</span>
@@ -416,7 +554,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
               </AccordionTrigger>
               <AccordionContent>
                 <ul className="space-y-2">
-                  {plan.recomendaciones.hidratacion?.map((rec, idx) => (
+                  {displayRecomendaciones.hidratacion?.map((rec, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{rec}</span>
@@ -435,7 +573,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
               </AccordionTrigger>
               <AccordionContent>
                 <ul className="space-y-2">
-                  {plan.recomendaciones.suplementos?.map((rec, idx) => (
+                  {displayRecomendaciones.suplementos?.map((rec, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-purple-500 mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{rec}</span>
@@ -454,7 +592,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
               </AccordionTrigger>
               <AccordionContent>
                 <ul className="space-y-2">
-                  {plan.recomendaciones.timing_comidas?.map((rec, idx) => (
+                  {displayRecomendaciones.timing_comidas?.map((rec, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{rec}</span>
@@ -476,7 +614,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
                   <div>
                     <h4 className="font-semibold mb-2 text-green-600">{t('nutritionPlan.recommended')}</h4>
                     <ul className="space-y-1">
-                      {plan.recomendaciones.alimentos_recomendados?.map((alimento, idx) => (
+                      {displayRecomendaciones.alimentos_recomendados?.map((alimento, idx) => (
                         <li key={idx} className="flex items-center gap-2 text-sm">
                           <CheckCircle className="h-3 w-3 text-green-500" />
                           {alimento}
@@ -487,7 +625,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
                   <div>
                     <h4 className="font-semibold mb-2 text-red-600">{t('nutritionPlan.avoid')}</h4>
                     <ul className="space-y-1">
-                      {plan.recomendaciones.alimentos_evitar?.map((alimento, idx) => (
+                      {displayRecomendaciones.alimentos_evitar?.map((alimento, idx) => (
                         <li key={idx} className="flex items-center gap-2 text-sm">
                           <XCircle className="h-3 w-3 text-red-500" />
                           {alimento}

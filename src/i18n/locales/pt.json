@@ -1530,5 +1530,43 @@
     "total": "TOTAL",
     "recommendations": "Recomendações",
     "macroDistribution": "Distribuição de macros"
+  },
+  "nutritionPlan": {
+    "title": "Plano Nutricional",
+    "noPlan": "Sem plano nutricional",
+    "noPlanDescription": "Gere um plano nutricional personalizado adaptado ao seu treino {{type}}",
+    "generateWithAI": "Gerar com IA",
+    "generating": "Gerando...",
+    "generated": "Plano nutricional gerado!",
+    "generateError": "Erro ao gerar o plano",
+    "save": "Salvar",
+    "saved": "Plano salvo com sucesso",
+    "saveError": "Erro ao salvar",
+    "regenerate": "Regenerar",
+    "weeklyPlan": "Plano Semanal",
+    "recommendations": "Recomendações",
+    "dailyProgress": "Progresso do dia",
+    "kcalDay": "kcal/dia",
+    "protein": "Proteínas",
+    "carbs": "Carboidratos",
+    "fats": "Gorduras",
+    "ingredients": "Ingredientes",
+    "preWorkout": "Pré-Treino",
+    "postWorkout": "Pós-Treino",
+    "hydration": "Hidratação",
+    "supplements": "Suplementos",
+    "mealTiming": "Horário das Refeições",
+    "foodGuide": "Guia Alimentar",
+    "recommended": "Recomendados",
+    "avoid": "Evitar",
+    "days": {
+      "monday": "Segunda",
+      "tuesday": "Terça",
+      "wednesday": "Quarta",
+      "thursday": "Quinta",
+      "friday": "Sexta",
+      "saturday": "Sábado",
+      "sunday": "Domingo"
+    }
   }
 }
