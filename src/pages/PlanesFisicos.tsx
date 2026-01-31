@@ -10,12 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { Calendar as CalendarIcon, Dumbbell, Pencil, Trash2, Plus, Sparkles, User } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { Calendar as CalendarIcon, Dumbbell, Pencil, Trash2, Plus, Sparkles, User, Loader2 } from 'lucide-react';
+import { format, Locale } from 'date-fns';
+import { es, enUS, fr, de, pt } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 
 interface PlanFisico {
   id: number;
@@ -30,8 +31,13 @@ interface PlanFisico {
   usuario_email?: string;
 }
 
+interface TranslatedPlan {
+  titulo: string;
+  descripcion: string;
+}
+
 export default function PlanesFisicos() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [planes, setPlanes] = useState<PlanFisico[]>([]);
@@ -41,6 +47,10 @@ export default function PlanesFisicos() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // Traducción dinámica
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const [translatedPlans, setTranslatedPlans] = useState<Map<number, TranslatedPlan>>(new Map());
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -57,11 +67,46 @@ export default function PlanesFisicos() {
     fecha_fin: '',
   });
 
+  const dateLocales: Record<string, Locale> = { es, en: enUS, fr, de, pt };
+  const currentLocale = dateLocales[i18n.language] || es;
+
   useEffect(() => {
     if (user) {
       fetchPlanes();
     }
   }, [user]);
+
+  // Traducir planes cuando cambie el idioma o la lista
+  useEffect(() => {
+    const translatePlans = async () => {
+      if (!needsTranslation || planes.length === 0) {
+        // Resetear traducciones si no hace falta traducir
+        setTranslatedPlans(new Map());
+        return;
+      }
+
+      // Recoger todos los textos a traducir
+      const textsToTranslate: string[] = [];
+      planes.forEach((plan) => {
+        textsToTranslate.push(plan.titulo || '');
+        textsToTranslate.push(plan.descripcion || '');
+      });
+
+      const translated = await translateTexts(textsToTranslate);
+
+      // Mapear resultados
+      const newMap = new Map<number, TranslatedPlan>();
+      planes.forEach((plan, idx) => {
+        newMap.set(plan.id, {
+          titulo: translated[idx * 2] || plan.titulo,
+          descripcion: translated[idx * 2 + 1] || plan.descripcion,
+        });
+      });
+      setTranslatedPlans(newMap);
+    };
+
+    translatePlans();
+  }, [planes, i18n.language, needsTranslation, translateTexts]);
 
   const isSA = user?.nivel === 'SA';
 
@@ -240,7 +285,15 @@ export default function PlanesFisicos() {
   };
 
   const formatFecha = (fecha: string) => {
-    return format(new Date(fecha), 'dd/MM/yyyy', { locale: es });
+    return format(new Date(fecha), 'dd/MM/yyyy', { locale: currentLocale });
+  };
+
+  const getTranslatedPlan = (plan: PlanFisico) => {
+    const t = translatedPlans.get(plan.id);
+    return {
+      titulo: t?.titulo || plan.titulo,
+      descripcion: t?.descripcion || plan.descripcion,
+    };
   };
 
   if (loading) {
@@ -299,7 +352,12 @@ export default function PlanesFisicos() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{plan.titulo}</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      {getTranslatedPlan(plan).titulo}
+                      {isTranslating && needsTranslation && !translatedPlans.has(plan.id) && (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      )}
+                    </CardTitle>
                     <CardDescription>{plan.tipo_prueba}</CardDescription>
                     {isSA && plan.usuario_nombre && (
                       <div className="flex items-center gap-1 text-xs text-primary mt-2">
@@ -339,7 +397,7 @@ export default function PlanesFisicos() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {plan.descripcion || '-'}
+                  {getTranslatedPlan(plan).descripcion || '-'}
                 </p>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                   <CalendarIcon className="h-4 w-4" />
