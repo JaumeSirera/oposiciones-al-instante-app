@@ -1,0 +1,191 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import {
+  Clock,
+  Users,
+  ChefHat,
+  Loader2,
+  CheckCircle,
+  Lightbulb,
+  UtensilsCrossed
+} from 'lucide-react';
+
+interface Ingrediente {
+  cantidad: string;
+  ingrediente: string;
+}
+
+interface Receta {
+  nombre: string;
+  descripcion: string;
+  tiempo_preparacion: string;
+  tiempo_coccion: string;
+  porciones: number;
+  dificultad: string;
+  ingredientes: Ingrediente[];
+  instrucciones: string[];
+  consejos: string[];
+  imagen_url?: string;
+}
+
+interface RecipeModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  receta: Receta | null;
+  loading: boolean;
+  platoNombre: string;
+}
+
+export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }: RecipeModalProps) {
+  const { t } = useTranslation();
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const getDifficultyColor = (dificultad: string) => {
+    const lower = dificultad.toLowerCase();
+    if (lower.includes('fácil') || lower.includes('easy') || lower.includes('baja')) {
+      return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+    }
+    if (lower.includes('difícil') || lower.includes('hard') || lower.includes('alta')) {
+      return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+    }
+    return 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300';
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-12 gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-lg font-medium">{t('recipe.generating', 'Generando receta...')}</p>
+            <p className="text-sm text-muted-foreground">{platoNombre}</p>
+          </div>
+        ) : receta ? (
+          <>
+            {/* Imagen del plato */}
+            {receta.imagen_url && !imageError && (
+              <div className="relative w-full h-48 md:h-64 bg-muted">
+                {!imageLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                <img
+                  src={receta.imagen_url}
+                  alt={receta.nombre}
+                  className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageError(true)}
+                />
+              </div>
+            )}
+
+            <ScrollArea className="max-h-[calc(90vh-16rem)]">
+              <div className="p-6 space-y-6">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl flex items-center gap-2">
+                    <UtensilsCrossed className="h-6 w-6 text-primary" />
+                    {receta.nombre}
+                  </DialogTitle>
+                  <p className="text-muted-foreground">{receta.descripcion}</p>
+                </DialogHeader>
+
+                {/* Información rápida */}
+                <div className="flex flex-wrap gap-3">
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {t('recipe.prep', 'Prep')}: {receta.tiempo_preparacion}
+                  </Badge>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {t('recipe.cook', 'Cocción')}: {receta.tiempo_coccion}
+                  </Badge>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {receta.porciones} {t('recipe.servings', 'porciones')}
+                  </Badge>
+                  <Badge className={getDifficultyColor(receta.dificultad)}>
+                    <ChefHat className="h-3 w-3 mr-1" />
+                    {receta.dificultad}
+                  </Badge>
+                </div>
+
+                <Separator />
+
+                {/* Ingredientes */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    🥗 {t('recipe.ingredients', 'Ingredientes')}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {receta.ingredientes.map((ing, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                        <span className="font-medium text-primary">{ing.cantidad}</span>
+                        <span>{ing.ingrediente}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Instrucciones */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    📝 {t('recipe.instructions', 'Instrucciones')}
+                  </h3>
+                  <ol className="space-y-3">
+                    {receta.instrucciones.map((paso, idx) => (
+                      <li key={idx} className="flex gap-3">
+                        <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                          {idx + 1}
+                        </span>
+                        <p className="pt-0.5">{paso.replace(/^Paso \d+:\s*/i, '')}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Consejos */}
+                {receta.consejos && receta.consejos.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5 text-amber-500" />
+                        {t('recipe.tips', 'Consejos del Chef')}
+                      </h3>
+                      <ul className="space-y-2">
+                        {receta.consejos.map((consejo, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">{consejo}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
+              </div>
+            </ScrollArea>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-12 gap-4">
+            <UtensilsCrossed className="h-12 w-12 text-muted-foreground" />
+            <p className="text-lg font-medium">{t('recipe.noRecipe', 'No se pudo cargar la receta')}</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

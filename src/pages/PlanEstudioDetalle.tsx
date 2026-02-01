@@ -12,8 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, BookOpen, Target, PlayCircle, Brain, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Calendar, BookOpen, Target, PlayCircle, Brain, Loader2, AlertTriangle, RefreshCw, Apple } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { NutritionPlanStudyTab } from "@/components/NutritionPlanStudyTab";
 
 interface ActividadDia {
   dia: number;
@@ -599,7 +600,7 @@ export default function PlanEstudioDetalle() {
                 {t('common.translatingContent')}
               </div>
             )}
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="plan-ia">
                 <Brain className="mr-2 h-4 w-4" />
                 {t('studyPlans.aiWeeklyPlan')}
@@ -607,6 +608,10 @@ export default function PlanEstudioDetalle() {
               <TabsTrigger value="etapas">
                 <BookOpen className="mr-2 h-4 w-4" />
                 {t('studyPlans.manualStages')}
+              </TabsTrigger>
+              <TabsTrigger value="nutricion">
+                <Apple className="mr-2 h-4 w-4" />
+                {t('studyPlans.nutritionPlan', 'Nutrición')}
               </TabsTrigger>
             </TabsList>
 
@@ -860,6 +865,15 @@ export default function PlanEstudioDetalle() {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            {/* Pestaña de Plan Nutricional para Estudio */}
+            <TabsContent value="nutricion">
+              <NutritionPlanStudyTab
+                planEstudioId={parseInt(id || '0')}
+                tipoOposicion={plan?.titulo || 'Oposiciones'}
+                horasEstudioDiarias={6}
+              />
             </TabsContent>
           </Tabs>
         ) : etapas.length === 0 ? (

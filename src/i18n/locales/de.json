@@ -1568,5 +1568,24 @@
       "saturday": "Samstag",
       "sunday": "Sonntag"
     }
+  },
+  "nutritionPlanStudy": {
+    "title": "Ernährungsplan fürs Lernen",
+    "description": "Optimierte Ernährung für maximale geistige Leistung, Konzentration und Gedächtnis",
+    "noPlan": "Sie haben keinen Ernährungsplan für diesen Studienplan erstellt",
+    "generate": "Ernährungsplan Erstellen",
+    "generating": "Generierung...",
+    "generated": "Ernährungsplan für Studium erstellt!",
+    "errorGenerating": "Fehler beim Generieren des Plans",
+    "beforeStudy": "Vor dem Lernen",
+    "duringStudy": "Während des Lernens",
+    "breaks": "Pausen",
+    "cognitiveSupplements": "Kognitive Ergänzungen",
+    "brainFoods": "Gehirnnahrung",
+    "optimalSchedule": "Optimaler Zeitplan",
+    "brainTips": "Gehirn-Tipps"
+  },
+  "studyPlans": {
+    "nutritionPlan": "Ernährung"
   }
 }

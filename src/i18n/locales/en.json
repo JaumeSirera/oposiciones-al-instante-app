@@ -1680,5 +1680,24 @@
       "saturday": "Saturday",
       "sunday": "Sunday"
     }
+  },
+  "nutritionPlanStudy": {
+    "title": "Nutrition Plan for Studying",
+    "description": "Optimized nutrition for maximum mental performance, concentration and memory",
+    "noPlan": "You don't have a nutrition plan generated for this study plan",
+    "generate": "Generate Nutrition Plan",
+    "generating": "Generating...",
+    "generated": "Study nutrition plan generated!",
+    "errorGenerating": "Error generating nutrition plan",
+    "beforeStudy": "Before Studying",
+    "duringStudy": "During Study",
+    "breaks": "Breaks",
+    "cognitiveSupplements": "Cognitive Supplements",
+    "brainFoods": "Brain Foods",
+    "optimalSchedule": "Optimal Schedule",
+    "brainTips": "Brain Tips"
+  },
+  "studyPlans": {
+    "nutritionPlan": "Nutrition"
   }
 }
