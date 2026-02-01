@@ -1568,5 +1568,24 @@
       "saturday": "Samedi",
       "sunday": "Dimanche"
     }
+  },
+  "nutritionPlanStudy": {
+    "title": "Plan Nutritionnel pour les Études",
+    "description": "Alimentation optimisée pour performance mentale maximale, concentration et mémoire",
+    "noPlan": "Vous n'avez pas de plan nutritionnel généré pour ce plan d'études",
+    "generate": "Générer Plan Nutritionnel",
+    "generating": "Génération...",
+    "generated": "Plan nutritionnel pour études généré !",
+    "errorGenerating": "Erreur lors de la génération du plan",
+    "beforeStudy": "Avant d'Étudier",
+    "duringStudy": "Pendant l'Étude",
+    "breaks": "Pauses",
+    "cognitiveSupplements": "Suppléments Cognitifs",
+    "brainFoods": "Aliments pour le Cerveau",
+    "optimalSchedule": "Horaires Optimaux",
+    "brainTips": "Conseils Cerveau"
+  },
+  "studyPlans": {
+    "nutritionPlan": "Nutrition"
   }
 }
