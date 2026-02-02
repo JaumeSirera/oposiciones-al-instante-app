@@ -592,29 +592,32 @@ export default function PlanEstudioDetalle() {
           </CardContent>
         </Card>
 
-        {planIA && planIA.length > 0 ? (
-          <Tabs defaultValue="plan-ia" className="w-full">
-            {isTranslating && needsTranslation && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t('common.translatingContent')}
-              </div>
-            )}
-            <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue={planIA && planIA.length > 0 ? "plan-ia" : "etapas"} className="w-full">
+          {isTranslating && needsTranslation && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 p-2 bg-muted rounded">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {t('common.translatingContent')}
+            </div>
+          )}
+          <TabsList className={`grid w-full ${planIA && planIA.length > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            {planIA && planIA.length > 0 && (
               <TabsTrigger value="plan-ia">
                 <Brain className="mr-2 h-4 w-4" />
                 {t('studyPlans.aiWeeklyPlan')}
               </TabsTrigger>
-              <TabsTrigger value="etapas">
-                <BookOpen className="mr-2 h-4 w-4" />
-                {t('studyPlans.manualStages')}
-              </TabsTrigger>
-              <TabsTrigger value="nutricion">
-                <Apple className="mr-2 h-4 w-4" />
-                {t('studyPlans.nutritionPlan', 'Nutrición')}
-              </TabsTrigger>
-            </TabsList>
+            )}
+            <TabsTrigger value="etapas">
+              <BookOpen className="mr-2 h-4 w-4" />
+              {t('studyPlans.stages', 'Etapas')}
+            </TabsTrigger>
+            <TabsTrigger value="nutricion">
+              <Apple className="mr-2 h-4 w-4" />
+              {t('studyPlans.nutritionPlan', 'Nutrición')}
+            </TabsTrigger>
+          </TabsList>
 
+          {/* Plan IA Tab - Solo si hay plan IA */}
+          {planIA && planIA.length > 0 && (
             <TabsContent value="plan-ia">
               <Card>
                 <CardHeader>
@@ -626,7 +629,6 @@ export default function PlanEstudioDetalle() {
                 <CardContent>
                   <Accordion type="single" collapsible className="w-full" onValueChange={handleWeekAccordionChange}>
                     {planIA && Array.isArray(planIA) && planIA.map((semanaOriginal, index) => {
-                      // Usar semana traducida si existe, sino original
                       const semana = (needsTranslation && translatedWeeks[index]) ? translatedWeeks[index] : semanaOriginal;
                       const isTranslatingThisWeek = translatingWeek === index;
                       
@@ -657,7 +659,6 @@ export default function PlanEstudioDetalle() {
                         </AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-6 pt-2">
-                            {/* Temas de la semana */}
                             {semana.temas_semana && Array.isArray(semana.temas_semana) && semana.temas_semana.length > 0 && (
                               <div>
                                 <h4 className="font-semibold text-sm mb-3">{t('studyPlans.weekTopics')}</h4>
@@ -688,7 +689,6 @@ export default function PlanEstudioDetalle() {
                               </div>
                             )}
 
-                            {/* Objetivos */}
                             {semana.objetivos && Array.isArray(semana.objetivos) && semana.objetivos.length > 0 && (
                               <div>
                                 <h4 className="font-semibold text-sm mb-3">{t('studyPlans.objectives')}</h4>
@@ -703,7 +703,6 @@ export default function PlanEstudioDetalle() {
                               </div>
                             )}
 
-                            {/* Actividades diarias */}
                             {semana.actividades && Array.isArray(semana.actividades) && semana.actividades.length > 0 && (
                               <div>
                                 <h4 className="font-semibold text-sm mb-3">{t('studyPlans.dailyActivities')}</h4>
@@ -749,204 +748,77 @@ export default function PlanEstudioDetalle() {
                 </CardContent>
               </Card>
             </TabsContent>
+          )}
 
-            <TabsContent value="etapas">
-              {etapas.length === 0 ? (
+          {/* Etapas Tab */}
+          <TabsContent value="etapas">
+            {etapas.length === 0 ? (
               <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      {t('studyPlans.noManualStages')}
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('studyPlans.planStages')}</CardTitle>
-                    <CardDescription>
-                      {t('studyPlans.autoGeneratedTasks')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
-                      {etapas.map((etapaOriginal) => {
-                        // Usar etapa traducida si existe, sino usar pre-traducción para título/descripción
-                        const etapaIdStr = String(etapaOriginal.id);
-                        const fullTranslated = translatedEtapasMap[etapaIdStr];
-                        const preTranslated = preTranslatedEtapas[etapaIdStr];
-                        
-                        // Para el título y descripción: usar fullTranslated > preTranslated > original
-                        const displayTitulo = needsTranslation 
-                          ? (fullTranslated?.titulo || preTranslated?.titulo || etapaOriginal.titulo)
-                          : etapaOriginal.titulo;
-                        const displayDescripcion = needsTranslation 
-                          ? (fullTranslated?.descripcion || preTranslated?.descripcion || etapaOriginal.descripcion)
-                          : etapaOriginal.descripcion;
-                        
-                        // Para las tareas: usar fullTranslated si existe, sino original
-                        const etapa = fullTranslated || etapaOriginal;
-                        
-                        const isTranslatingThisEtapa = String(translatingEtapa) === etapaIdStr;
-                        const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
-                          ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
-                          : 0;
-                        const tareasCompletadas = etapaOriginal.tareas ? etapaOriginal.tareas.filter((t: any) => t.completada === 1).length : 0;
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    {t('studyPlans.noManualStages', 'No hay etapas definidas')}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('studyPlans.planStages')}</CardTitle>
+                  <CardDescription>
+                    {t('studyPlans.followProgress')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
+                    {etapas.map((etapaOriginal) => {
+                      const etapaIdStr = String(etapaOriginal.id);
+                      const fullTranslated = translatedEtapasMap[etapaIdStr];
+                      const preTranslated = preTranslatedEtapas[etapaIdStr];
+                      
+                      const displayTitulo = needsTranslation 
+                        ? (fullTranslated?.titulo || preTranslated?.titulo || etapaOriginal.titulo)
+                        : etapaOriginal.titulo;
+                      const displayDescripcion = needsTranslation 
+                        ? (fullTranslated?.descripcion || preTranslated?.descripcion || etapaOriginal.descripcion)
+                        : etapaOriginal.descripcion;
+                      
+                      const etapa = fullTranslated || etapaOriginal;
+                      
+                      const isTranslatingThisEtapa = String(translatingEtapa) === etapaIdStr;
+                      const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
+                        ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
+                        : 0;
+                      const tareasCompletadas = etapaOriginal.tareas ? etapaOriginal.tareas.filter((t: any) => t.completada === 1).length : 0;
 
-                        return (
-                          <AccordionItem key={etapaOriginal.id} value={`etapa-${etapaOriginal.id}`}>
-                            <AccordionTrigger>
-                              <div className="flex items-center justify-between w-full pr-4">
-                                <div className="text-left">
-                                  <p className="font-medium">
-                                    {isPreTranslatingEtapas && needsTranslation ? (
-                                      <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
-                                    ) : null}
-                                    {displayTitulo}
-                                    {isTranslatingThisEtapa && (
-                                      <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
-                                    )}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {displayDescripcion?.length > 100 ? displayDescripcion.substring(0, 100) + '...' : displayDescripcion}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm text-muted-foreground">
-                                    {tareasCompletadas}/{etapaOriginal.tareas ? etapaOriginal.tareas.length : 0}
-                                  </span>
-                                  <Progress value={progresoEtapa} className="w-20" />
-                                </div>
+                      return (
+                        <AccordionItem key={etapaOriginal.id} value={`etapa-${etapaOriginal.id}`}>
+                          <AccordionTrigger>
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <div className="text-left flex-1">
+                                <p className="font-semibold text-base">
+                                  {isPreTranslatingEtapas && needsTranslation ? (
+                                    <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
+                                  ) : null}
+                                  {displayTitulo}
+                                  {isTranslatingThisEtapa && (
+                                    <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
+                                  )}
+                                </p>
+                                <p className="text-sm text-muted-foreground mt-0.5">
+                                  {tareasCompletadas}/{etapaOriginal.tareas ? etapaOriginal.tareas.length : 0} {t('studyPlans.tasksCompleted')}
+                                </p>
                               </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="space-y-3 pt-2">
-                                {etapa.tareas && Array.isArray(etapa.tareas) && etapa.tareas.map((tarea: any, tareaIdx: number) => {
-                                  const tareaOriginal = etapaOriginal.tareas[tareaIdx];
-                                  return (
-                                  <div
-                                    key={tareaOriginal.id}
-                                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
-                                    onClick={() => handleClickTarea(tareaOriginal, etapaOriginal)}
-                                  >
-                                    <Checkbox
-                                      checked={tareaOriginal.completada === 1}
-                                      onCheckedChange={(checked) => {
-                                        checked && handleMarcarTarea(tareaOriginal.id, checked as boolean);
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="mt-1"
-                                    />
-                                    <div className="flex-1">
-                                      <p className={`font-medium ${tareaOriginal.completada === 1 ? "line-through text-muted-foreground" : ""}`}>
-                                        {tarea.titulo}
-                                      </p>
-                                      <p className="text-sm text-muted-foreground mt-1">
-                                        {tarea.descripcion}
-                                      </p>
-                                      {(tareaOriginal.titulo.toLowerCase().includes('test') || 
-                                        tareaOriginal.titulo.toLowerCase().includes('examen') || 
-                                        tareaOriginal.titulo.toLowerCase().includes('psicotécnico')) && (
-                                        <Badge variant="outline" className="mt-2">
-                                          <PlayCircle className="mr-1 h-3 w-3" />
-                                          {t('studyPlans.clickToTake')}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                  );
-                                })}
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-sm font-medium">
+                                  {progresoEtapa.toFixed(0)}%
+                                </span>
+                                <Progress value={progresoEtapa} className="w-24 h-2" />
                               </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        );
-                      })}
-                    </Accordion>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            {/* Pestaña de Plan Nutricional para Estudio */}
-            <TabsContent value="nutricion">
-              <NutritionPlanStudyTab
-                planEstudioId={parseInt(id || '0')}
-                tipoOposicion={plan?.titulo || 'Oposiciones'}
-                horasEstudioDiarias={6}
-              />
-            </TabsContent>
-          </Tabs>
-        ) : etapas.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                {t('studyPlans.noPlanContent')}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('studyPlans.planStages')}</CardTitle>
-              <CardDescription>
-                {t('studyPlans.followProgress')}
-              </CardDescription>
-            </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible className="w-full" onValueChange={handleEtapaAccordionChange}>
-                  {etapas.map((etapaOriginal) => {
-                    // Usar etapa traducida si existe, sino usar pre-traducción para título/descripción
-                    const etapaIdStr = String(etapaOriginal.id);
-                    const fullTranslated = translatedEtapasMap[etapaIdStr];
-                    const preTranslated = preTranslatedEtapas[etapaIdStr];
-                    
-                    // Para el título y descripción: usar fullTranslated > preTranslated > original
-                    const displayTitulo = needsTranslation 
-                      ? (fullTranslated?.titulo || preTranslated?.titulo || etapaOriginal.titulo)
-                      : etapaOriginal.titulo;
-                    const displayDescripcion = needsTranslation 
-                      ? (fullTranslated?.descripcion || preTranslated?.descripcion || etapaOriginal.descripcion)
-                      : etapaOriginal.descripcion;
-                    
-                    // Para las tareas: usar fullTranslated si existe, sino original
-                    const etapa = fullTranslated || etapaOriginal;
-                    
-                    const isTranslatingThisEtapa = String(translatingEtapa) === etapaIdStr;
-                    const progresoEtapa = etapaOriginal.tareas && etapaOriginal.tareas.length > 0
-                      ? (etapaOriginal.tareas.filter((t: any) => t.completada === 1).length / etapaOriginal.tareas.length) * 100
-                      : 0;
-                    const tareasCompletadas = etapaOriginal.tareas ? etapaOriginal.tareas.filter((t: any) => t.completada === 1).length : 0;
-
-                    return (
-                      <AccordionItem key={etapaOriginal.id} value={`etapa-${etapaOriginal.id}`}>
-                        <AccordionTrigger>
-                          <div className="flex items-center justify-between w-full pr-4">
-                            <div className="text-left flex-1">
-                              <p className="font-semibold text-base">
-                                {isPreTranslatingEtapas && needsTranslation ? (
-                                  <Loader2 className="inline-block mr-2 h-4 w-4 animate-spin" />
-                                ) : null}
-                                {displayTitulo}
-                                {isTranslatingThisEtapa && (
-                                  <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
-                                )}
-                              </p>
-                              <p className="text-sm text-muted-foreground mt-0.5">
-                                {tareasCompletadas}/{etapaOriginal.tareas ? etapaOriginal.tareas.length : 0} {t('studyPlans.tasksCompleted')}
-                              </p>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-sm font-medium">
-                                {progresoEtapa.toFixed(0)}%
-                              </span>
-                              <Progress value={progresoEtapa} className="w-24 h-2" />
-                            </div>
-                          </div>
-                        </AccordionTrigger>
+                          </AccordionTrigger>
                           <AccordionContent>
                             <div className="space-y-6 pt-2">
-                              {/* Temas de la etapa */}
                               {displayDescripcion && (
                                 <div>
                                   <h4 className="font-semibold text-sm mb-3">{t('studyPlans.topics')}:</h4>
@@ -972,44 +844,43 @@ export default function PlanEstudioDetalle() {
                                 </div>
                               )}
 
-                              {/* Tareas de la etapa */}
                               {etapa.tareas && Array.isArray(etapa.tareas) && etapa.tareas.length > 0 && (
                                 <div>
                                   <h4 className="font-semibold text-sm mb-3">{t('studyPlans.tasks')}:</h4>
                                   <div className="space-y-3">
-                                     {etapa.tareas.map((tarea: any, tareaIdx: number) => {
+                                    {etapa.tareas.map((tarea: any, tareaIdx: number) => {
                                       const tareaOriginal = etapaOriginal.tareas[tareaIdx];
                                       return (
-                                      <div
-                                        key={tareaOriginal.id}
-                                        className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
-                                        onClick={() => handleClickTarea(tareaOriginal, etapaOriginal)}
-                                      >
-                                        <Checkbox
-                                          checked={tareaOriginal.completada === 1}
-                                          onCheckedChange={(checked) => {
-                                            checked && handleMarcarTarea(tareaOriginal.id, checked as boolean);
-                                          }}
-                                          onClick={(e) => e.stopPropagation()}
-                                          className="mt-1"
-                                        />
-                                        <div className="flex-1">
-                                          <p className={`font-medium ${tareaOriginal.completada === 1 ? "line-through text-muted-foreground" : ""}`}>
-                                            {tarea.titulo}
-                                          </p>
-                                          <p className="text-sm text-muted-foreground mt-1">
-                                            {tarea.descripcion}
-                                          </p>
-                                          {(tareaOriginal.titulo.toLowerCase().includes('test') || 
-                                            tareaOriginal.titulo.toLowerCase().includes('examen') || 
-                                            tareaOriginal.titulo.toLowerCase().includes('psicotécnico')) && (
-                                            <Badge variant="outline" className="mt-2">
-                                              <PlayCircle className="mr-1 h-3 w-3" />
-                                              {t('studyPlans.clickToTake')}
-                                            </Badge>
-                                          )}
+                                        <div
+                                          key={tareaOriginal.id}
+                                          className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                                          onClick={() => handleClickTarea(tareaOriginal, etapaOriginal)}
+                                        >
+                                          <Checkbox
+                                            checked={tareaOriginal.completada === 1}
+                                            onCheckedChange={(checked) => {
+                                              checked && handleMarcarTarea(tareaOriginal.id, checked as boolean);
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="mt-1"
+                                          />
+                                          <div className="flex-1">
+                                            <p className={`font-medium ${tareaOriginal.completada === 1 ? "line-through text-muted-foreground" : ""}`}>
+                                              {tarea.titulo}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                              {tarea.descripcion}
+                                            </p>
+                                            {(tareaOriginal.titulo.toLowerCase().includes('test') || 
+                                              tareaOriginal.titulo.toLowerCase().includes('examen') || 
+                                              tareaOriginal.titulo.toLowerCase().includes('psicotécnico')) && (
+                                              <Badge variant="outline" className="mt-2">
+                                                <PlayCircle className="mr-1 h-3 w-3" />
+                                                {t('studyPlans.clickToTake')}
+                                              </Badge>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
                                       );
                                     })}
                                   </div>
@@ -1018,12 +889,24 @@ export default function PlanEstudioDetalle() {
                             </div>
                           </AccordionContent>
                         </AccordionItem>
-                    );
-                  })}
-              </Accordion>
-            </CardContent>
-          </Card>
-        )}
+                      );
+                    })}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Plan Nutricional para Estudio Tab */}
+          <TabsContent value="nutricion">
+            <NutritionPlanStudyTab
+              planEstudioId={parseInt(id || '0')}
+              tipoOposicion={plan?.titulo || 'Oposiciones'}
+              horasEstudioDiarias={6}
+            />
+          </TabsContent>
+        </Tabs>
+
       </div>
     </div>
   );
