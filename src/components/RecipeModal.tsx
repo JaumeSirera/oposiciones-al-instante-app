@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTranslateContent } from '@/hooks/useTranslateContent';
 import {
   Dialog,
   DialogContent,
@@ -46,20 +47,87 @@ interface RecipeModalProps {
 }
 
 export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }: RecipeModalProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // Estados para contenido traducido
+  const [translatedReceta, setTranslatedReceta] = useState<Receta | null>(null);
+
+  // Resetear estados de imagen cuando cambia la receta
+  useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+    setTranslatedReceta(null);
+  }, [receta]);
+
+  // Traducir contenido de la receta
+  useEffect(() => {
+    const translateRecipe = async () => {
+      if (!receta || !open) return;
+
+      if (!needsTranslation) {
+        setTranslatedReceta(receta);
+        return;
+      }
+
+      const textsToTranslate: string[] = [];
+      
+      // Nombre, descripción, dificultad
+      textsToTranslate.push(receta.nombre);
+      textsToTranslate.push(receta.descripcion);
+      textsToTranslate.push(receta.dificultad);
+      
+      // Ingredientes (solo el nombre, no la cantidad)
+      receta.ingredientes.forEach(ing => textsToTranslate.push(ing.ingrediente));
+      
+      // Instrucciones
+      receta.instrucciones.forEach(inst => textsToTranslate.push(inst));
+      
+      // Consejos
+      receta.consejos.forEach(consejo => textsToTranslate.push(consejo));
+
+      try {
+        const translations = await translateTexts(textsToTranslate);
+        let idx = 0;
+        
+        const translated: Receta = {
+          ...receta,
+          nombre: translations[idx++] || receta.nombre,
+          descripcion: translations[idx++] || receta.descripcion,
+          dificultad: translations[idx++] || receta.dificultad,
+          ingredientes: receta.ingredientes.map(ing => ({
+            cantidad: ing.cantidad,
+            ingrediente: translations[idx++] || ing.ingrediente
+          })),
+          instrucciones: receta.instrucciones.map(() => translations[idx++] || ''),
+          consejos: receta.consejos.map(() => translations[idx++] || '')
+        };
+        
+        setTranslatedReceta(translated);
+      } catch (error) {
+        console.error('Error translating recipe:', error);
+        setTranslatedReceta(receta);
+      }
+    };
+
+    translateRecipe();
+  }, [receta, open, i18n.language, needsTranslation, translateTexts]);
+
   const getDifficultyColor = (dificultad: string) => {
     const lower = dificultad.toLowerCase();
-    if (lower.includes('fácil') || lower.includes('easy') || lower.includes('baja')) {
+    if (lower.includes('fácil') || lower.includes('easy') || lower.includes('baja') || lower.includes('facile') || lower.includes('leicht')) {
       return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
     }
-    if (lower.includes('difícil') || lower.includes('hard') || lower.includes('alta')) {
+    if (lower.includes('difícil') || lower.includes('hard') || lower.includes('alta') || lower.includes('difficile') || lower.includes('schwer')) {
       return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
     }
     return 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300';
   };
+
+  const displayReceta = translatedReceta || receta;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,10 +138,10 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
             <p className="text-lg font-medium">{t('recipe.generating', 'Generando receta...')}</p>
             <p className="text-sm text-muted-foreground">{platoNombre}</p>
           </div>
-        ) : receta ? (
+        ) : displayReceta ? (
           <>
             {/* Imagen del plato */}
-            {receta.imagen_url && !imageError && (
+            {displayReceta.imagen_url && !imageError && (
               <div className="relative w-full h-48 md:h-64 bg-muted">
                 {!imageLoaded && (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -81,8 +149,8 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
                   </div>
                 )}
                 <img
-                  src={receta.imagen_url}
-                  alt={receta.nombre}
+                  src={displayReceta.imagen_url}
+                  alt={displayReceta.nombre}
                   className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   onLoad={() => setImageLoaded(true)}
                   onError={() => setImageError(true)}
@@ -95,28 +163,31 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
                 <DialogHeader>
                   <DialogTitle className="text-2xl flex items-center gap-2">
                     <UtensilsCrossed className="h-6 w-6 text-primary" />
-                    {receta.nombre}
+                    {displayReceta.nombre}
+                    {isTranslating && needsTranslation && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
                   </DialogTitle>
-                  <p className="text-muted-foreground">{receta.descripcion}</p>
+                  <p className="text-muted-foreground">{displayReceta.descripcion}</p>
                 </DialogHeader>
 
                 {/* Información rápida */}
                 <div className="flex flex-wrap gap-3">
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {t('recipe.prep', 'Prep')}: {receta.tiempo_preparacion}
+                    {t('recipe.prep', 'Prep')}: {displayReceta.tiempo_preparacion}
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {t('recipe.cook', 'Cocción')}: {receta.tiempo_coccion}
+                    {t('recipe.cook', 'Cocción')}: {displayReceta.tiempo_coccion}
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
-                    {receta.porciones} {t('recipe.servings', 'porciones')}
+                    {displayReceta.porciones} {t('recipe.servings', 'porciones')}
                   </Badge>
-                  <Badge className={getDifficultyColor(receta.dificultad)}>
+                  <Badge className={getDifficultyColor(displayReceta.dificultad)}>
                     <ChefHat className="h-3 w-3 mr-1" />
-                    {receta.dificultad}
+                    {displayReceta.dificultad}
                   </Badge>
                 </div>
 
@@ -128,7 +199,7 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
                     🥗 {t('recipe.ingredients', 'Ingredientes')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {receta.ingredientes.map((ing, idx) => (
+                    {displayReceta.ingredientes.map((ing, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
                         <span className="font-medium text-primary">{ing.cantidad}</span>
                         <span>{ing.ingrediente}</span>
@@ -145,7 +216,7 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
                     📝 {t('recipe.instructions', 'Instrucciones')}
                   </h3>
                   <ol className="space-y-3">
-                    {receta.instrucciones.map((paso, idx) => (
+                    {displayReceta.instrucciones.map((paso, idx) => (
                       <li key={idx} className="flex gap-3">
                         <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
                           {idx + 1}
@@ -157,7 +228,7 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
                 </div>
 
                 {/* Consejos */}
-                {receta.consejos && receta.consejos.length > 0 && (
+                {displayReceta.consejos && displayReceta.consejos.length > 0 && (
                   <>
                     <Separator />
                     <div>
@@ -166,7 +237,7 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
                         {t('recipe.tips', 'Consejos del Chef')}
                       </h3>
                       <ul className="space-y-2">
-                        {receta.consejos.map((consejo, idx) => (
+                        {displayReceta.consejos.map((consejo, idx) => (
                           <li key={idx} className="flex items-start gap-2">
                             <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                             <span className="text-sm">{consejo}</span>

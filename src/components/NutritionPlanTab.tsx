@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
+import { RecipeModal } from '@/components/RecipeModal';
 import { 
   Loader2, 
   Sparkles, 
@@ -23,7 +24,8 @@ import {
   CheckCircle,
   XCircle,
   Save,
-  RefreshCw
+  RefreshCw,
+  BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -92,6 +94,12 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>('lunes');
+
+  // Estados para recetas
+  const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [currentRecipe, setCurrentRecipe] = useState<any>(null);
+  const [loadingRecipe, setLoadingRecipe] = useState(false);
+  const [currentPlatoNombre, setCurrentPlatoNombre] = useState('');
 
   // Estados para contenido traducido
   const [translatedObjetivo, setTranslatedObjetivo] = useState<string>('');
@@ -317,6 +325,37 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
     }
   };
 
+  const handleVerReceta = async (comida: Comida, tipo: string) => {
+    setCurrentPlatoNombre(comida.plato);
+    setCurrentRecipe(null);
+    setLoadingRecipe(true);
+    setRecipeModalOpen(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generar-receta', {
+        body: {
+          plato: comida.plato,
+          ingredientes: comida.ingredientes,
+          tipo_comida: tipo
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data.receta) {
+        setCurrentRecipe(data.receta);
+      } else {
+        throw new Error(data?.error || 'Error al generar receta');
+      }
+    } catch (error: any) {
+      console.error('Error generando receta:', error);
+      toast.error(t('recipe.error', 'Error al generar la receta'));
+      setRecipeModalOpen(false);
+    } finally {
+      setLoadingRecipe(false);
+    }
+  };
+
   const renderComida = (comida: Comida, tipo: 'desayuno' | 'almuerzo' | 'cena' | 'snack', icon: React.ReactNode) => (
     <Card className="mb-3">
       <CardContent className="p-4">
@@ -325,12 +364,23 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
             {icon}
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold flex items-center gap-2">
-              {comida.plato}
-              {isTranslating && needsTranslation && (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              )}
-            </h4>
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="font-semibold flex items-center gap-2">
+                {comida.plato}
+                {isTranslating && needsTranslation && (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                )}
+              </h4>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleVerReceta(comida, tipo)}
+                className="flex-shrink-0"
+              >
+                <BookOpen className="h-4 w-4 mr-1" />
+                {t('recipe.viewRecipe', 'Receta')}
+              </Button>
+            </div>
             <div className="flex flex-wrap gap-2 mt-2">
               <Badge variant="outline">{comida.calorias} kcal</Badge>
               <Badge variant="secondary" className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
@@ -639,6 +689,15 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
           </Accordion>
         </TabsContent>
       </Tabs>
+
+      {/* Modal de receta */}
+      <RecipeModal
+        open={recipeModalOpen}
+        onOpenChange={setRecipeModalOpen}
+        receta={currentRecipe}
+        loading={loadingRecipe}
+        platoNombre={currentPlatoNombre}
+      />
     </div>
   );
 }
