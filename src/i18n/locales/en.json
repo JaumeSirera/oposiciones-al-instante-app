@@ -729,7 +729,9 @@
     "followProgress": "Follow your progress week by week",
     "tasksCompleted": "tasks completed",
     "tasks": "Tasks",
-    "topics": "Topics"
+    "topics": "Topics",
+    "nutritionPlan": "Nutrition",
+    "subtitleSA": "Viewing all study plans from all users"
   },
   "summaries": {
     "title": "Summaries",
@@ -1696,8 +1698,5 @@
     "brainFoods": "Brain Foods",
     "optimalSchedule": "Optimal Schedule",
     "brainTips": "Brain Tips"
-  },
-  "studyPlans": {
-    "nutritionPlan": "Nutrition"
   }
 }
