@@ -1584,5 +1584,25 @@
     "brainFoods": "Gehirnnahrung",
     "optimalSchedule": "Optimaler Zeitplan",
     "brainTips": "Gehirn-Tipps"
+  },
+  "nutritionDisclaimer": {
+    "title": "Ernährungshinweis",
+    "subtitle": "Bitte lesen und akzeptieren Sie die folgenden Bedingungen, bevor Sie fortfahren.",
+    "section1Title": "1. Informativer und Bildender Charakter",
+    "section1Text": "Diese Anwendung (im Folgenden \"die App\") ist ein technologisches Werkzeug, das allgemeine Orientierung zu Fitness und Ernährung bietet. Die Ernährungspläne, Makronährstoffberechnungen (Proteine, Kohlenhydrate, Fette), Kalorienwerte und Rezepte, die vom Algorithmus generiert werden, basieren auf mathematischen Standardschätzformeln und stellen unter keinen Umständen eine medizinische Beratung, Diagnose oder professionelle Behandlung dar.",
+    "section2Title": "2. Fehlen einer Professionellen Beziehung",
+    "section2Text": "Die Nutzung dieser App begründet keine professionelle Beziehung zwischen dem Benutzer und einem Diätassistenten-Ernährungsberater oder zugelassenen Gesundheitsfachmann. Die App wird nicht von medizinischem Personal verwaltet und ihr Zweck ist rein freizeitorientiert und zur Unterstützung der körperlichen Leistung bei Eignungsprüfungen.",
+    "section3Title": "3. Gesundheits- und Pathologiewarnung",
+    "section3Text": "Die generierten Pläne sind ausschließlich für gesunde Personen bestimmt. Wenn Sie an einer Erkrankung leiden (einschließlich, aber nicht beschränkt auf: Diabetes, Bluthochdruck, Essstörungen, Niereninsuffizienz oder schwere Allergien), sollten Sie den Vorschlägen der App NICHT ohne vorherige Überwachung durch einen zugelassenen Arzt oder Ernährungsberater folgen.",
+    "section4Title": "4. Allergene und Lebensmittelsicherheit",
+    "section4Text": "Die von Künstlicher Intelligenz generierten Rezepte und Bilder sind illustrative Vorschläge. Es liegt in der alleinigen Verantwortung des Benutzers zu überprüfen, dass die vorgeschlagenen Zutaten keine Allergene enthalten, die ihn beeinträchtigen könnten, und dass die Mengen für seine persönliche Situation geeignet sind.",
+    "section5Title": "5. Haftungsausschluss",
+    "section5Text": "Der Inhaber der App haftet nicht für Schäden, Verletzungen oder Nachteile, die aus der Interpretation oder Nutzung der bereitgestellten Informationen entstehen. Durch die Nutzung dieses Tools übernimmt der Benutzer die volle Verantwortung für seine Gesundheit und sein körperliches Wohlbefinden.",
+    "checkbox1": "Ich verstehe, dass diese App den Rat eines Ernährungsberaters oder Arztes nicht ersetzt.",
+    "checkbox2": "Ich bestätige, dass ich nicht an schweren medizinischen Erkrankungen leide oder, falls doch, einen Fachmann konsultieren werde, bevor ich einem Plan folge.",
+    "accept": "Ich akzeptiere die Bedingungen",
+    "banner": "Diese Anwendung ist ein informatives Orientierungswerkzeug und stellt keine medizinische Beratung, Diagnose oder Behandlung dar. Konsultieren Sie immer einen zugelassenen Fachmann, bevor Sie einen Ernährungsplan beginnen.",
+    "aiImageLabel": "KI-generiertes Bild zu Illustrationszwecken",
+    "calorieWarning": "Diese Werte liegen außerhalb des empfohlenen gesunden Bereichs (1200-4000 kcal). Konsultieren Sie einen Fachmann."
   }
 }

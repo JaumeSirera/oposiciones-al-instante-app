@@ -15,6 +15,7 @@ import { ArrowLeft, Sparkles, Calendar, CheckCircle2, Languages, Loader2 } from 
 import { supabase } from "@/lib/supabaseClient";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslateContent } from "@/hooks/useTranslateContent";
+import { NutritionDisclaimerModal, NutritionDisclaimerBanner, useNutritionDisclaimer } from "@/components/NutritionDisclaimer";
 
 interface PlanGenerado {
   titulo: string;
@@ -31,7 +32,9 @@ export default function GenerarPlanIA() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { hasAccepted: hasAcceptedDisclaimer, acceptDisclaimer } = useNutritionDisclaimer();
   
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generando, setGenerando] = useState(false);
   
@@ -107,6 +110,20 @@ export default function GenerarPlanIA() {
     } catch (error) {
       toast.error(t('generatePlanIA.errorLoadingProcesses'));
     }
+  };
+
+  const handleGenerarClick = () => {
+    if (!hasAcceptedDisclaimer) {
+      setShowDisclaimer(true);
+      return;
+    }
+    generarPlanAutomatico();
+  };
+
+  const handleAcceptDisclaimer = () => {
+    acceptDisclaimer();
+    setShowDisclaimer(false);
+    generarPlanAutomatico();
   };
 
   const generarPlanAutomatico = async () => {
@@ -191,6 +208,13 @@ export default function GenerarPlanIA() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
+      {showDisclaimer && (
+        <NutritionDisclaimerModal
+          onAccept={handleAcceptDisclaimer}
+          onCancel={() => setShowDisclaimer(false)}
+        />
+      )}
+      
       <Button
         variant="ghost"
         onClick={() => navigate("/")}
@@ -199,6 +223,10 @@ export default function GenerarPlanIA() {
         <ArrowLeft className="mr-2 h-4 w-4" />
         {t('generatePlanIA.backToDashboard')}
       </Button>
+
+      <div className="mb-4">
+        <NutritionDisclaimerBanner />
+      </div>
 
       {!planGenerado ? (
         <Card>
@@ -293,7 +321,7 @@ export default function GenerarPlanIA() {
               </div>
 
               <Button
-                onClick={generarPlanAutomatico}
+                onClick={handleGenerarClick}
                 disabled={!selectedProceso || generando}
                 className="w-full"
                 size="lg"
