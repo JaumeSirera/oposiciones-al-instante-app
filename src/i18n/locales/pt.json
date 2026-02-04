@@ -1584,5 +1584,25 @@
     "brainFoods": "Alimentos para o Cérebro",
     "optimalSchedule": "Horários Ótimos",
     "brainTips": "Dicas para o Cérebro"
+  },
+  "nutritionDisclaimer": {
+    "title": "Aviso de Responsabilidade Nutricional",
+    "subtitle": "Por favor, leia e aceite os seguintes termos antes de continuar.",
+    "section1Title": "1. Natureza Informativa e Educativa",
+    "section1Text": "Esta aplicação (doravante \"a App\") é uma ferramenta tecnológica projetada para fornecer orientação geral sobre fitness e nutrição. Os planos nutricionais, cálculos de macronutrientes (proteínas, carboidratos, gorduras), valores calóricos e receitas gerados pelo algoritmo são baseados em fórmulas matemáticas de estimativa padrão e não constituem, sob nenhuma circunstância, aconselhamento médico, diagnóstico ou tratamento profissional.",
+    "section2Title": "2. Ausência de Relação Profissional",
+    "section2Text": "O uso desta App não estabelece uma relação profissional entre o usuário e um nutricionista-dietista ou profissional de saúde licenciado. A App não é gerenciada por pessoal médico e seu propósito é puramente recreativo e de apoio ao desempenho físico para concursos públicos.",
+    "section3Title": "3. Aviso de Saúde e Patologias",
+    "section3Text": "Os planos gerados são destinados exclusivamente a pessoas saudáveis. Se você sofre de alguma condição médica (incluindo, mas não limitado a: diabetes, hipertensão, transtornos alimentares, insuficiência renal ou alergias graves), você NÃO deve seguir as sugestões da App sem supervisão prévia de um médico ou nutricionista licenciado.",
+    "section4Title": "4. Alérgenos e Segurança Alimentar",
+    "section4Text": "As receitas e imagens geradas por Inteligência Artificial são sugestões ilustrativas. É responsabilidade exclusiva do usuário verificar se os ingredientes propostos não contêm alérgenos que possam afetá-lo e se as quantidades são adequadas para sua situação pessoal.",
+    "section5Title": "5. Isenção de Responsabilidade",
+    "section5Text": "O titular da App não é responsável por qualquer dano, lesão ou prejuízo decorrente da interpretação ou uso das informações fornecidas. Ao utilizar esta ferramenta, o usuário assume toda a responsabilidade por sua saúde e bem-estar físico.",
+    "checkbox1": "Entendo que esta App não substitui o conselho de um nutricionista ou médico profissional.",
+    "checkbox2": "Confirmo que não sofro de patologias médicas graves ou, se sofrer, consultarei um profissional antes de seguir qualquer plano.",
+    "accept": "Aceito os termos",
+    "banner": "Esta aplicação é uma ferramenta de orientação informativa e não constitui aconselhamento médico, diagnóstico ou tratamento. Consulte sempre um profissional licenciado antes de iniciar qualquer plano nutricional.",
+    "aiImageLabel": "Imagem gerada por IA para fins ilustrativos",
+    "calorieWarning": "Esses valores estão fora da faixa saudável recomendada (1200-4000 kcal). Consulte um profissional."
   }
 }

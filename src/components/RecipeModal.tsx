@@ -19,6 +19,7 @@ import {
   Lightbulb,
   UtensilsCrossed
 } from 'lucide-react';
+import { AIGeneratedImageLabel } from '@/components/NutritionDisclaimer';
 
 interface Ingrediente {
   cantidad: string;
@@ -155,6 +156,12 @@ export function RecipeModal({ open, onOpenChange, receta, loading, platoNombre }
                   onLoad={() => setImageLoaded(true)}
                   onError={() => setImageError(true)}
                 />
+                {/* Etiqueta de imagen generada por IA */}
+                {imageLoaded && (
+                  <div className="absolute bottom-2 right-2">
+                    <AIGeneratedImageLabel />
+                  </div>
+                )}
               </div>
             )}
 

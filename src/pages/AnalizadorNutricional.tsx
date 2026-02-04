@@ -15,6 +15,7 @@ import { nutritionHistoryService, NutritionAnalysis } from "@/services/nutrition
 import NutritionHistory from "@/components/NutritionHistory";
 import { useCapacitorCamera } from "@/hooks/useCapacitorCamera";
 import { useTranslateContent } from "@/hooks/useTranslateContent";
+import { NutritionDisclaimerModal, NutritionDisclaimerBanner, useNutritionDisclaimer } from "@/components/NutritionDisclaimer";
 
 interface NutrientInfo {
   name: string;
@@ -59,6 +60,9 @@ const AnalizadorNutricional: React.FC = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { hasAccepted: hasAcceptedDisclaimer, acceptDisclaimer } = useNutritionDisclaimer();
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   
   // Capacitor camera hook for native platforms
   const { takePhoto, pickFromGallery, isNativePlatform, isLoading: isCameraLoading, error: cameraError, clearError } = useCapacitorCamera();
@@ -143,6 +147,24 @@ const AnalizadorNutricional: React.FC = () => {
       setSelectedImage(imageData);
       setResult(null);
       setError(null);
+    }
+  };
+
+  const handleAnalyzeClick = () => {
+    if (!hasAcceptedDisclaimer) {
+      setPendingAction(() => analyzeImage);
+      setShowDisclaimer(true);
+      return;
+    }
+    analyzeImage();
+  };
+
+  const handleAcceptDisclaimer = () => {
+    acceptDisclaimer();
+    setShowDisclaimer(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
     }
   };
 
@@ -243,6 +265,16 @@ const AnalizadorNutricional: React.FC = () => {
         <meta name="description" content={t('nutritionAnalyzer.description', 'Analiza el valor nutricional de tus platos con IA')} />
       </Helmet>
 
+      {showDisclaimer && (
+        <NutritionDisclaimerModal
+          onAccept={handleAcceptDisclaimer}
+          onCancel={() => {
+            setShowDisclaimer(false);
+            setPendingAction(null);
+          }}
+        />
+      )}
+
       <div className="container mx-auto py-6 px-4 max-w-5xl">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -256,6 +288,11 @@ const AnalizadorNutricional: React.FC = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             {t('nutritionAnalyzer.subtitle', 'Sube una foto de tu plato y obtén un análisis detallado de los ingredientes, calorías, proteínas y más.')}
           </p>
+        </div>
+
+        {/* Disclaimer Banner */}
+        <div className="mb-6">
+          <NutritionDisclaimerBanner />
         </div>
 
         {/* Upload Section */}
@@ -355,7 +392,7 @@ const AnalizadorNutricional: React.FC = () => {
                     {t('nutritionAnalyzer.changeImage', 'Cambiar imagen')}
                   </Button>
                   <Button
-                    onClick={analyzeImage}
+                    onClick={handleAnalyzeClick}
                     disabled={isAnalyzing}
                     className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                   >

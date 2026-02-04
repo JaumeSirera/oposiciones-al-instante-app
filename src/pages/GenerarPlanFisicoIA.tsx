@@ -18,6 +18,7 @@ import { Loader2, Calendar as CalendarIcon, Sparkles, ArrowLeft, Languages } fro
 import { format, addWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { NutritionDisclaimerModal, NutritionDisclaimerBanner, useNutritionDisclaimer } from '@/components/NutritionDisclaimer';
 
 interface PlanGenerado {
   titulo: string;
@@ -55,7 +56,9 @@ export default function GenerarPlanFisicoIA() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { translateTexts, isTranslating } = useTranslateContent();
+  const { hasAccepted: hasAcceptedDisclaimer, acceptDisclaimer } = useNutritionDisclaimer();
 
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generando, setGenerando] = useState(false);
   const [planGenerado, setPlanGenerado] = useState<PlanGenerado | null>(null);
@@ -87,6 +90,20 @@ export default function GenerarPlanFisicoIA() {
     };
     translateTipos();
   }, [i18n.language, translateTexts]);
+
+  const handleGenerarClick = () => {
+    if (!hasAcceptedDisclaimer) {
+      setShowDisclaimer(true);
+      return;
+    }
+    generarPlanConIA();
+  };
+
+  const handleAcceptDisclaimer = () => {
+    acceptDisclaimer();
+    setShowDisclaimer(false);
+    generarPlanConIA();
+  };
 
   const generarPlanConIA = async () => {
     if (!user?.id || !titulo.trim() || !tipo) {
@@ -163,10 +180,21 @@ export default function GenerarPlanFisicoIA() {
   if (!planGenerado) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
+        {showDisclaimer && (
+          <NutritionDisclaimerModal
+            onAccept={handleAcceptDisclaimer}
+            onCancel={() => setShowDisclaimer(false)}
+          />
+        )}
+        
         <Button variant="ghost" onClick={() => navigate('/planes-fisicos')} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('common.back')}
         </Button>
+
+        <div className="mb-4">
+          <NutritionDisclaimerBanner />
+        </div>
 
         <Card>
           <CardHeader>
@@ -314,7 +342,7 @@ export default function GenerarPlanFisicoIA() {
             </div>
 
             <Button
-              onClick={generarPlanConIA}
+              onClick={handleGenerarClick}
               disabled={generando}
               className="w-full"
               size="lg"
