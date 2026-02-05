@@ -1771,6 +1771,8 @@
     "checkbox2": "Confirmo que no padezco patologías médicas graves o, si las padezco, consultaré con un profesional antes de seguir cualquier plan.",
     "accept": "Acepto los términos",
     "banner": "Esta aplicación es una herramienta de orientación informativa y no constituye un consejo médico, diagnóstico o tratamiento. Consulte siempre con un profesional colegiado antes de iniciar cualquier plan nutricional.",
+    "viewDisclaimer": "Ver Aviso Legal",
+    "legal": "Legal",
     "aiImageLabel": "Imagen generada por IA con fines ilustrativos",
     "calorieWarning": "Estos valores están fuera del rango saludable recomendado (1200-4000 kcal). Consulta a un profesional."
   }
