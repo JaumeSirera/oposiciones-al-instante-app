@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { AlertTriangle, Heart, ShieldAlert, Cookie, Scale, FileWarning } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -71,8 +71,8 @@ export const NutritionDisclaimerModal: React.FC<NutritionDisclaimerProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel?.()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <ShieldAlert className="h-6 w-6 text-amber-500" />
             {t("nutritionDisclaimer.title", "Descargo de Responsabilidad Nutricional")}
@@ -82,7 +82,7 @@ export const NutritionDisclaimerModal: React.FC<NutritionDisclaimerProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-[40vh] max-h-[60vh] pr-4">
+        <div className="flex-1 overflow-y-auto pr-4 min-h-0" style={{ maxHeight: "calc(90vh - 280px)" }}>
           <div className="space-y-6 text-sm">
             {/* Sección 1 */}
             <div className="space-y-2">
@@ -139,7 +139,7 @@ export const NutritionDisclaimerModal: React.FC<NutritionDisclaimerProps> = ({
               </p>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         <div className="space-y-4 pt-4 border-t">
           <div className="flex items-start space-x-3">
