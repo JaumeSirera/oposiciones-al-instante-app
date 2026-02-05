@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Heart, ShieldAlert, Cookie, Scale, FileWarning } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const DISCLAIMER_ACCEPTED_KEY = "nutrition_disclaimer_accepted";
 
@@ -39,6 +40,24 @@ export function useNutritionDisclaimer() {
 
   return { hasAccepted, acceptDisclaimer, resetDisclaimer };
 }
+
+// Botón pequeño para revisar el disclaimer (siempre visible después de aceptar)
+export const NutritionDisclaimerButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+  const { t } = useTranslation();
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-1.5 text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950"
+    >
+      <Info className="h-4 w-4" />
+      <span className="hidden sm:inline">{t("nutritionDisclaimer.viewDisclaimer", "Ver Aviso Legal")}</span>
+      <span className="sm:hidden">{t("nutritionDisclaimer.legal", "Legal")}</span>
+    </Button>
+  );
+};
 
 export const NutritionDisclaimerModal: React.FC<NutritionDisclaimerProps> = ({
   onAccept,

@@ -28,6 +28,12 @@ import {
   BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { 
+  useNutritionDisclaimer, 
+  NutritionDisclaimerModal, 
+  NutritionDisclaimerBanner,
+  NutritionDisclaimerButton 
+} from '@/components/NutritionDisclaimer';
 
 interface Comida {
   plato: string;
@@ -88,12 +94,16 @@ const DIAS_SEMANA = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabad
 export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSemana }: Props) {
   const { t, i18n } = useTranslation();
   const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { hasAccepted, acceptDisclaimer } = useNutritionDisclaimer();
   
   const [plan, setPlan] = useState<PlanNutricional | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>('lunes');
+  
+  // Estado para mostrar el modal del disclaimer
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
 
   // Estados para recetas
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
@@ -426,10 +436,22 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
     );
   }
 
+  // Si no ha aceptado el disclaimer, mostrarlo primero
+  if (!hasAccepted) {
+    return (
+      <NutritionDisclaimerModal
+        onAccept={acceptDisclaimer}
+        onCancel={() => {}}
+      />
+    );
+  }
+
   if (!plan) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
+          <NutritionDisclaimerBanner />
+          <div className="mt-4" />
           <UtensilsCrossed className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-xl font-semibold mb-2">{t('nutritionPlan.noPlan')}</h3>
           <p className="text-muted-foreground mb-6">
@@ -466,6 +488,22 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
 
   return (
     <div className="space-y-6">
+      {/* Modal del disclaimer (para revisar) */}
+      {showDisclaimerModal && (
+        <NutritionDisclaimerModal
+          onAccept={() => setShowDisclaimerModal(false)}
+          onCancel={() => setShowDisclaimerModal(false)}
+        />
+      )}
+
+      {/* Banner de disclaimer + botón para revisarlo */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1">
+          <NutritionDisclaimerBanner />
+        </div>
+        <NutritionDisclaimerButton onClick={() => setShowDisclaimerModal(true)} />
+      </div>
+
       {/* Header con objetivos */}
       <Card>
         <CardHeader>

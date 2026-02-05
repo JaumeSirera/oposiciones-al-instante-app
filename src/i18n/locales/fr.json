@@ -1602,6 +1602,8 @@
     "checkbox2": "Je confirme que je ne souffre pas de pathologies médicales graves ou, si c'est le cas, je consulterai un professionnel avant de suivre tout plan.",
     "accept": "J'accepte les conditions",
     "banner": "Cette application est un outil d'orientation informative et ne constitue pas un avis médical, un diagnostic ou un traitement. Consultez toujours un professionnel agréé avant de commencer tout plan nutritionnel.",
+    "viewDisclaimer": "Voir Avis Légal",
+    "legal": "Légal",
     "aiImageLabel": "Image générée par IA à titre illustratif",
     "calorieWarning": "Ces valeurs sont en dehors de la plage saine recommandée (1200-4000 kcal). Consultez un professionnel."
   }

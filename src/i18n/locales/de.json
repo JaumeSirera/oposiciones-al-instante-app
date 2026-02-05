@@ -1602,6 +1602,8 @@
     "checkbox2": "Ich bestätige, dass ich nicht an schweren medizinischen Erkrankungen leide oder, falls doch, einen Fachmann konsultieren werde, bevor ich einem Plan folge.",
     "accept": "Ich akzeptiere die Bedingungen",
     "banner": "Diese Anwendung ist ein informatives Orientierungswerkzeug und stellt keine medizinische Beratung, Diagnose oder Behandlung dar. Konsultieren Sie immer einen zugelassenen Fachmann, bevor Sie einen Ernährungsplan beginnen.",
+    "viewDisclaimer": "Rechtlichen Hinweis anzeigen",
+    "legal": "Rechtlich",
     "aiImageLabel": "KI-generiertes Bild zu Illustrationszwecken",
     "calorieWarning": "Diese Werte liegen außerhalb des empfohlenen gesunden Bereichs (1200-4000 kcal). Konsultieren Sie einen Fachmann."
   }

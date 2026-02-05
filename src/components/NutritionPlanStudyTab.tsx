@@ -28,6 +28,12 @@ import {
   Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { 
+  useNutritionDisclaimer, 
+  NutritionDisclaimerModal, 
+  NutritionDisclaimerBanner,
+  NutritionDisclaimerButton 
+} from '@/components/NutritionDisclaimer';
 
 interface Comida {
   plato: string;
@@ -108,11 +114,15 @@ const DIAS_LABELS: Record<string, string> = {
 export function NutritionPlanStudyTab({ planEstudioId, tipoOposicion, horasEstudioDiarias }: Props) {
   const { t, i18n } = useTranslation();
   const { translateTexts, isTranslating, needsTranslation } = useTranslateContent();
+  const { hasAccepted, acceptDisclaimer } = useNutritionDisclaimer();
   
   const [plan, setPlan] = useState<PlanNutricionalEstudio | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>('lunes');
+  
+  // Estado para mostrar el modal del disclaimer
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
 
   // Estados para recetas
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
@@ -231,6 +241,16 @@ export function NutritionPlanStudyTab({ planEstudioId, tipoOposicion, horasEstud
 
     translateContent();
   }, [plan, selectedDay, i18n.language, needsTranslation, translateTexts]);
+
+  // Si no ha aceptado el disclaimer, mostrarlo primero
+  if (!hasAccepted) {
+    return (
+      <NutritionDisclaimerModal
+        onAccept={acceptDisclaimer}
+        onCancel={() => {}}
+      />
+    );
+  }
 
   const generatePlan = async () => {
     setGenerating(true);
@@ -363,7 +383,9 @@ export function NutritionPlanStudyTab({ planEstudioId, tipoOposicion, horasEstud
             {t('nutritionPlanStudy.description', 'Alimentación optimizada para máximo rendimiento mental, concentración y memoria')}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-12">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <NutritionDisclaimerBanner />
+          <div className="h-4" />
           <Brain className="h-16 w-16 text-muted-foreground mb-4" />
           <p className="text-muted-foreground mb-4 text-center">
             {t('nutritionPlanStudy.noPlan', 'No tienes un plan nutricional generado para este plan de estudio')}
@@ -391,6 +413,22 @@ export function NutritionPlanStudyTab({ planEstudioId, tipoOposicion, horasEstud
 
   return (
     <div className="space-y-6">
+      {/* Modal del disclaimer (para revisar) */}
+      {showDisclaimerModal && (
+        <NutritionDisclaimerModal
+          onAccept={() => setShowDisclaimerModal(false)}
+          onCancel={() => setShowDisclaimerModal(false)}
+        />
+      )}
+
+      {/* Banner de disclaimer + botón para revisarlo */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1">
+          <NutritionDisclaimerBanner />
+        </div>
+        <NutritionDisclaimerButton onClick={() => setShowDisclaimerModal(true)} />
+      </div>
+
       {/* Header con macros objetivo */}
       <Card className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-200 dark:border-purple-800">
         <CardHeader>
