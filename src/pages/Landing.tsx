@@ -309,6 +309,16 @@ const Landing = () => {
                   <p className="text-gray-300">{t('landing.features.stats.description')}</p>
                 </CardContent>
               </Card>
+
+              <Card className="bg-white/10 backdrop-blur-md border-white/20">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center mb-4">
+                    <Sparkles className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">{t('landing.features.nutrition.title')}</h3>
+                  <p className="text-gray-300">{t('landing.features.nutrition.description')}</p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

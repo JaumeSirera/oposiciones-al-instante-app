@@ -182,6 +182,10 @@
       "stats": {
         "title": "Estatísticas e boletins",
         "description": "Meça seu progresso, ranking e consulte últimas convocatórias por região."
+      },
+      "nutrition": {
+        "title": "Planos nutricionais IA",
+        "description": "Gere planos nutricionais personalizados para otimizar seu desempenho cognitivo e físico durante a preparação."
       }
     },
     "cta": {
