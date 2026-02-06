@@ -279,7 +279,8 @@
     "translating": "Traduction en cours...",
     "translatingContent": "Traduction du contenu du plan...",
     "translationFailed": "Impossible de traduire le contenu (problème de connexion)",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "regenerate": "Régénérer"
   },
   "test": {
     "choosePracticeMode": "Choisissez le mode de pratique",

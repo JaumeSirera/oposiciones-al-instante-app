@@ -279,7 +279,8 @@
     "translating": "Übersetzen...",
     "translatingContent": "Planinhalt wird übersetzt...",
     "translationFailed": "Inhalt konnte nicht übersetzt werden (Verbindungsproblem)",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "regenerate": "Neu generieren"
   },
   "test": {
     "choosePracticeMode": "Übungsmodus wählen",

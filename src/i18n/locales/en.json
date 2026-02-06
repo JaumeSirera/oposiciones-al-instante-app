@@ -303,7 +303,8 @@
     "translating": "Translating...",
     "translatingContent": "Translating plan content...",
     "translationFailed": "Could not translate content (connection issue)",
-    "retry": "Retry"
+    "retry": "Retry",
+    "regenerate": "Regenerate"
   },
   "test": {
     "choosePracticeMode": "Choose practice mode",
