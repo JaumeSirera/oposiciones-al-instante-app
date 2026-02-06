@@ -1606,5 +1606,17 @@
     "legal": "Légal",
     "aiImageLabel": "Image générée par IA à titre illustratif",
     "calorieWarning": "Ces valeurs sont en dehors de la plage saine recommandée (1200-4000 kcal). Consultez un professionnel."
+  },
+  "recipe": {
+    "viewRecipe": "Recette",
+    "generating": "Génération de la recette...",
+    "error": "Erreur lors de la génération de la recette",
+    "prep": "Prép",
+    "cook": "Cuisson",
+    "servings": "portions",
+    "ingredients": "Ingrédients",
+    "instructions": "Instructions",
+    "tips": "Conseils du Chef",
+    "noRecipe": "Impossible de charger la recette"
   }
 }

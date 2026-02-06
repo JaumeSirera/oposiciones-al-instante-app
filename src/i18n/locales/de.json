@@ -1606,5 +1606,17 @@
     "legal": "Rechtlich",
     "aiImageLabel": "KI-generiertes Bild zu Illustrationszwecken",
     "calorieWarning": "Diese Werte liegen außerhalb des empfohlenen gesunden Bereichs (1200-4000 kcal). Konsultieren Sie einen Fachmann."
+  },
+  "recipe": {
+    "viewRecipe": "Rezept",
+    "generating": "Rezept wird generiert...",
+    "error": "Fehler beim Generieren des Rezepts",
+    "prep": "Vorb",
+    "cook": "Kochen",
+    "servings": "Portionen",
+    "ingredients": "Zutaten",
+    "instructions": "Anleitung",
+    "tips": "Tipps vom Koch",
+    "noRecipe": "Rezept konnte nicht geladen werden"
   }
 }
