@@ -182,6 +182,10 @@
       "stats": {
         "title": "Statistiques et bulletins",
         "description": "Mesurez vos progrès, classement et consultez les derniers appels par région."
+      },
+      "nutrition": {
+        "title": "Plans nutritionnels IA",
+        "description": "Générez des plans nutritionnels personnalisés pour optimiser vos performances cognitives et physiques."
       }
     },
     "cta": {

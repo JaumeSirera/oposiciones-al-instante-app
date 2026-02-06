@@ -206,6 +206,10 @@
       "stats": {
         "title": "Estadísticas y boletines",
         "description": "Mide tu progreso, ranking y consulta últimas convocatorias por CCAA."
+      },
+      "nutrition": {
+        "title": "Planes nutricionales IA",
+        "description": "Genera planes nutricionales personalizados para optimizar tu rendimiento cognitivo y físico durante la preparación."
       }
     },
     "cta": {

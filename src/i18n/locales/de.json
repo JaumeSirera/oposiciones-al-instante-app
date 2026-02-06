@@ -182,6 +182,10 @@
       "stats": {
         "title": "Statistiken und Bulletins",
         "description": "Messen Sie Ihren Fortschritt, Ranking und sehen Sie die neuesten Aufrufe nach Region."
+      },
+      "nutrition": {
+        "title": "KI-Ernährungspläne",
+        "description": "Erstellen Sie personalisierte Ernährungspläne zur Optimierung Ihrer kognitiven und körperlichen Leistung."
       }
     },
     "cta": {

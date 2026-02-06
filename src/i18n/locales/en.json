@@ -206,6 +206,10 @@
       "stats": {
         "title": "Statistics and Bulletins",
         "description": "Measure your progress, ranking and check latest calls by region."
+      },
+      "nutrition": {
+        "title": "AI Nutrition Plans",
+        "description": "Generate personalized nutrition plans to optimize your cognitive and physical performance during preparation."
       }
     },
     "cta": {
