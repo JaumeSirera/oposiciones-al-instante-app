@@ -303,7 +303,8 @@
     "translating": "Traduciendo...",
     "translatingContent": "Traduciendo contenido del plan...",
     "translationFailed": "No se ha podido traducir el contenido (problema de conexión)",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "regenerate": "Regenerar"
   },
   "test": {
     "choosePracticeMode": "Elige el modo de práctica",
