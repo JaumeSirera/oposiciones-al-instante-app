@@ -1720,5 +1720,17 @@
     "legal": "Legal",
     "aiImageLabel": "AI-generated image for illustrative purposes",
     "calorieWarning": "These values are outside the recommended healthy range (1200-4000 kcal). Consult a professional."
+  },
+  "recipe": {
+    "viewRecipe": "Recipe",
+    "generating": "Generating recipe...",
+    "error": "Error generating the recipe",
+    "prep": "Prep",
+    "cook": "Cook",
+    "servings": "servings",
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "tips": "Chef's Tips",
+    "noRecipe": "Could not load the recipe"
   }
 }
