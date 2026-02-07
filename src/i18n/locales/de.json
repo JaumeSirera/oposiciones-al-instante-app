@@ -1622,6 +1622,12 @@
     "ingredients": "Zutaten",
     "instructions": "Anleitung",
     "tips": "Tipps vom Koch",
-    "noRecipe": "Rezept konnte nicht geladen werden"
+    "noRecipe": "Rezept konnte nicht geladen werden",
+    "dietary": {
+      "normal": "Normal",
+      "glutenFree": "Glutenfrei",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Vegan"
+    }
   }
 }

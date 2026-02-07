@@ -1791,6 +1791,12 @@
     "ingredients": "Ingredientes",
     "instructions": "Instrucciones",
     "tips": "Consejos del Chef",
-    "noRecipe": "No se pudo cargar la receta"
+    "noRecipe": "No se pudo cargar la receta",
+    "dietary": {
+      "normal": "Normal",
+      "glutenFree": "Sin gluten",
+      "vegetarian": "Vegetariano",
+      "vegan": "Vegano"
+    }
   }
 }

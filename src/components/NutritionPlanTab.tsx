@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { RecipeModal } from '@/components/RecipeModal';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Loader2, 
   Sparkles, 
@@ -25,7 +26,8 @@ import {
   XCircle,
   Save,
   RefreshCw,
-  BookOpen
+  BookOpen,
+  Leaf
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -110,6 +112,7 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
   const [currentRecipe, setCurrentRecipe] = useState<any>(null);
   const [loadingRecipe, setLoadingRecipe] = useState(false);
   const [currentPlatoNombre, setCurrentPlatoNombre] = useState('');
+  const [dietaryPreference, setDietaryPreference] = useState<string>('normal');
 
   // Estados para contenido traducido
   const [translatedObjetivo, setTranslatedObjetivo] = useState<string>('');
@@ -346,7 +349,8 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
         body: {
           plato: comida.plato,
           ingredientes: comida.ingredientes,
-          tipo_comida: tipo
+          tipo_comida: tipo,
+          preferencia_dietetica: dietaryPreference
         }
       });
 
@@ -381,15 +385,29 @@ export function NutritionPlanTab({ planFisicoId, tipoPrueba, nivelFisico, diasSe
                   <Loader2 className="h-3 w-3 animate-spin" />
                 )}
               </h4>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleVerReceta(comida, tipo)}
-                className="flex-shrink-0"
-              >
-                <BookOpen className="h-4 w-4 mr-1" />
-                {t('recipe.viewRecipe', 'Receta')}
-              </Button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Select value={dietaryPreference} onValueChange={setDietaryPreference}>
+                  <SelectTrigger className="w-[130px] h-8 text-xs">
+                    <Leaf className="h-3 w-3 mr-1" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">{t('recipe.dietary.normal', 'Normal')}</SelectItem>
+                    <SelectItem value="sin_gluten">{t('recipe.dietary.glutenFree', 'Sin gluten')}</SelectItem>
+                    <SelectItem value="vegetariano">{t('recipe.dietary.vegetarian', 'Vegetariano')}</SelectItem>
+                    <SelectItem value="vegano">{t('recipe.dietary.vegan', 'Vegano')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleVerReceta(comida, tipo)}
+                  className="flex-shrink-0"
+                >
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  {t('recipe.viewRecipe', 'Receta')}
+                </Button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               <Badge variant="outline">{comida.calorias} kcal</Badge>
