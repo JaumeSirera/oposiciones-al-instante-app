@@ -59,3 +59,12 @@ verify_jwt = false
 
 [functions.generar-plan-nutricional]
 verify_jwt = false
+
+[functions.generar-plan-nutricional-estudio]
+verify_jwt = false
+
+[functions.enviar-email-actualizacion]
+verify_jwt = false
+
+[functions.generar-receta]
+verify_jwt = false

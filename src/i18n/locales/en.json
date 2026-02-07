@@ -1736,6 +1736,12 @@
     "ingredients": "Ingredients",
     "instructions": "Instructions",
     "tips": "Chef's Tips",
-    "noRecipe": "Could not load the recipe"
+    "noRecipe": "Could not load the recipe",
+    "dietary": {
+      "normal": "Normal",
+      "glutenFree": "Gluten-free",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan"
+    }
   }
 }
