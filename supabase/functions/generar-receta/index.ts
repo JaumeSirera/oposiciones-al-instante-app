@@ -32,16 +32,100 @@ serve(async (req) => {
     let restriccionDietetica = "";
     switch (preferencia_dietetica) {
       case "sin_gluten":
-        restriccionDietetica = "\n\n**IMPORTANTE - RESTRICCIÓN DIETÉTICA: SIN GLUTEN**\nTodos los ingredientes y la receta deben ser 100% libres de gluten. Sustituye cualquier ingrediente con gluten (trigo, cebada, centeno, avena no certificada) por alternativas sin gluten. Indica claramente las sustituciones realizadas.";
+        restriccionDietetica = `
+
+⚠️ **RESTRICCIÓN DIETÉTICA OBLIGATORIA: SIN GLUTEN** ⚠️
+Esta receta DEBE ser 100% libre de gluten. Cumple ESTRICTAMENTE estas reglas:
+
+INGREDIENTES TOTALMENTE PROHIBIDOS (no usar bajo ningún concepto):
+- Trigo (harina de trigo, pan, pasta de trigo, sémola, cuscús, bulgur, seitan)
+- Cebada (incluida la malta de cebada y cerveza)
+- Centeno (pan de centeno, harina de centeno)
+- Avena (salvo que sea certificada sin gluten)
+- Espelta, kamut, triticale
+- Salsas comerciales con gluten: salsa de soja normal, salsa teriyaki, salsa Worcestershire
+- Rebozados con harina de trigo, pan rallado normal, empanados
+- Cerveza, algunos caldos comerciales con gluten
+
+SUSTITUCIONES OBLIGATORIAS:
+- Harina de trigo → harina de arroz, harina de maíz, harina de almendra, harina de garbanzo, fécula de patata, almidón de maíz (maicena)
+- Pasta de trigo → pasta de arroz, pasta de maíz, pasta de legumbres
+- Pan normal → pan sin gluten (de arroz, maíz o trigo sarraceno)
+- Pan rallado → pan rallado sin gluten o almendra molida
+- Salsa de soja → tamari (salsa de soja sin gluten)
+- Cuscús → quinoa o arroz
+- Cerveza → vino o caldo sin gluten
+
+Indica SIEMPRE entre paréntesis "(sin gluten)" junto a cada ingrediente sustituido.`;
         break;
       case "vegetariano":
-        restriccionDietetica = "\n\n**IMPORTANTE - RESTRICCIÓN DIETÉTICA: VEGETARIANO**\nLa receta debe ser 100% vegetariana. No incluir carne, pescado ni mariscos. Se permiten huevos, lácteos y miel. Si el plato original contiene carne/pescado, adapta la receta con proteínas vegetarianas (tofu, tempeh, legumbres, huevos, queso, etc.).";
+        restriccionDietetica = `
+
+⚠️ **RESTRICCIÓN DIETÉTICA OBLIGATORIA: VEGETARIANO** ⚠️
+Esta receta DEBE ser 100% vegetariana. Cumple ESTRICTAMENTE estas reglas:
+
+INGREDIENTES TOTALMENTE PROHIBIDOS (no usar bajo ningún concepto):
+- Cualquier tipo de carne: ternera, cerdo, cordero, conejo, caballo, caza
+- Cualquier tipo de ave: pollo, pavo, pato, codorniz
+- Cualquier tipo de pescado: salmón, atún, merluza, bacalao, sardinas, anchoas
+- Cualquier tipo de marisco: gambas, langostinos, mejillones, calamares, pulpo
+- Embutidos y derivados cárnicos: jamón, chorizo, salchichón, bacon, salchichas
+- Gelatina animal, manteca de cerdo, grasa animal
+- Caldos de carne o pescado (usar caldo vegetal)
+- Anchoas en salsas (como la salsa Caesar tradicional)
+
+INGREDIENTES PERMITIDOS:
+- Huevos, lácteos (leche, queso, yogur, nata, mantequilla), miel
+- Todas las verduras, frutas, legumbres, cereales, frutos secos, semillas
+- Tofu, tempeh, seitán, soja texturizada, heura
+- Hongos y setas (portobello, shiitake, etc.)
+
+SUSTITUCIONES OBLIGATORIAS para platos con carne/pescado:
+- Carne → tofu firme marinado, seitán, soja texturizada, tempeh, legumbres (lentejas, garbanzos), setas portobello
+- Pescado → tofu ahumado, algas, coliflor al horno
+- Caldo de carne → caldo vegetal
+- Gelatina → agar-agar
+
+El plato resultante debe tener proteínas vegetarianas suficientes. Indica las sustituciones realizadas.`;
         break;
       case "vegano":
-        restriccionDietetica = "\n\n**IMPORTANTE - RESTRICCIÓN DIETÉTICA: VEGANO**\nLa receta debe ser 100% vegana. No incluir ningún producto de origen animal (carne, pescado, huevos, lácteos, miel). Adapta todos los ingredientes a alternativas 100% vegetales (leche vegetal, tofu, tempeh, levadura nutricional, etc.).";
+        restriccionDietetica = `
+
+⚠️ **RESTRICCIÓN DIETÉTICA OBLIGATORIA: VEGANO** ⚠️
+Esta receta DEBE ser 100% vegana. Cumple ESTRICTAMENTE estas reglas:
+
+INGREDIENTES TOTALMENTE PROHIBIDOS (no usar bajo ningún concepto):
+- Cualquier tipo de carne, ave, pescado o marisco (ver lista vegetariano)
+- Huevos (ni como ingrediente ni para rebozar/empanar/pintar)
+- Lácteos: leche, queso, yogur, nata, mantequilla, crema, requesón, kéfir
+- Miel
+- Gelatina animal, manteca de cerdo/animal
+- Caseína, suero de leche (whey), lactosa
+- Caldos de carne, pescado o con derivados animales
+- Cualquier alimento que contenga trazas de productos animales como ingrediente principal
+
+INGREDIENTES PERMITIDOS:
+- Todas las verduras, frutas, legumbres, cereales, frutos secos, semillas
+- Tofu, tempeh, seitán, soja texturizada, heura, proteína de guisante
+- Leches vegetales: avena, soja, almendra, coco, arroz
+- Yogur vegetal, queso vegano, nata vegetal (de coco, soja, avena)
+- Levadura nutricional (para sabor a queso)
+- Sirope de arce o agave (en lugar de miel)
+
+SUSTITUCIONES OBLIGATORIAS:
+- Leche → leche de avena, soja o almendra
+- Mantequilla → aceite de oliva, margarina vegetal o aceite de coco
+- Huevo (para rebozar) → mezcla de harina de garbanzo con agua, o semillas de lino/chía molidas con agua
+- Huevo (para bizcochos) → puré de plátano, compota de manzana, o sustituto comercial vegano
+- Queso → levadura nutricional, queso vegano, anacardos remojados
+- Nata → nata de coco o de soja
+- Miel → sirope de agave o de arce
+- Yogur → yogur de soja o coco
+- Caldo → caldo vegetal casero o comercial vegano
+
+El plato debe ser nutricionalmente completo. Indica todas las sustituciones.`;
         break;
       default:
-        // "normal" - no restriction
         break;
     }
 
