@@ -234,6 +234,8 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
     try {
       const imagePrompt = `Professional food photography of ${plato}, beautifully plated, restaurant quality, warm lighting, shallow depth of field, top-down view, 4k quality`;
       
+      console.log("Generating image for recipe:", plato);
+      
       const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
         method: "POST",
         headers: {
@@ -241,18 +243,39 @@ Responde SOLO con JSON válido, sin markdown ni explicaciones.`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "flux.schnell",
+          model: "google/gemini-2.5-flash-image",
           prompt: imagePrompt,
           n: 1,
           size: "512x512",
         }),
       });
 
+      console.log("Image API response status:", imageResponse.status);
+
       if (imageResponse.ok) {
         const imageData = await imageResponse.json();
-        if (imageData.data?.[0]?.url) {
-          receta.imagen_url = imageData.data[0].url;
+        
+        // Format: choices[0].images[0].image_url.url (Gemini image model)
+        const imageUrl = imageData.choices?.[0]?.images?.[0]?.image_url?.url;
+        if (imageUrl) {
+          receta.imagen_url = imageUrl;
+          console.log("Image set from choices.images, length:", imageUrl.length > 200 ? imageUrl.substring(0, 50) + "..." : imageUrl);
         }
+        // Fallback: data[0].url
+        else if (imageData.data?.[0]?.url) {
+          receta.imagen_url = imageData.data[0].url;
+          console.log("Image URL set from data");
+        }
+        // Fallback: data[0].b64_json
+        else if (imageData.data?.[0]?.b64_json) {
+          receta.imagen_url = `data:image/png;base64,${imageData.data[0].b64_json}`;
+          console.log("Image base64 set from data");
+        } else {
+          console.log("Unexpected image response:", JSON.stringify(imageData).substring(0, 500));
+        }
+      } else {
+        const errorText = await imageResponse.text();
+        console.error("Image API error:", imageResponse.status, errorText.substring(0, 500));
       }
     } catch (imgError) {
       console.error("Error generating image (non-fatal):", imgError);
