@@ -102,6 +102,21 @@ class TestService {
     }
   }
 
+  async getAllProcesosComunidad(): Promise<Proceso[]> {
+    try {
+      const data = await this.callAPI('procesos.php');
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      if (data.procesos && Array.isArray(data.procesos)) return data.procesos;
+      if (data.data && Array.isArray(data.data)) return data.data;
+      console.warn('Formato inesperado de respuesta:', data);
+      return [];
+    } catch (error) {
+      console.error('Error al obtener procesos de comunidad:', error);
+      return [];
+    }
+  }
+
   async getSeccionesYTemas(id_proceso: number): Promise<SeccionesTemasResponse> {
     try {
       const data = await this.callAPI(`preguntas_auxiliares.php?id_proceso=${id_proceso}`);
