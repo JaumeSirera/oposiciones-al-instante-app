@@ -245,7 +245,14 @@ export default function CrearTest() {
       return;
     }
 
-    // Texto es opcional - si no hay texto, se generan preguntas basadas en tema/sección
+    if (!formData.textoBase || formData.textoBase.trim().length === 0) {
+      toast({
+        variant: "destructive",
+        title: t('createTest.contentRequired', { defaultValue: 'Contenido requerido' }),
+        description: t('createTest.mustAddReferenceContent', { defaultValue: 'Debes añadir contenido de referencia (subir un archivo o pegar texto) para generar las preguntas.' })
+      });
+      return;
+    }
 
     if (!formData.proceso && !useCustomProceso) {
       toast({
