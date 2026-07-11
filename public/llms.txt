@@ -1,0 +1,18 @@
+# Oposiciones Test IA
+
+> Aplicación con inteligencia artificial para preparar oposiciones: tests ilimitados, simulacros, resúmenes automáticos, planes de estudio, psicotécnicos, preparación física y profesor virtual 24/7.
+
+## Pages
+
+- [Inicio](/): Descripción general de la plataforma y funcionalidades principales.
+- [Agente IA para Oposiciones](/agente-ia-oposiciones): Cómo el agente de IA ayuda a preparar oposiciones.
+- [Planes de Estudio IA](/planes-de-estudio-ia): Planes personalizados generados con IA.
+- [Resúmenes IA](/resumenes-ia-oposiciones): Resúmenes automáticos del temario.
+- [Psicotécnicos Online](/psicotecnicos-online): Ejercicios de cálculo, memoria y razonamiento.
+- [Preparación Física IA](/preparacion-fisica-ia): Planes físicos para pruebas de oposición.
+- [Profesor Virtual](/profesor-virtual-oposiciones): Profesor virtual 24/7 basado en IA.
+- [Donación Pública](/donacion-publica): Apoya el proyecto.
+
+## Optional
+
+- [Política de Privacidad](/privacy-policy): Cómo tratamos los datos personales.

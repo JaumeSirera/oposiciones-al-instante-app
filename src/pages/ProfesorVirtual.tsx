@@ -32,7 +32,7 @@ const ProfesorVirtual: React.FC = () => {
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
                 <MessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('profesorVirtual.instantDoubts')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('profesorVirtual.instantDoubts')}</h2>
               <p className="text-muted-foreground">{t('profesorVirtual.instantDoubtsDesc')}</p>
             </CardContent>
           </Card>
@@ -41,7 +41,7 @@ const ProfesorVirtual: React.FC = () => {
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Lightbulb className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('profesorVirtual.examplesTricks')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('profesorVirtual.examplesTricks')}</h2>
               <p className="text-muted-foreground">{t('profesorVirtual.examplesTricksDesc')}</p>
             </CardContent>
           </Card>
@@ -50,7 +50,7 @@ const ProfesorVirtual: React.FC = () => {
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
                 <NotebookPen className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('profesorVirtual.guidedExercises')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('profesorVirtual.guidedExercises')}</h2>
               <p className="text-muted-foreground">{t('profesorVirtual.guidedExercisesDesc')}</p>
             </CardContent>
           </Card>

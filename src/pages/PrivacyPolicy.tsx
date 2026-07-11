@@ -21,9 +21,9 @@ const PrivacyPolicy = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl text-center text-blue-600">
+            <h1 className="text-3xl font-bold text-center text-blue-600">
               Política de Privacidad
-            </CardTitle>
+            </h1>
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none space-y-6">
             
