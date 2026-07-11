@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.12.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,39 +26,42 @@ serve(async (req) => {
 
     let texto = '';
 
-    // Para archivos de texto plano
     if (file.type === 'text/plain') {
       texto = await file.text();
-    } 
-    // Para PDF (extraer texto simple - nota: esto es básico, para OCR más avanzado se necesitaría una librería especializada)
-    else if (file.type === 'application/pdf') {
-      // Por ahora, retornamos un mensaje indicando que se recibió el PDF
-      // En producción, aquí se usaría una librería como pdf-parse
-      texto = await file.text();
-      
-      // Si no se puede extraer texto directamente, informar al usuario
-      if (!texto || texto.length < 50) {
+    } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      try {
+        const buffer = new Uint8Array(await file.arrayBuffer());
+        const pdf = await getDocumentProxy(buffer);
+        const { text } = await extractText(pdf, { mergePages: true });
+        texto = (Array.isArray(text) ? text.join('\n') : text || '').trim();
+      } catch (e) {
+        console.error('Error extrayendo PDF con unpdf:', e);
         return new Response(
-          JSON.stringify({ 
-            error: 'No se pudo extraer texto del PDF. Por favor, copia y pega el contenido manualmente.',
+          JSON.stringify({
+            error: 'No se pudo extraer el texto del PDF. Puede ser un PDF escaneado (imagen). Copia y pega el contenido manualmente.',
             texto: ''
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-    }
-    // Para Word y otros formatos
-    else if (
+
+      if (!texto || texto.length < 50) {
+        return new Response(
+          JSON.stringify({
+            error: 'El PDF no contiene texto extraíble (posiblemente escaneado). Copia y pega el contenido manualmente.',
+            texto: ''
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else if (
       file.type === 'application/msword' ||
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ) {
-      // Para Word, intentamos extraer como texto
-      // En producción, se usaría una librería especializada como mammoth
       texto = await file.text();
-      
       if (!texto || texto.length < 50) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: 'No se pudo extraer texto del documento Word. Por favor, copia y pega el contenido manualmente.',
             texto: ''
           }),
@@ -74,9 +78,9 @@ serve(async (req) => {
     console.log('Texto extraído, longitud:', texto.length);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        texto: texto,
+      JSON.stringify({
+        success: true,
+        texto,
         nombre_archivo: file.name,
         tipo_archivo: file.type,
         tamano: file.size
@@ -87,9 +91,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error al extraer texto:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Error al procesar el archivo', 
-        details: error.message 
+      JSON.stringify({
+        error: 'Error al procesar el archivo',
+        details: error instanceof Error ? error.message : String(error)
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
