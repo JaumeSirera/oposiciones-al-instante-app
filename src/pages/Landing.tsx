@@ -149,8 +149,8 @@ const Landing = () => {
 
             {/* Mobile: solo botón de menú y acceso rápido */}
             <div className="flex sm:hidden items-center gap-2">
-              <Link to="/auth" onClick={closeMenu}>
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Link to="/auth" onClick={closeMenu} aria-label="Acceso alumnos">
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="Acceso alumnos">
                   <Users className="w-4 h-4" />
                 </Button>
               </Link>
