@@ -82,7 +82,7 @@ export default function CrearPsicotecnicos() {
     const loadProcesos = async () => {
       setLoadingProcesos(true);
       try {
-        const data = await testService.getProcesos(user?.id);
+        const data = await testService.getAllProcesosComunidad();
         setProcesos(data);
       } catch (error) {
         console.error('Error al cargar procesos:', error);
