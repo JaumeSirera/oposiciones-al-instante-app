@@ -108,6 +108,7 @@ export function AppSidebar() {
         { title: t('nav.physicalPlans'), url: "/planes-fisicos", icon: Dumbbell, notForUsuario: true },
         { title: t('nav.reminders'), url: "/administrar-recordatorios", icon: Bell, requiresAdmin: true },
         { title: "Email Actualización", url: "/enviar-email-actualizacion", icon: Mail, requiresSA: true },
+        { title: "Administrar usuarios", url: "/administrar-usuarios", icon: Users, requiresSA: true },
       ]
     },
     {
