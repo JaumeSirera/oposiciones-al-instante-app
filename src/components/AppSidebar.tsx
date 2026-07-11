@@ -20,7 +20,8 @@ import {
   Mail,
   Download,
   Layers,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Users
 } from "lucide-react";
 import {
   Sidebar,
