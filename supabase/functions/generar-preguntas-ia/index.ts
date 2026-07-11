@@ -124,44 +124,74 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
       throw new Error("Respuesta vacía del modelo");
     }
 
-    // Parsear el JSON de la respuesta
-    let parsed;
-    try {
-      // Limpiar posibles caracteres de markdown
-      let cleanContent = content.trim();
-      if (cleanContent.startsWith("```json")) {
-        cleanContent = cleanContent.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-      } else if (cleanContent.startsWith("```")) {
-        cleanContent = cleanContent.replace(/^```\s*/, "").replace(/\s*```$/, "");
-      }
-      
-      // Eliminar TODOS los caracteres de control (incluyendo saltos de línea) para evitar JSON truncado
-      cleanContent = cleanContent
-        .replace(/[\x00-\x1F\x7F]/g, ' ');
-      
-      
-      parsed = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error("[generar-preguntas-ia] Error parsing JSON:", parseError);
-      console.error("[generar-preguntas-ia] Content:", content.substring(0, 500));
-      
-      // Fallback: extraer con regex
-      try {
-        const preguntasMatch = content.match(/"preguntas"\s*:\s*\[[\s\S]*\]/);
-        if (preguntasMatch) {
-          const sanitized = preguntasMatch[0]
-            .replace(/[\x00-\x1F\x7F]/g, ' ')
-            .replace(/,\s*]/g, ']');
-          parsed = JSON.parse(`{${sanitized}}`);
-        } else {
-          throw new Error("No se pudo extraer JSON válido");
+    // Parsear el JSON de la respuesta (tolerante a errores)
+    let preguntas: any[] = [];
+    
+    const cleanMarkdown = (s: string) => {
+      let c = s.trim();
+      if (c.startsWith("```json")) c = c.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      else if (c.startsWith("```")) c = c.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      return c;
+    };
+    
+    const sanitize = (s: string) => s.replace(/[\x00-\x1F\x7F]/g, ' ');
+    
+    // Extrae objetos JSON balanceados de un string, ignorando los inválidos
+    const extractObjects = (text: string): any[] => {
+      const results: any[] = [];
+      let depth = 0;
+      let start = -1;
+      let inString = false;
+      let escape = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (escape) { escape = false; continue; }
+        if (ch === '\\') { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === '{') {
+          if (depth === 0) start = i;
+          depth++;
+        } else if (ch === '}') {
+          depth--;
+          if (depth === 0 && start !== -1) {
+            const chunk = text.substring(start, i + 1);
+            try {
+              results.push(JSON.parse(chunk));
+            } catch {
+              // Intento de reparación: escapar backslashes sueltos
+              try {
+                const repaired = chunk.replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
+                results.push(JSON.parse(repaired));
+              } catch {
+                // descartar objeto inválido
+              }
+            }
+            start = -1;
+          }
         }
-      } catch {
+      }
+      return results;
+    };
+
+    try {
+      const cleanContent = sanitize(cleanMarkdown(content));
+      const parsed = JSON.parse(cleanContent);
+      preguntas = parsed.preguntas || parsed;
+    } catch (parseError) {
+      console.warn("[generar-preguntas-ia] JSON global inválido, extrayendo objetos individualmente");
+      const cleanContent = sanitize(cleanMarkdown(content));
+      // Buscar el array "preguntas" y extraer sus objetos uno a uno
+      const idx = cleanContent.indexOf('"preguntas"');
+      const region = idx >= 0 ? cleanContent.substring(idx) : cleanContent;
+      preguntas = extractObjects(region).filter((p) => p && p.pregunta && Array.isArray(p.respuestas));
+      if (preguntas.length === 0) {
+        console.error("[generar-preguntas-ia] Content:", content.substring(0, 500));
         throw new Error("Error al procesar respuesta del modelo");
       }
+      console.log(`[generar-preguntas-ia] Recuperadas ${preguntas.length} preguntas tras reparación`);
     }
 
-    const preguntas = parsed.preguntas || parsed;
 
     if (!Array.isArray(preguntas) || preguntas.length === 0) {
       throw new Error("No se generaron preguntas válidas");
