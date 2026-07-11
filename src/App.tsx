@@ -54,6 +54,7 @@ import Flashcards from "./pages/Flashcards";
 import ConfigurarRecordatoriosFlashcards from "./pages/ConfigurarRecordatoriosFlashcards";
 import AnalizadorNutricional from "./pages/AnalizadorNutricional";
 import AdministrarUsuarios from "./pages/AdministrarUsuarios";
+import AdministrarProcesos from "./pages/AdministrarProcesos";
 
 const queryClient = new QueryClient();
 
@@ -153,6 +154,7 @@ function AppContent() {
           <Route path="/analizador-nutricional" element={<AnalizadorNutricional />}
           />
           <Route path="/administrar-usuarios" element={<AdministrarUsuarios />} />
+          <Route path="/administrar-procesos" element={<AdministrarProcesos />} />
         </Route>
 
         {/* Fallback global */}
