@@ -109,6 +109,7 @@ export function AppSidebar() {
         { title: t('nav.reminders'), url: "/administrar-recordatorios", icon: Bell, requiresAdmin: true },
         { title: "Email Actualización", url: "/enviar-email-actualizacion", icon: Mail, requiresSA: true },
         { title: "Administrar usuarios", url: "/administrar-usuarios", icon: Users, requiresSA: true },
+        { title: "Administrar procesos", url: "/administrar-procesos", icon: Layers, requiresSA: true },
       ]
     },
     {
