@@ -142,42 +142,62 @@ Los campos "pagina", "ubicacion" y "cita" son OBLIGATORIOS cuando se genera desd
       throw new Error("Respuesta vacía del modelo");
     }
 
-    // Parsear el JSON de la respuesta
-    let parsed;
-    try {
-      let cleanContent = content.trim();
-      if (cleanContent.startsWith("```json")) {
-        cleanContent = cleanContent.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-      } else if (cleanContent.startsWith("```")) {
-        cleanContent = cleanContent.replace(/^```\s*/, "").replace(/\s*```$/, "");
-      }
-      
-      // Eliminar caracteres de control problemáticos (excepto espacios normales)
-      cleanContent = cleanContent
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Eliminar control chars excepto \t \n \r
-      
-      parsed = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error("[generar-psicotecnicos-ia] Error parsing JSON:", parseError);
-      console.error("[generar-psicotecnicos-ia] Content:", content.substring(0, 500));
-      
-      // Intentar extraer preguntas con regex como fallback
-      try {
-        const preguntasMatch = content.match(/"preguntas"\s*:\s*\[[\s\S]*\]/);
-        if (preguntasMatch) {
-          const sanitized = preguntasMatch[0]
-            .replace(/[\x00-\x1F\x7F]/g, '')
-            .replace(/,\s*]/g, ']'); // Fix trailing commas
-          parsed = JSON.parse(`{${sanitized}}`);
-        } else {
-          throw new Error("No se pudo extraer JSON válido");
+    // Parsear el JSON de la respuesta (tolerante a errores)
+    let preguntas: any[] = [];
+
+    const cleanMarkdown = (s: string) => {
+      let c = s.trim();
+      if (c.startsWith("```json")) c = c.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      else if (c.startsWith("```")) c = c.replace(/^```\s*/, "").replace(/\s*```$/, "");
+      return c;
+    };
+    const sanitize = (s: string) => s.replace(/[\x00-\x1F\x7F]/g, ' ');
+
+    const extractObjects = (text: string): any[] => {
+      const results: any[] = [];
+      let depth = 0, start = -1, inString = false, escape = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (escape) { escape = false; continue; }
+        if (ch === '\\') { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === '{') { if (depth === 0) start = i; depth++; }
+        else if (ch === '}') {
+          depth--;
+          if (depth === 0 && start !== -1) {
+            const chunk = text.substring(start, i + 1);
+            try { results.push(JSON.parse(chunk)); }
+            catch {
+              try {
+                const repaired = chunk.replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
+                results.push(JSON.parse(repaired));
+              } catch { /* descartar */ }
+            }
+            start = -1;
+          }
         }
-      } catch {
+      }
+      return results;
+    };
+
+    try {
+      const cleanContent = sanitize(cleanMarkdown(content));
+      const parsed = JSON.parse(cleanContent);
+      preguntas = parsed.preguntas || parsed;
+    } catch {
+      console.warn("[generar-psicotecnicos-ia] JSON global inválido, extrayendo objetos individualmente");
+      const cleanContent = sanitize(cleanMarkdown(content));
+      const idx = cleanContent.indexOf('"preguntas"');
+      const region = idx >= 0 ? cleanContent.substring(idx) : cleanContent;
+      preguntas = extractObjects(region).filter((p) => p && p.pregunta && Array.isArray(p.respuestas));
+      if (preguntas.length === 0) {
+        console.error("[generar-psicotecnicos-ia] Content:", content.substring(0, 500));
         throw new Error("Error al procesar respuesta del modelo");
       }
+      console.log(`[generar-psicotecnicos-ia] Recuperadas ${preguntas.length} preguntas tras reparación`);
     }
 
-    const preguntas = parsed.preguntas || parsed;
 
     if (!Array.isArray(preguntas) || preguntas.length === 0) {
       throw new Error("No se generaron preguntas válidas");
