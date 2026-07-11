@@ -33,7 +33,7 @@ const Psicotecnicos: React.FC = () => {
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Calculator className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('psychotechnics.calculationTitle')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('psychotechnics.calculationTitle')}</h2>
               <p className="text-muted-foreground">{t('psychotechnics.calculationDescription')}</p>
             </CardContent>
           </Card>
@@ -42,7 +42,7 @@ const Psicotecnicos: React.FC = () => {
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('psychotechnics.memoryTitle')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('psychotechnics.memoryTitle')}</h2>
               <p className="text-muted-foreground">{t('psychotechnics.memoryDescription')}</p>
             </CardContent>
           </Card>
@@ -51,7 +51,7 @@ const Psicotecnicos: React.FC = () => {
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Timer className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('psychotechnics.timerTitle')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('psychotechnics.timerTitle')}</h2>
               <p className="text-muted-foreground">{t('psychotechnics.timerDescription')}</p>
             </CardContent>
           </Card>

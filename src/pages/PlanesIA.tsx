@@ -30,7 +30,7 @@ const PlanesIA: React.FC = () => {
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('planesIA.calendarByGoals')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('planesIA.calendarByGoals')}</h2>
               <p className="text-muted-foreground">{t('planesIA.calendarByGoalsDesc')}</p>
             </CardContent>
           </Card>
@@ -40,7 +40,7 @@ const PlanesIA: React.FC = () => {
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Repeat className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('planesIA.spacedRepetition')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('planesIA.spacedRepetition')}</h2>
               <p className="text-muted-foreground">{t('planesIA.spacedRepetitionDesc')}</p>
             </CardContent>
           </Card>
@@ -50,7 +50,7 @@ const PlanesIA: React.FC = () => {
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
                 <BookOpen className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('planesIA.smartPriority')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('planesIA.smartPriority')}</h2>
               <p className="text-muted-foreground">{t('planesIA.smartPriorityDesc')}</p>
             </CardContent>
           </Card>

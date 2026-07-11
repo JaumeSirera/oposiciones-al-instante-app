@@ -30,7 +30,7 @@ const PreparacionFisicaIA: React.FC = () => {
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Dumbbell className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('preparacionFisica.specificTests')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('preparacionFisica.specificTests')}</h2>
               <p className="text-muted-foreground">{t('preparacionFisica.specificTestsDesc')}</p>
             </CardContent>
           </Card>
@@ -39,7 +39,7 @@ const PreparacionFisicaIA: React.FC = () => {
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
                 <Activity className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('preparacionFisica.progressionsAndTechnique')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('preparacionFisica.progressionsAndTechnique')}</h2>
               <p className="text-muted-foreground">{t('preparacionFisica.progressionsAndTechniqueDesc')}</p>
             </CardContent>
           </Card>
@@ -48,7 +48,7 @@ const PreparacionFisicaIA: React.FC = () => {
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
                 <HeartPulse className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">{t('preparacionFisica.tracking')}</h3>
+              <h2 className="text-xl font-bold text-foreground mb-2">{t('preparacionFisica.tracking')}</h2>
               <p className="text-muted-foreground">{t('preparacionFisica.trackingDesc')}</p>
             </CardContent>
           </Card>
