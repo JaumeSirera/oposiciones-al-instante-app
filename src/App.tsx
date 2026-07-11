@@ -152,6 +152,7 @@ function AppContent() {
           />
           <Route path="/analizador-nutricional" element={<AnalizadorNutricional />}
           />
+          <Route path="/administrar-usuarios" element={<AdministrarUsuarios />} />
         </Route>
 
         {/* Fallback global */}
