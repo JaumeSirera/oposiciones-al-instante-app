@@ -53,6 +53,7 @@ import EnviarEmailActualizacion from "./pages/EnviarEmailActualizacion";
 import Flashcards from "./pages/Flashcards";
 import ConfigurarRecordatoriosFlashcards from "./pages/ConfigurarRecordatoriosFlashcards";
 import AnalizadorNutricional from "./pages/AnalizadorNutricional";
+import AdministrarUsuarios from "./pages/AdministrarUsuarios";
 
 const queryClient = new QueryClient();
 
