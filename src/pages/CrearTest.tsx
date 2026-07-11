@@ -71,7 +71,7 @@ export default function CrearTest() {
       
       setLoadingProcesos(true);
       try {
-        const data = await testService.getAllProcesosComunidad();
+        const data = await testService.getProcesos(user.id);
         setProcesos(data || []);
       } catch (error) {
         console.error('Error al cargar procesos:', error);

@@ -74,14 +74,11 @@ if ($method === 'GET') {
             if ($usuario) {
                 $nivel = $usuario['nivel'];
                 
-                if ($nivel === 'admin') {
-                    // Admin ve procesos públicos + sus propios procesos
+                if ($nivel !== 'SA') {
+                    // Cualquier usuario no-SA (admin o normal) ve procesos públicos + sus propios
                     $query .= " AND (p.es_publico = 1 OR p.id_usuario = ?)";
                     $types .= 'i';
                     $params[] = $id_usuario;
-                } elseif ($nivel !== 'SA') {
-                    // Usuarios normales solo ven procesos públicos
-                    $query .= " AND p.es_publico = 1";
                 }
                 // SA ve todos los procesos (no añadimos condición)
             }
