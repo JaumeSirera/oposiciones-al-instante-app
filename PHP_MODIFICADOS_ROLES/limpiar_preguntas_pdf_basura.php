@@ -31,6 +31,8 @@ $id_usuario = isset($_GET['id_usuario']) ? intval($_GET['id_usuario']) : 0;
 $desde      = $_GET['desde'] ?? '';
 $limite     = isset($_GET['limite']) ? max(50, intval($_GET['limite'])) : 500; // por defecto 500 por lote
 $desde_id   = isset($_GET['desde_id']) ? intval($_GET['desde_id']) : 0;
+$auto       = isset($_GET['auto']) && $_GET['auto'] == '1'; // avance automático entre lotes
+$confirmado = isset($_GET['confirmado']) && $_GET['confirmado'] == '1'; // salta confirm() en auto
 
 if ($ejecutar && $clave !== $CLAVE) {
     die('<h2 style="color:red;">❌ Clave incorrecta</h2>');
