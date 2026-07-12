@@ -7,7 +7,7 @@
  *   Simulación:  limpiar_preguntas_pdf_basura.php
  *   Ejecutar:    limpiar_preguntas_pdf_basura.php?ejecutar=1&clave=limpiar2024
  *   Filtros:     &id_proceso=123  &id_usuario=45  &desde=2025-01-01
- *   Batching:    &limite=500  &desde_id=12000   (evita timeouts)
+ *   Batching:    &limite=1000  &desde_id=12000   (configurable: 500, 1000, 2000…)
  */
 
 header('Content-Type: text/html; charset=utf-8');
