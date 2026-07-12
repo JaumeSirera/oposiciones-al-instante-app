@@ -33,9 +33,39 @@ $limite     = isset($_GET['limite']) ? max(50, intval($_GET['limite'])) : 500; /
 $desde_id   = isset($_GET['desde_id']) ? intval($_GET['desde_id']) : 0;
 $auto       = isset($_GET['auto']) && $_GET['auto'] == '1'; // avance automático entre lotes
 $confirmado = isset($_GET['confirmado']) && $_GET['confirmado'] == '1'; // salta confirm() en auto
+$reanudar   = isset($_GET['reanudar']) && $_GET['reanudar'] == '1'; // usar checkpoint guardado
+$reset      = isset($_GET['reset']) && $_GET['reset'] == '1'; // borrar checkpoint
 
 if ($ejecutar && $clave !== $CLAVE) {
     die('<h2 style="color:red;">❌ Clave incorrecta</h2>');
+}
+
+// ---- CHECKPOINT: guardar/leer último desde_id procesado por combinación de filtros ----
+$STATE_DIR = sys_get_temp_dir();
+$stateKey  = md5(json_encode([
+    'ej' => $ejecutar ? 1 : 0,
+    'p'  => $id_proceso, 'u' => $id_usuario, 'd' => $desde, 'l' => $limite,
+]));
+$stateFile = $STATE_DIR . '/limpiar_pdf_basura_' . $stateKey . '.json';
+
+function leer_checkpoint($f) {
+    if (!is_file($f)) return null;
+    $j = @json_decode(@file_get_contents($f), true);
+    return is_array($j) ? $j : null;
+}
+function guardar_checkpoint($f, $data) {
+    @file_put_contents($f, json_encode($data));
+}
+function borrar_checkpoint($f) { if (is_file($f)) @unlink($f); }
+
+if ($reset) { borrar_checkpoint($stateFile); }
+
+$checkpoint = leer_checkpoint($stateFile);
+// Si no se pasó desde_id explícito y hay checkpoint, reanudar automáticamente
+if ($desde_id === 0 && $checkpoint && !empty($checkpoint['next_id']) && empty($checkpoint['finished'])) {
+    if ($reanudar || $auto) {
+        $desde_id = intval($checkpoint['next_id']);
+    }
 }
 
 $PATRONES_BASURA = [
