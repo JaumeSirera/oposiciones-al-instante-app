@@ -234,7 +234,19 @@ if ($ejecutar && count($sospechosas) > 0) {
 
 echo '</div>'; // cerrar progress
 
-// 5) Estadísticas + tabla
+$hayMas    = ($total >= $limite);
+$siguiente = $ultimo_id > 0 ? ($ultimo_id + 1) : ($desde_id ?: 0);
+
+// Persistir checkpoint del lote completado
+guardar_checkpoint($stateFile, [
+    'last_id'  => $ultimo_id,
+    'next_id'  => $siguiente,
+    'started'  => $checkpoint['started'] ?? date('c'),
+    'updated'  => date('c'),
+    'finished' => !$hayMas,
+    'ejecutar' => $ejecutar,
+]);
+logline('💾 Checkpoint guardado (next_id='.$siguiente.($hayMas?'':' · FIN').')', 'ok');
 echo '<div>
 <div class="stat"><b>'.number_format($total).'</b>Analizadas (lote)</div>
 <div class="stat"><b style="color:'.(count($sospechosas)?'#d32f2f':'#388e3c').'">'.count($sospechosas).'</b>Sospechosas</div>
