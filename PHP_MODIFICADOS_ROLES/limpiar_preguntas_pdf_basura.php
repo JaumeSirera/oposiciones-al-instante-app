@@ -31,6 +31,8 @@ $id_usuario = isset($_GET['id_usuario']) ? intval($_GET['id_usuario']) : 0;
 $desde      = $_GET['desde'] ?? '';
 $limite     = isset($_GET['limite']) ? max(50, intval($_GET['limite'])) : 500; // por defecto 500 por lote
 $desde_id   = isset($_GET['desde_id']) ? intval($_GET['desde_id']) : 0;
+$auto       = isset($_GET['auto']) && $_GET['auto'] == '1'; // avance automático entre lotes
+$confirmado = isset($_GET['confirmado']) && $_GET['confirmado'] == '1'; // salta confirm() en auto
 
 if ($ejecutar && $clave !== $CLAVE) {
     die('<h2 style="color:red;">❌ Clave incorrecta</h2>');
@@ -212,7 +214,7 @@ if (count($sospechosas) > 0) {
     echo '</table>';
 }
 
-// 6) Botones: siguiente lote / ejecutar
+// 6) Botones: siguiente lote / ejecutar / auto
 $baseQs = "limite=$limite";
 if ($id_proceso) $baseQs .= "&id_proceso=$id_proceso";
 if ($id_usuario) $baseQs .= "&id_usuario=$id_usuario";
@@ -224,13 +226,23 @@ $siguiente = $ultimo_id + 1;
 echo '<div class="warn" style="margin-top:20px">';
 if (!$ejecutar && count($sospechosas) > 0) {
     $qs = $baseQs."&ejecutar=1&clave=$CLAVE".($desde_id?"&desde_id=$desde_id":"");
-    echo '<a href="?'.$qs.'" class="btn" onclick="return confirm(\'¿Eliminar '.count($sospechosas).' preguntas de este lote?\')">🗑️ Ejecutar este lote</a>';
+    echo '<a href="?'.$qs.'" class="btn" onclick="return confirm(\'¿Eliminar '.count($sospechosas).' preguntas de este lote?\')">🗑️ Ejecutar este lote</a> ';
+    $qsAuto = $baseQs."&ejecutar=1&clave=$CLAVE&auto=1&confirmado=1";
+    echo '<a href="?'.$qsAuto.'" class="btn" style="background:#6a1b9a" onclick="return confirm(\'Se procesarán TODOS los lotes automáticamente hasta el final. ¿Continuar?\')">⚡ Ejecutar TODO automáticamente</a>';
 }
 if ($hayMas) {
-    $qsNext = $baseQs."&desde_id=$siguiente".($ejecutar?"&ejecutar=1&clave=$CLAVE":"");
-    echo '<a href="?'.$qsNext.'" class="btn next">➡️ Siguiente lote (desde ID '.$siguiente.')</a>';
+    $qsNext = $baseQs."&desde_id=$siguiente".($ejecutar?"&ejecutar=1&clave=$CLAVE":"").($auto?"&auto=1&confirmado=1":"");
+    echo ' <a href="?'.$qsNext.'" class="btn next" id="btnNext">➡️ Siguiente lote (desde ID '.$siguiente.')</a>';
+
+    if ($auto && $confirmado) {
+        // Redirección automática al siguiente lote
+        $segundos = 2;
+        echo '<div class="ok" style="margin-top:12px">⚡ <b>Modo automático activo.</b> Redirigiendo al siguiente lote en '.$segundos.'s…</div>';
+        echo '<script>setTimeout(function(){ window.location.href = "?'.$qsNext.'"; }, '.($segundos*1000).');</script>';
+        echo '<noscript><meta http-equiv="refresh" content="'.$segundos.';url=?'.$qsNext.'"></noscript>';
+    }
 } else {
-    echo '<div class="ok" style="margin-top:10px">✅ No hay más preguntas que procesar con estos filtros.</div>';
+    echo '<div class="ok" style="margin-top:10px">✅ No hay más preguntas que procesar con estos filtros. Proceso completado.</div>';
 }
 echo '</div>';
 
