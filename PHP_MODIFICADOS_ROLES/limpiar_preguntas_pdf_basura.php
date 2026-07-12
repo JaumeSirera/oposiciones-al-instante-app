@@ -33,9 +33,39 @@ $limite     = isset($_GET['limite']) ? max(50, intval($_GET['limite'])) : 500; /
 $desde_id   = isset($_GET['desde_id']) ? intval($_GET['desde_id']) : 0;
 $auto       = isset($_GET['auto']) && $_GET['auto'] == '1'; // avance automático entre lotes
 $confirmado = isset($_GET['confirmado']) && $_GET['confirmado'] == '1'; // salta confirm() en auto
+$reanudar   = isset($_GET['reanudar']) && $_GET['reanudar'] == '1'; // usar checkpoint guardado
+$reset      = isset($_GET['reset']) && $_GET['reset'] == '1'; // borrar checkpoint
 
 if ($ejecutar && $clave !== $CLAVE) {
     die('<h2 style="color:red;">❌ Clave incorrecta</h2>');
+}
+
+// ---- CHECKPOINT: guardar/leer último desde_id procesado por combinación de filtros ----
+$STATE_DIR = sys_get_temp_dir();
+$stateKey  = md5(json_encode([
+    'ej' => $ejecutar ? 1 : 0,
+    'p'  => $id_proceso, 'u' => $id_usuario, 'd' => $desde, 'l' => $limite,
+]));
+$stateFile = $STATE_DIR . '/limpiar_pdf_basura_' . $stateKey . '.json';
+
+function leer_checkpoint($f) {
+    if (!is_file($f)) return null;
+    $j = @json_decode(@file_get_contents($f), true);
+    return is_array($j) ? $j : null;
+}
+function guardar_checkpoint($f, $data) {
+    @file_put_contents($f, json_encode($data));
+}
+function borrar_checkpoint($f) { if (is_file($f)) @unlink($f); }
+
+if ($reset) { borrar_checkpoint($stateFile); }
+
+$checkpoint = leer_checkpoint($stateFile);
+// Si no se pasó desde_id explícito y hay checkpoint, reanudar automáticamente
+if ($desde_id === 0 && $checkpoint && !empty($checkpoint['next_id']) && empty($checkpoint['finished'])) {
+    if ($reanudar || $auto) {
+        $desde_id = intval($checkpoint['next_id']);
+    }
 }
 
 $PATRONES_BASURA = [
@@ -102,11 +132,25 @@ $whereSql = implode(' AND ', $where);
 
 echo '<div class="info">
 <b>Filtros:</b> '.htmlspecialchars($whereSql).'<br>
-<b>Tamaño del lote:</b> '.$limite.' preguntas
+<b>Tamaño del lote:</b> '.$limite.' preguntas<br>
+<b>Checkpoint:</b> '.($checkpoint
+    ? 'último ID procesado <code>'.intval($checkpoint['last_id'] ?? 0).'</code>, siguiente <code>'.intval($checkpoint['next_id'] ?? 0).'</code>'.(!empty($checkpoint['finished'])?' <b style="color:#388e3c">(finalizado)</b>':'')
+    : '<i>ninguno guardado</i>').'
 </div>';
+
+// Guardar checkpoint inicial (por si el script muere durante el análisis del lote)
+guardar_checkpoint($stateFile, [
+    'last_id'   => $desde_id ?: 0,
+    'next_id'   => $desde_id ?: 0,
+    'started'   => $checkpoint['started'] ?? date('c'),
+    'updated'   => date('c'),
+    'finished'  => false,
+    'ejecutar'  => $ejecutar,
+]);
 
 echo '<h3>⏳ Progreso</h3><div class="progress" id="log">';
 logline('🚀 Iniciando análisis...', 'ok');
+if ($desde_id > 0) logline("↩️ Reanudando desde ID $desde_id", 'ok');
 
 $inicio = microtime(true);
 
@@ -190,7 +234,19 @@ if ($ejecutar && count($sospechosas) > 0) {
 
 echo '</div>'; // cerrar progress
 
-// 5) Estadísticas + tabla
+$hayMas    = ($total >= $limite);
+$siguiente = $ultimo_id > 0 ? ($ultimo_id + 1) : ($desde_id ?: 0);
+
+// Persistir checkpoint del lote completado
+guardar_checkpoint($stateFile, [
+    'last_id'  => $ultimo_id,
+    'next_id'  => $siguiente,
+    'started'  => $checkpoint['started'] ?? date('c'),
+    'updated'  => date('c'),
+    'finished' => !$hayMas,
+    'ejecutar' => $ejecutar,
+]);
+logline('💾 Checkpoint guardado (next_id='.$siguiente.($hayMas?'':' · FIN').')', 'ok');
 echo '<div>
 <div class="stat"><b>'.number_format($total).'</b>Analizadas (lote)</div>
 <div class="stat"><b style="color:'.(count($sospechosas)?'#d32f2f':'#388e3c').'">'.count($sospechosas).'</b>Sospechosas</div>
@@ -214,14 +270,11 @@ if (count($sospechosas) > 0) {
     echo '</table>';
 }
 
-// 6) Botones: siguiente lote / ejecutar / auto
+// 6) Botones: siguiente lote / ejecutar / auto (variables $hayMas y $siguiente ya calculadas arriba)
 $baseQs = "limite=$limite";
 if ($id_proceso) $baseQs .= "&id_proceso=$id_proceso";
 if ($id_usuario) $baseQs .= "&id_usuario=$id_usuario";
 if ($desde)      $baseQs .= "&desde=".urlencode($desde);
-
-$hayMas = ($total >= $limite);
-$siguiente = $ultimo_id + 1;
 
 echo '<div class="warn" style="margin-top:20px">';
 if (!$ejecutar && count($sospechosas) > 0) {
@@ -235,15 +288,23 @@ if ($hayMas) {
     echo ' <a href="?'.$qsNext.'" class="btn next" id="btnNext">➡️ Siguiente lote (desde ID '.$siguiente.')</a>';
 
     if ($auto && $confirmado) {
-        // Redirección automática al siguiente lote
         $segundos = 2;
-        echo '<div class="ok" style="margin-top:12px">⚡ <b>Modo automático activo.</b> Redirigiendo al siguiente lote en '.$segundos.'s…</div>';
+        echo '<div class="ok" style="margin-top:12px">⚡ <b>Modo automático activo.</b> Redirigiendo al siguiente lote en '.$segundos.'s… <br><small>Si la página falla o expira, al recargar reanudará desde el checkpoint guardado (ID '.$siguiente.').</small></div>';
         echo '<script>setTimeout(function(){ window.location.href = "?'.$qsNext.'"; }, '.($segundos*1000).');</script>';
         echo '<noscript><meta http-equiv="refresh" content="'.$segundos.';url=?'.$qsNext.'"></noscript>';
     }
 } else {
     echo '<div class="ok" style="margin-top:10px">✅ No hay más preguntas que procesar con estos filtros. Proceso completado.</div>';
 }
+
+// Botones de checkpoint (reanudar / borrar)
+echo '<hr style="margin:15px 0;border:none;border-top:1px solid #eee">';
+if ($hayMas) {
+    $qsResume = $baseQs.($ejecutar?"&ejecutar=1&clave=$CLAVE":"")."&reanudar=1&auto=1&confirmado=1";
+    echo '<a href="?'.$qsResume.'" class="btn" style="background:#00838f">↩️ Reanudar desde checkpoint automáticamente</a> ';
+}
+$qsReset = $baseQs."&reset=1";
+echo '<a href="?'.$qsReset.'" class="btn" style="background:#616161" onclick="return confirm(\'¿Borrar el checkpoint guardado?\')">🗑️ Borrar checkpoint</a>';
 echo '</div>';
 
 echo '</div></body></html>';
