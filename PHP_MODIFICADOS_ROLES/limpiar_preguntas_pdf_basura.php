@@ -132,11 +132,25 @@ $whereSql = implode(' AND ', $where);
 
 echo '<div class="info">
 <b>Filtros:</b> '.htmlspecialchars($whereSql).'<br>
-<b>Tamaño del lote:</b> '.$limite.' preguntas
+<b>Tamaño del lote:</b> '.$limite.' preguntas<br>
+<b>Checkpoint:</b> '.($checkpoint
+    ? 'último ID procesado <code>'.intval($checkpoint['last_id'] ?? 0).'</code>, siguiente <code>'.intval($checkpoint['next_id'] ?? 0).'</code>'.(!empty($checkpoint['finished'])?' <b style="color:#388e3c">(finalizado)</b>':'')
+    : '<i>ninguno guardado</i>').'
 </div>';
+
+// Guardar checkpoint inicial (por si el script muere durante el análisis del lote)
+guardar_checkpoint($stateFile, [
+    'last_id'   => $desde_id ?: 0,
+    'next_id'   => $desde_id ?: 0,
+    'started'   => $checkpoint['started'] ?? date('c'),
+    'updated'   => date('c'),
+    'finished'  => false,
+    'ejecutar'  => $ejecutar,
+]);
 
 echo '<h3>⏳ Progreso</h3><div class="progress" id="log">';
 logline('🚀 Iniciando análisis...', 'ok');
+if ($desde_id > 0) logline("↩️ Reanudando desde ID $desde_id", 'ok');
 
 $inicio = microtime(true);
 
