@@ -7,7 +7,7 @@
  *   Simulación:  limpiar_preguntas_pdf_basura.php
  *   Ejecutar:    limpiar_preguntas_pdf_basura.php?ejecutar=1&clave=limpiar2024
  *   Filtros:     &id_proceso=123  &id_usuario=45  &desde=2025-01-01
- *   Batching:    &limite=500  &desde_id=12000   (evita timeouts)
+ *   Batching:    &limite=1000  &desde_id=12000   (configurable: 500, 1000, 2000…)
  */
 
 header('Content-Type: text/html; charset=utf-8');
@@ -136,6 +136,32 @@ echo '<div class="info">
 <b>Checkpoint:</b> '.($checkpoint
     ? 'último ID procesado <code>'.intval($checkpoint['last_id'] ?? 0).'</code>, siguiente <code>'.intval($checkpoint['next_id'] ?? 0).'</code>'.(!empty($checkpoint['finished'])?' <b style="color:#388e3c">(finalizado)</b>':'')
     : '<i>ninguno guardado</i>').'
+</div>';
+
+// Selector de tamaño de lote
+$qsBaseNoLimite = '';
+if ($id_proceso) $qsBaseNoLimite .= "&id_proceso=$id_proceso";
+if ($id_usuario) $qsBaseNoLimite .= "&id_usuario=$id_usuario";
+if ($desde)      $qsBaseNoLimite .= "&desde=".urlencode($desde);
+if ($desde_id)   $qsBaseNoLimite .= "&desde_id=$desde_id";
+if ($ejecutar)   $qsBaseNoLimite .= "&ejecutar=1&clave=$CLAVE";
+if ($auto)       $qsBaseNoLimite .= "&auto=1&confirmado=1";
+
+echo '<div class="info" style="background:#f3e5f5">
+<b>Tamaño de lote configurable:</b> actualmente <b>'.$limite.'</b> preguntas &nbsp;
+<a href="?limite=500'.$qsBaseNoLimite.'" class="btn" style="padding:6px 12px;background:#7b1fa2">500</a>
+<a href="?limite=1000'.$qsBaseNoLimite.'" class="btn" style="padding:6px 12px;background:#7b1fa2">1000</a>
+<a href="?limite=2000'.$qsBaseNoLimite.'" class="btn" style="padding:6px 12px;background:#7b1fa2">2000</a>
+<form method="get" style="display:inline;margin-left:10px">
+  <input type="number" name="limite" value="'.$limite.'" min="50" max="5000" step="50" style="width:70px;padding:6px">
+  '.($id_proceso?'<input type="hidden" name="id_proceso" value="'.$id_proceso.'">':'').'
+  '.($id_usuario?'<input type="hidden" name="id_usuario" value="'.$id_usuario.'">':'').'
+  '.($desde?'<input type="hidden" name="desde" value="'.htmlspecialchars($desde).'">':'').'
+  '.($desde_id?'<input type="hidden" name="desde_id" value="'.$desde_id.'">':'').'
+  '.($ejecutar?'<input type="hidden" name="ejecutar" value="1"><input type="hidden" name="clave" value="'.$CLAVE.'">':'').'
+  '.($auto?'<input type="hidden" name="auto" value="1"><input type="hidden" name="confirmado" value="1">':'').'
+  <button type="submit" class="btn" style="padding:6px 12px;background:#7b1fa2;cursor:pointer;border:none">Aplicar</button>
+</form>
 </div>';
 
 // Guardar checkpoint inicial (por si el script muere durante el análisis del lote)
