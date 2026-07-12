@@ -162,7 +162,7 @@ echo '<div class="info" style="background:#f3e5f5">
   '.($auto?'<input type="hidden" name="auto" value="1"><input type="hidden" name="confirmado" value="1">':'').'
   <button type="submit" class="btn" style="padding:6px 12px;background:#7b1fa2;cursor:pointer;border:none">Aplicar</button>
 </form>
-</div>'
+</div>';
 
 // Guardar checkpoint inicial (por si el script muere durante el análisis del lote)
 guardar_checkpoint($stateFile, [
