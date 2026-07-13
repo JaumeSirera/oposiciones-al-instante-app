@@ -63,7 +63,7 @@ const PrivacyPolicy = () => {
               </ul>
             </Section>
 
-            <Section title="3. Uso de la Información">
+            <Section title="5. Uso de la Información">
               <p>
                 Utilizo la información recopilada solo para uso interno de la APP, nunca para segundos,
                 terceros o cualquier otros propósitos:
