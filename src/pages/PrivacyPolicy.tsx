@@ -130,7 +130,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="8. Contacto">
+            <Section title="10. Contacto">
               <p>
                 Si tiene alguna pregunta sobre esta política de privacidad o sobre cómo manejo su información personal,
                 puede contactarme en:
