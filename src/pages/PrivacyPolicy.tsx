@@ -49,7 +49,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="3. Información que Recopilamos">
+            <Section title="4. Información que Recopilamos">
 
               <p>Puedo recopilar y procesar la siguiente información personal:</p>
               <ul className="list-disc pl-6 space-y-1">
