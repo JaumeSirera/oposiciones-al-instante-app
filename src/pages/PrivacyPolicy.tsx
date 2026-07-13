@@ -78,7 +78,7 @@ const PrivacyPolicy = () => {
               </ul>
             </Section>
 
-            <Section title="4. Protección de Datos y uso de IA (Google Gemini)">
+            <Section title="6. Protección de Datos y uso de IA (Google Gemini)">
               <p>
                 Implemento medidas técnicas y organizativas adecuadas para proteger sus datos personales
                 contra el acceso no autorizado, la alteración, la divulgación o la destrucción. Cumplo con las
