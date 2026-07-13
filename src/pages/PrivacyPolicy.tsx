@@ -138,7 +138,7 @@ const PrivacyPolicy = () => {
               <p className="font-bold text-blue-600">contacto@oposiciones-test.com</p>
             </Section>
 
-            <Section title="9. Base jurídica y plazos">
+            <Section title="11. Base jurídica y plazos">
               <p>Trato sus datos personales conforme a las siguientes bases jurídicas del RGPD:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li><strong>Ejecución del contrato</strong> (art. 6.1.b): para prestar la APP y sus funcionalidades.</li>
