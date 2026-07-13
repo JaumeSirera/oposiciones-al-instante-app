@@ -116,7 +116,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="6. Cookies">
+            <Section title="8. Cookies">
               <p>
                 La aplicación puede utilizar cookies o tecnologías similares para mejorar la experiencia del usuario.
                 Puede configurar su dispositivo para rechazar cookies, aunque esto puede afectar la funcionalidad.
