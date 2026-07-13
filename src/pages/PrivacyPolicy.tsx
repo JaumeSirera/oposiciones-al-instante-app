@@ -27,15 +27,30 @@ const PrivacyPolicy = () => {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none space-y-6">
             
-            <Section title="1. Introducción">
+            <Section title="1. Responsable del Tratamiento">
               <p>
-                oposiciones-test.com se compromete a proteger y respetar su privacidad.
-                Esta política de privacidad explica cómo recopilo, utilizo y protejo la
-                información personal que obtengo a través de la aplicación.
+                En cumplimiento del Reglamento (UE) 2016/679 (RGPD) y de la Ley Orgánica 3/2018 (LOPDGDD),
+                se informa de que el responsable del tratamiento de los datos personales recogidos en esta
+                aplicación y sitio web es:
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li><strong>Titular:</strong> JAIME PÉREZ SIRERA</li>
+                <li><strong>DNI:</strong> 21630072-K</li>
+                <li><strong>Sitio web:</strong> oposiciones-test.com</li>
+                <li><strong>Correo de contacto:</strong> contacto@oposiciones-test.com</li>
+              </ul>
+            </Section>
+
+            <Section title="2. Introducción">
+              <p>
+                JAIME PÉREZ SIRERA, como titular de oposiciones-test.com, se compromete a proteger y respetar su privacidad.
+                Esta política de privacidad explica cómo se recopila, utiliza y protege la
+                información personal obtenida a través de la aplicación.
               </p>
             </Section>
 
-            <Section title="2. Información que Recopilamos">
+            <Section title="4. Información que Recopilamos">
+
               <p>Puedo recopilar y procesar la siguiente información personal:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Nombre y apellidos</li>
@@ -48,7 +63,7 @@ const PrivacyPolicy = () => {
               </ul>
             </Section>
 
-            <Section title="3. Uso de la Información">
+            <Section title="5. Uso de la Información">
               <p>
                 Utilizo la información recopilada solo para uso interno de la APP, nunca para segundos,
                 terceros o cualquier otros propósitos:
@@ -63,7 +78,7 @@ const PrivacyPolicy = () => {
               </ul>
             </Section>
 
-            <Section title="4. Protección de Datos y uso de IA (Google Gemini)">
+            <Section title="6. Protección de Datos y uso de IA (Google Gemini)">
               <p>
                 Implemento medidas técnicas y organizativas adecuadas para proteger sus datos personales
                 contra el acceso no autorizado, la alteración, la divulgación o la destrucción. Cumplo con las
@@ -93,7 +108,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="5. Derechos del Usuario">
+            <Section title="7. Derechos del Usuario">
               <p>
                 Usted tiene derecho a acceder, rectificar, suprimir, oponerse y limitar el tratamiento de sus datos personales.
                 También puede retirar su consentimiento en cualquier momento. Para ejercer estos derechos, puede ponerse en
@@ -101,21 +116,21 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="6. Cookies">
+            <Section title="8. Cookies">
               <p>
                 La aplicación puede utilizar cookies o tecnologías similares para mejorar la experiencia del usuario.
                 Puede configurar su dispositivo para rechazar cookies, aunque esto puede afectar la funcionalidad.
               </p>
             </Section>
 
-            <Section title="7. Cambios en la Política de Privacidad">
+            <Section title="9. Cambios en la Política de Privacidad">
               <p>
                 Me reservo el derecho de actualizar esta política de privacidad en cualquier momento. Cualquier cambio será
                 publicado en esta página y, cuando corresponda, notificado por correo electrónico.
               </p>
             </Section>
 
-            <Section title="8. Contacto">
+            <Section title="10. Contacto">
               <p>
                 Si tiene alguna pregunta sobre esta política de privacidad o sobre cómo manejo su información personal,
                 puede contactarme en:
@@ -123,7 +138,7 @@ const PrivacyPolicy = () => {
               <p className="font-bold text-blue-600">contacto@oposiciones-test.com</p>
             </Section>
 
-            <Section title="9. Base jurídica y plazos">
+            <Section title="11. Base jurídica y plazos">
               <p>Trato sus datos personales conforme a las siguientes bases jurídicas del RGPD:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li><strong>Ejecución del contrato</strong> (art. 6.1.b): para prestar la APP y sus funcionalidades.</li>
@@ -139,7 +154,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="10. Residencia de datos y transferencias (Google Gemini)">
+            <Section title="12. Residencia de datos y transferencias (Google Gemini)">
               <p>
                 El procesamiento de entradas y salidas de IA mediante Google Gemini puede implicar
                 <strong> transferencias internacionales</strong> fuera del EEE. En tales supuestos, se aplican las
