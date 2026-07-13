@@ -36,9 +36,11 @@ const PrivacyPolicy = () => {
               <ul className="list-disc pl-6 space-y-1">
                 <li><strong>Titular:</strong> JAIME PÉREZ SIRERA</li>
                 <li><strong>DNI:</strong> 21630072-K</li>
+                <li><strong>Dirección postal:</strong> Alameda Camilo Sesto, 79, Alcoy (Alicante), España</li>
                 <li><strong>Sitio web:</strong> oposiciones-test.com</li>
                 <li><strong>Correo de contacto:</strong> contacto@oposiciones-test.com</li>
               </ul>
+
             </Section>
 
             <Section title="2. Introducción">
