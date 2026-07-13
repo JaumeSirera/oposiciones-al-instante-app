@@ -27,15 +27,30 @@ const PrivacyPolicy = () => {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none space-y-6">
             
-            <Section title="1. Introducción">
+            <Section title="1. Responsable del Tratamiento">
               <p>
-                oposiciones-test.com se compromete a proteger y respetar su privacidad.
-                Esta política de privacidad explica cómo recopilo, utilizo y protejo la
-                información personal que obtengo a través de la aplicación.
+                En cumplimiento del Reglamento (UE) 2016/679 (RGPD) y de la Ley Orgánica 3/2018 (LOPDGDD),
+                se informa de que el responsable del tratamiento de los datos personales recogidos en esta
+                aplicación y sitio web es:
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li><strong>Titular:</strong> JAIME PÉREZ SIRERA</li>
+                <li><strong>DNI:</strong> 21630072-K</li>
+                <li><strong>Sitio web:</strong> oposiciones-test.com</li>
+                <li><strong>Correo de contacto:</strong> contacto@oposiciones-test.com</li>
+              </ul>
+            </Section>
+
+            <Section title="2. Introducción">
+              <p>
+                JAIME PÉREZ SIRERA, como titular de oposiciones-test.com, se compromete a proteger y respetar su privacidad.
+                Esta política de privacidad explica cómo se recopila, utiliza y protege la
+                información personal obtenida a través de la aplicación.
               </p>
             </Section>
 
-            <Section title="2. Información que Recopilamos">
+            <Section title="3. Información que Recopilamos">
+
               <p>Puedo recopilar y procesar la siguiente información personal:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Nombre y apellidos</li>
