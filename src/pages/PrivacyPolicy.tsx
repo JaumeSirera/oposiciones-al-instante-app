@@ -108,7 +108,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="5. Derechos del Usuario">
+            <Section title="7. Derechos del Usuario">
               <p>
                 Usted tiene derecho a acceder, rectificar, suprimir, oponerse y limitar el tratamiento de sus datos personales.
                 También puede retirar su consentimiento en cualquier momento. Para ejercer estos derechos, puede ponerse en
