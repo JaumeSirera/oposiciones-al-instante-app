@@ -123,7 +123,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="7. Cambios en la Política de Privacidad">
+            <Section title="9. Cambios en la Política de Privacidad">
               <p>
                 Me reservo el derecho de actualizar esta política de privacidad en cualquier momento. Cualquier cambio será
                 publicado en esta página y, cuando corresponda, notificado por correo electrónico.
