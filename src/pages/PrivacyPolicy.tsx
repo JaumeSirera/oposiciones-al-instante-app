@@ -154,7 +154,7 @@ const PrivacyPolicy = () => {
               </p>
             </Section>
 
-            <Section title="10. Residencia de datos y transferencias (Google Gemini)">
+            <Section title="12. Residencia de datos y transferencias (Google Gemini)">
               <p>
                 El procesamiento de entradas y salidas de IA mediante Google Gemini puede implicar
                 <strong> transferencias internacionales</strong> fuera del EEE. En tales supuestos, se aplican las
