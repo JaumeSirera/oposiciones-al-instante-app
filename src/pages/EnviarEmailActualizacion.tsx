@@ -627,6 +627,14 @@ const EnviarEmailActualizacion = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <EmailProgressDialog
+          open={progressOpen}
+          onOpenChange={setProgressOpen}
+          historyId={progressItem?.id ?? null}
+          subject={progressItem?.subject ?? ""}
+          message={progressItem?.message ?? ""}
+        />
       </div>
     </div>
   );
