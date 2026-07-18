@@ -108,10 +108,11 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
   };
 
   const pct = stats.total > 0 ? Math.round(((stats.sent + stats.failed) / stats.total) * 100) : 0;
+  const commonError = items.find((item) => item.status === "failed" && item.last_error)?.last_error;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-5xl h-[88vh] max-h-[88vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5" /> Progreso del envío #{historyId}
@@ -153,9 +154,16 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
               Reintentar fallidos ({stats.failed})
             </Button>
           </div>
+
+          {commonError && stats.failed > 0 && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="font-semibold">Motivo del fallo</div>
+              <div className="mt-1 whitespace-pre-wrap break-words">{commonError}</div>
+            </div>
+          )}
         </div>
 
-        <ScrollArea className="flex-1 mt-2 border rounded">
+        <ScrollArea className="min-h-0 flex-1 mt-2 rounded border">
           {loading && items.length === 0 ? (
             <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
           ) : items.length === 0 ? (
@@ -163,10 +171,11 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
               Sin datos de destinatarios. Este envío puede ser anterior al sistema de seguimiento.
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="min-w-[780px]">
+            <table className="w-full table-fixed text-sm">
               <thead className="bg-muted/50 sticky top-0">
                 <tr className="text-left">
-                  <th className="p-2">Email</th>
+                  <th className="p-2 w-[34%]">Email</th>
                   <th className="p-2 w-24">Estado</th>
                   <th className="p-2 w-16">Int.</th>
                   <th className="p-2">Error</th>
@@ -185,11 +194,16 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
                       {it.status === "pending" && <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pendiente</Badge>}
                     </td>
                     <td className="p-2">{it.attempts}</td>
-                    <td className="p-2 text-xs text-destructive truncate max-w-[200px]">{it.last_error || ""}</td>
+                    <td className="p-2 text-xs text-destructive">
+                      <div className="max-h-12 overflow-y-auto whitespace-pre-wrap break-words pr-1" title={it.last_error || ""}>
+                        {it.last_error || ""}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </ScrollArea>
       </DialogContent>
