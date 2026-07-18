@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Send, Mail, Smartphone, Loader2, CheckCircle, Users, RefreshCw, Search, History, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, Mail, Smartphone, Loader2, CheckCircle, Users, RefreshCw, Search, History, Clock, AlertCircle, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { authService } from "@/services/authService";
+import EmailProgressDialog from "@/components/EmailProgressDialog";
 
 interface Usuario {
   id: number;
@@ -47,7 +48,9 @@ const EnviarEmailActualizacion = () => {
   const [historialOffset, setHistorialOffset] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const HISTORIAL_LIMIT = 20;
-  
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [progressItem, setProgressItem] = useState<HistorialEmail | null>(null);
+
   const [subject, setSubject] = useState("¡Nueva actualización disponible en Play Store!");
   const [message, setMessage] = useState(
     `¡Hola!\n\nHay una nueva versión de Oposiciones-Test disponible en Google Play Store.\n\nNovedades de esta versión:\n- Mejoras de rendimiento\n- Nuevas funcionalidades\n- Corrección de errores\n\nActualiza ahora para disfrutar de la mejor experiencia.\n\n¡Gracias por usar Oposiciones-Test!`
@@ -155,26 +158,39 @@ const EnviarEmailActualizacion = () => {
     sent_by: string | null;
     status: string;
     errors: string | null;
-  }) => {
+  }): Promise<number | null> => {
     try {
       const response = await fetch("https://oposiciones-test.com/api/guardar_historial_email.php", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(emailData),
       });
-
       const data = await response.json();
-      
       if (!data.success) {
         console.error("Error guardando historial:", data.error);
-      } else {
-        // Refresh historial
-        fetchHistorial();
+        return null;
       }
+      fetchHistorial();
+      return data.id ?? null;
     } catch (error) {
       console.error("Error guardando historial:", error);
+      return null;
+    }
+  };
+
+  const crearRecipients = async (historyId: number, recipients: { email: string; nombre: string }[]) => {
+    try {
+      const res = await fetch("https://oposiciones-test.com/api/crear_email_recipients.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email_history_id: historyId, recipients }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Error creando destinatarios");
+      return (data.recipients || []) as { id: number; email: string; nombre: string | null }[];
+    } catch (e) {
+      console.error("crearRecipients:", e);
+      return [];
     }
   };
 
@@ -232,44 +248,40 @@ const EnviarEmailActualizacion = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("enviar-email-actualizacion", {
-        body: { 
-          subject, 
-          message,
-          recipients: selectedEmails 
-        },
-      });
-
-      if (error) throw error;
-
-      // Guardar en historial
-      await guardarHistorial({
-        subject,
-        message,
-        recipients_count: data.emailsSent || selectedEmails.length,
-        sent_by: authService.getCurrentUser()?.username || null,
-        status: "sent",
-        errors: data.errors ? JSON.stringify(data.errors) : null,
-      });
-
-      setIsSent(true);
-      toast({
-        title: "¡Emails enviados!",
-        description: `Se han enviado ${data.emailsSent || 0} emails correctamente`,
-      });
-    } catch (error: any) {
-      console.error("Error sending emails:", error);
-      
-      // Guardar error en historial
-      await guardarHistorial({
+      // 1. Crear historial primero (status pending) para tener id
+      const historyId = await guardarHistorial({
         subject,
         message,
         recipients_count: selectedEmails.length,
         sent_by: authService.getCurrentUser()?.username || null,
-        status: "error",
-        errors: error.message || "Error desconocido",
+        status: "pending",
+        errors: null,
       });
 
+      if (!historyId) throw new Error("No se pudo crear el registro de historial");
+
+      // 2. Crear filas de destinatarios (para seguimiento por email)
+      const created = await crearRecipients(historyId, selectedEmails);
+
+      // 3. Invocar edge function con recipientIds
+      const recipientsForEdge = created.length > 0
+        ? created.map(c => ({ email: c.email, nombre: c.nombre || "", recipientId: c.id }))
+        : selectedEmails;
+
+      const { data, error } = await supabase.functions.invoke("enviar-email-actualizacion", {
+        body: { subject, message, recipients: recipientsForEdge, historyId },
+      });
+
+      if (error) throw error;
+
+      setIsSent(true);
+      toast({
+        title: "Envío iniciado",
+        description: `Se están enviando ${data?.queued || selectedEmails.length} emails en segundo plano. Consulta el progreso en el Historial.`,
+      });
+      fetchHistorial();
+    } catch (error: any) {
+      console.error("Error sending emails:", error);
       toast({
         title: "Error al enviar",
         description: error.message || "No se pudieron enviar los emails",
@@ -566,6 +578,16 @@ const EnviarEmailActualizacion = () => {
                                     Error: {item.errors}
                                   </div>
                                 )}
+                                <div className="mt-3">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => { setProgressItem(item); setProgressOpen(true); }}
+                                  >
+                                    <BarChart3 className="w-3 h-3 mr-1" />
+                                    Ver progreso / reintentar
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -605,6 +627,14 @@ const EnviarEmailActualizacion = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <EmailProgressDialog
+          open={progressOpen}
+          onOpenChange={setProgressOpen}
+          historyId={progressItem?.id ?? null}
+          subject={progressItem?.subject ?? ""}
+          message={progressItem?.message ?? ""}
+        />
       </div>
     </div>
   );
