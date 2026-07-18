@@ -578,6 +578,16 @@ const EnviarEmailActualizacion = () => {
                                     Error: {item.errors}
                                   </div>
                                 )}
+                                <div className="mt-3">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => { setProgressItem(item); setProgressOpen(true); }}
+                                  >
+                                    <BarChart3 className="w-3 h-3 mr-1" />
+                                    Ver progreso / reintentar
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
