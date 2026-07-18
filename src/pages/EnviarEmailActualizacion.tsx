@@ -158,26 +158,39 @@ const EnviarEmailActualizacion = () => {
     sent_by: string | null;
     status: string;
     errors: string | null;
-  }) => {
+  }): Promise<number | null> => {
     try {
       const response = await fetch("https://oposiciones-test.com/api/guardar_historial_email.php", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(emailData),
       });
-
       const data = await response.json();
-      
       if (!data.success) {
         console.error("Error guardando historial:", data.error);
-      } else {
-        // Refresh historial
-        fetchHistorial();
+        return null;
       }
+      fetchHistorial();
+      return data.id ?? null;
     } catch (error) {
       console.error("Error guardando historial:", error);
+      return null;
+    }
+  };
+
+  const crearRecipients = async (historyId: number, recipients: { email: string; nombre: string }[]) => {
+    try {
+      const res = await fetch("https://oposiciones-test.com/api/crear_email_recipients.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email_history_id: historyId, recipients }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Error creando destinatarios");
+      return (data.recipients || []) as { id: number; email: string; nombre: string | null }[];
+    } catch (e) {
+      console.error("crearRecipients:", e);
+      return [];
     }
   };
 
