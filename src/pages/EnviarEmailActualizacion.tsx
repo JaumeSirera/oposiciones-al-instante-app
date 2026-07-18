@@ -248,44 +248,40 @@ const EnviarEmailActualizacion = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("enviar-email-actualizacion", {
-        body: { 
-          subject, 
-          message,
-          recipients: selectedEmails 
-        },
-      });
-
-      if (error) throw error;
-
-      // Guardar en historial
-      await guardarHistorial({
-        subject,
-        message,
-        recipients_count: data.emailsSent || selectedEmails.length,
-        sent_by: authService.getCurrentUser()?.username || null,
-        status: "sent",
-        errors: data.errors ? JSON.stringify(data.errors) : null,
-      });
-
-      setIsSent(true);
-      toast({
-        title: "¡Emails enviados!",
-        description: `Se han enviado ${data.emailsSent || 0} emails correctamente`,
-      });
-    } catch (error: any) {
-      console.error("Error sending emails:", error);
-      
-      // Guardar error en historial
-      await guardarHistorial({
+      // 1. Crear historial primero (status pending) para tener id
+      const historyId = await guardarHistorial({
         subject,
         message,
         recipients_count: selectedEmails.length,
         sent_by: authService.getCurrentUser()?.username || null,
-        status: "error",
-        errors: error.message || "Error desconocido",
+        status: "pending",
+        errors: null,
       });
 
+      if (!historyId) throw new Error("No se pudo crear el registro de historial");
+
+      // 2. Crear filas de destinatarios (para seguimiento por email)
+      const created = await crearRecipients(historyId, selectedEmails);
+
+      // 3. Invocar edge function con recipientIds
+      const recipientsForEdge = created.length > 0
+        ? created.map(c => ({ email: c.email, nombre: c.nombre || "", recipientId: c.id }))
+        : selectedEmails;
+
+      const { data, error } = await supabase.functions.invoke("enviar-email-actualizacion", {
+        body: { subject, message, recipients: recipientsForEdge, historyId },
+      });
+
+      if (error) throw error;
+
+      setIsSent(true);
+      toast({
+        title: "Envío iniciado",
+        description: `Se están enviando ${data?.queued || selectedEmails.length} emails en segundo plano. Consulta el progreso en el Historial.`,
+      });
+      fetchHistorial();
+    } catch (error: any) {
+      console.error("Error sending emails:", error);
       toast({
         title: "Error al enviar",
         description: error.message || "No se pudieron enviar los emails",
