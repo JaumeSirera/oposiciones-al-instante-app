@@ -339,9 +339,9 @@ export default function AdministrarRecordatorios() {
   const recordatoriosFiltrados = recordatorios.filter((r) => {
     const busquedaLower = busqueda.toLowerCase();
     return (
-      r.titulo_plan.toLowerCase().includes(busquedaLower) ||
-      r.nombre_usuario.toLowerCase().includes(busquedaLower) ||
-      r.email_usuario.toLowerCase().includes(busquedaLower)
+      (r.titulo_plan?.toLowerCase() || "").includes(busquedaLower) ||
+      (r.nombre_usuario?.toLowerCase() || "").includes(busquedaLower) ||
+      (r.email_usuario?.toLowerCase() || "").includes(busquedaLower)
     );
   });
 
