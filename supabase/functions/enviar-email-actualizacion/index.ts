@@ -108,34 +108,58 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send emails in batches to avoid rate limits
-    const batchSize = 50;
+    // Send one email per recipient so nobody sees other addresses (privacy).
+    // Use small concurrency batches to respect Resend's ~2 req/sec rate limit.
     let emailsSent = 0;
     const errors: string[] = [];
+    const fromAddress = "Oposiciones-Test <notificaciones@oposiciones-test.com>";
+    const concurrency = 2; // ~2 emails/sec
+    const delayMs = 1100;
 
-    for (let i = 0; i < userEmails.length; i += batchSize) {
-      const batch = userEmails.slice(i, i + batchSize);
-      
-      try {
-        const emailResponse = await resend.emails.send({
-          from: "Oposiciones-Test <notificaciones@oposiciones-test.com>",
-          to: batch,
-          subject: subject,
-          html: htmlContent,
-        });
+    for (let i = 0; i < userEmails.length; i += concurrency) {
+      const chunk = userEmails.slice(i, i + concurrency);
 
-        if (emailResponse.error) {
-          errors.push(`Batch ${i / batchSize + 1}: ${emailResponse.error.message}`);
-        } else {
-          emailsSent += batch.length;
-        }
-      } catch (batchError: any) {
-        errors.push(`Batch ${i / batchSize + 1}: ${batchError.message}`);
+      const results = await Promise.all(
+        chunk.map(async (email) => {
+          // Retry on rate limit (429) up to 3 times
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const resp = await resend.emails.send({
+                from: fromAddress,
+                to: [email], // individual send -> recipients never see each other
+                subject: subject,
+                html: htmlContent,
+              });
+              if (resp.error) {
+                const msg = resp.error.message || "";
+                if (msg.toLowerCase().includes("rate") && attempt < 2) {
+                  await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+                  continue;
+                }
+                return { ok: false, email, error: msg };
+              }
+              return { ok: true, email };
+            } catch (err: any) {
+              if (attempt < 2) {
+                await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+                continue;
+              }
+              return { ok: false, email, error: err.message };
+            }
+          }
+          return { ok: false, email, error: "unknown" };
+        })
+      );
+
+      for (const r of results) {
+        if (r.ok) emailsSent++;
+        else errors.push(`${r.email}: ${r.error}`);
       }
 
-      // Small delay between batches
-      if (i + batchSize < userEmails.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log(`Progress: ${emailsSent}/${userEmails.length} sent, ${errors.length} errors`);
+
+      if (i + concurrency < userEmails.length) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
 
