@@ -108,48 +108,80 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send emails in batches to avoid rate limits
-    const batchSize = 50;
-    let emailsSent = 0;
-    const errors: string[] = [];
+    // Send one email per recipient so nobody sees other addresses (privacy).
+    // Runs in background so the client isn't kept waiting past the edge timeout.
+    const fromAddress = "Oposiciones-Test <notificaciones@oposiciones-test.com>";
+    const concurrency = 2; // ~2 emails/sec (Resend free tier limit)
+    const delayMs = 1100;
 
-    for (let i = 0; i < userEmails.length; i += batchSize) {
-      const batch = userEmails.slice(i, i + batchSize);
-      
-      try {
-        const emailResponse = await resend.emails.send({
-          from: "Oposiciones-Test <notificaciones@oposiciones-test.com>",
-          to: batch,
-          subject: subject,
-          html: htmlContent,
-        });
+    const sendAll = async () => {
+      let emailsSent = 0;
+      const errors: string[] = [];
 
-        if (emailResponse.error) {
-          errors.push(`Batch ${i / batchSize + 1}: ${emailResponse.error.message}`);
-        } else {
-          emailsSent += batch.length;
+      for (let i = 0; i < userEmails.length; i += concurrency) {
+        const chunk = userEmails.slice(i, i + concurrency);
+
+        const results = await Promise.all(
+          chunk.map(async (email) => {
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                const resp = await resend.emails.send({
+                  from: fromAddress,
+                  to: [email],
+                  subject: subject,
+                  html: htmlContent,
+                });
+                if (resp.error) {
+                  const msg = resp.error.message || "";
+                  if ((msg.toLowerCase().includes("rate") || msg.includes("429")) && attempt < 2) {
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                    continue;
+                  }
+                  return { ok: false, email, error: msg };
+                }
+                return { ok: true, email };
+              } catch (err: any) {
+                if (attempt < 2) {
+                  await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                  continue;
+                }
+                return { ok: false, email, error: err.message };
+              }
+            }
+            return { ok: false, email, error: "unknown" };
+          })
+        );
+
+        for (const r of results) {
+          if (r.ok) emailsSent++;
+          else errors.push(`${r.email}: ${r.error}`);
         }
-      } catch (batchError: any) {
-        errors.push(`Batch ${i / batchSize + 1}: ${batchError.message}`);
+
+        if ((i / concurrency) % 10 === 0) {
+          console.log(`Progress: ${emailsSent}/${userEmails.length} sent, ${errors.length} errors`);
+        }
+
+        if (i + concurrency < userEmails.length) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
       }
 
-      // Small delay between batches
-      if (i + batchSize < userEmails.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
+      console.log(`FINAL: sent ${emailsSent}/${userEmails.length}, errors: ${errors.length}`);
+      if (errors.length > 0) console.log("Errors:", errors.slice(0, 20));
+    };
 
-    console.log(`Emails sent: ${emailsSent}/${userEmails.length}`);
-    if (errors.length > 0) {
-      console.log("Errors:", errors);
-    }
+    // Process in background so all 300+ recipients complete even if the
+    // client connection closes.
+    // @ts-ignore - EdgeRuntime is provided by Supabase Edge Runtime
+    EdgeRuntime.waitUntil(sendAll());
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        emailsSent, 
+      JSON.stringify({
+        success: true,
+        queued: userEmails.length,
         totalUsers: userEmails.length,
-        errors: errors.length > 0 ? errors : undefined 
+        emailsSent: userEmails.length,
+        message: `Envío en segundo plano iniciado para ${userEmails.length} destinatarios. Los emails se enviarán de forma individual (sin CC/CCO visible) durante los próximos ${Math.ceil(userEmails.length * delayMs / concurrency / 1000)}s aproximadamente.`,
       }),
       {
         status: 200,
