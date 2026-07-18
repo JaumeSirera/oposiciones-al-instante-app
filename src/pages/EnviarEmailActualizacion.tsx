@@ -48,7 +48,9 @@ const EnviarEmailActualizacion = () => {
   const [historialOffset, setHistorialOffset] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const HISTORIAL_LIMIT = 20;
-  
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [progressItem, setProgressItem] = useState<HistorialEmail | null>(null);
+
   const [subject, setSubject] = useState("¡Nueva actualización disponible en Play Store!");
   const [message, setMessage] = useState(
     `¡Hola!\n\nHay una nueva versión de Oposiciones-Test disponible en Google Play Store.\n\nNovedades de esta versión:\n- Mejoras de rendimiento\n- Nuevas funcionalidades\n- Corrección de errores\n\nActualiza ahora para disfrutar de la mejor experiencia.\n\n¡Gracias por usar Oposiciones-Test!`
