@@ -11,6 +11,37 @@ const corsHeaders = {
 
 const PHP_BASE = "https://oposiciones-test.com/api";
 
+const QUOTA_ERROR_PATTERNS = [
+  "daily email sending limit",
+  "daily sending limit",
+  "reached your daily",
+  "quota",
+  "insufficient credits",
+];
+
+function getErrorMessage(error: unknown): string {
+  if (!error) return "Error desconocido del proveedor de email";
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  try {
+    const maybeMessage = (error as { message?: unknown }).message;
+    if (typeof maybeMessage === "string") return maybeMessage;
+    return JSON.stringify(error);
+  } catch {
+    return "Error desconocido del proveedor de email";
+  }
+}
+
+function isQuotaError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return QUOTA_ERROR_PATTERNS.some((pattern) => normalized.includes(pattern));
+}
+
+function isRetryableError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes("rate") || normalized.includes("429") || normalized.includes("timeout") || normalized.includes("temporar");
+}
+
 interface Recipient {
   email: string;
   nombre?: string;
@@ -100,24 +131,38 @@ const handler = async (req: Request): Promise<Response> => {
                 html: htmlContent,
               });
               if (resp.error) {
-                const msg = resp.error.message || "";
-                if ((msg.toLowerCase().includes("rate") || msg.includes("429")) && attempt < 2) {
+                const msg = getErrorMessage(resp.error);
+                if (isQuotaError(msg)) return { ok: false, r, error: msg, stopBatch: true };
+                if (isRetryableError(msg) && attempt < 2) {
                   await new Promise(res => setTimeout(res, 2000 * (attempt + 1)));
                   continue;
                 }
                 return { ok: false, r, error: msg };
               }
               return { ok: true, r };
-            } catch (err: any) {
-              if (attempt < 2) {
+            } catch (err: unknown) {
+              const msg = getErrorMessage(err);
+              if (isQuotaError(msg)) return { ok: false, r, error: msg, stopBatch: true };
+              if (isRetryableError(msg) && attempt < 2) {
                 await new Promise(res => setTimeout(res, 2000 * (attempt + 1)));
                 continue;
               }
-              return { ok: false, r, error: err.message };
+              return { ok: false, r, error: msg };
             }
           }
           return { ok: false, r, error: "unknown" };
         }));
+
+        const quotaFailure = results.find((x) => !x.ok && x.stopBatch);
+        if (quotaFailure) {
+          const remainingRecipients = validRecipients.slice(i);
+          await Promise.all(remainingRecipients.map((r) =>
+            r.recipientId ? updateRecipient(r.recipientId, "failed", quotaFailure.error) : Promise.resolve()
+          ));
+          emailsFailed += remainingRecipients.length;
+          console.log(`STOPPED history=${historyId ?? "-"} reason=quota_limit failed_remaining=${remainingRecipients.length}`);
+          break;
+        }
 
         for (const x of results) {
           if (x.ok) {
