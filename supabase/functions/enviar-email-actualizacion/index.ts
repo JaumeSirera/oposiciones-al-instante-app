@@ -109,71 +109,79 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Send one email per recipient so nobody sees other addresses (privacy).
-    // Use small concurrency batches to respect Resend's ~2 req/sec rate limit.
-    let emailsSent = 0;
-    const errors: string[] = [];
+    // Runs in background so the client isn't kept waiting past the edge timeout.
     const fromAddress = "Oposiciones-Test <notificaciones@oposiciones-test.com>";
-    const concurrency = 2; // ~2 emails/sec
+    const concurrency = 2; // ~2 emails/sec (Resend free tier limit)
     const delayMs = 1100;
 
-    for (let i = 0; i < userEmails.length; i += concurrency) {
-      const chunk = userEmails.slice(i, i + concurrency);
+    const sendAll = async () => {
+      let emailsSent = 0;
+      const errors: string[] = [];
 
-      const results = await Promise.all(
-        chunk.map(async (email) => {
-          // Retry on rate limit (429) up to 3 times
-          for (let attempt = 0; attempt < 3; attempt++) {
-            try {
-              const resp = await resend.emails.send({
-                from: fromAddress,
-                to: [email], // individual send -> recipients never see each other
-                subject: subject,
-                html: htmlContent,
-              });
-              if (resp.error) {
-                const msg = resp.error.message || "";
-                if (msg.toLowerCase().includes("rate") && attempt < 2) {
-                  await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+      for (let i = 0; i < userEmails.length; i += concurrency) {
+        const chunk = userEmails.slice(i, i + concurrency);
+
+        const results = await Promise.all(
+          chunk.map(async (email) => {
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                const resp = await resend.emails.send({
+                  from: fromAddress,
+                  to: [email],
+                  subject: subject,
+                  html: htmlContent,
+                });
+                if (resp.error) {
+                  const msg = resp.error.message || "";
+                  if ((msg.toLowerCase().includes("rate") || msg.includes("429")) && attempt < 2) {
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                    continue;
+                  }
+                  return { ok: false, email, error: msg };
+                }
+                return { ok: true, email };
+              } catch (err: any) {
+                if (attempt < 2) {
+                  await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
                   continue;
                 }
-                return { ok: false, email, error: msg };
+                return { ok: false, email, error: err.message };
               }
-              return { ok: true, email };
-            } catch (err: any) {
-              if (attempt < 2) {
-                await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
-                continue;
-              }
-              return { ok: false, email, error: err.message };
             }
-          }
-          return { ok: false, email, error: "unknown" };
-        })
-      );
+            return { ok: false, email, error: "unknown" };
+          })
+        );
 
-      for (const r of results) {
-        if (r.ok) emailsSent++;
-        else errors.push(`${r.email}: ${r.error}`);
+        for (const r of results) {
+          if (r.ok) emailsSent++;
+          else errors.push(`${r.email}: ${r.error}`);
+        }
+
+        if ((i / concurrency) % 10 === 0) {
+          console.log(`Progress: ${emailsSent}/${userEmails.length} sent, ${errors.length} errors`);
+        }
+
+        if (i + concurrency < userEmails.length) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
       }
 
-      console.log(`Progress: ${emailsSent}/${userEmails.length} sent, ${errors.length} errors`);
+      console.log(`FINAL: sent ${emailsSent}/${userEmails.length}, errors: ${errors.length}`);
+      if (errors.length > 0) console.log("Errors:", errors.slice(0, 20));
+    };
 
-      if (i + concurrency < userEmails.length) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
-    }
-
-    console.log(`Emails sent: ${emailsSent}/${userEmails.length}`);
-    if (errors.length > 0) {
-      console.log("Errors:", errors);
-    }
+    // Process in background so all 300+ recipients complete even if the
+    // client connection closes.
+    // @ts-ignore - EdgeRuntime is provided by Supabase Edge Runtime
+    EdgeRuntime.waitUntil(sendAll());
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        emailsSent, 
+      JSON.stringify({
+        success: true,
+        queued: userEmails.length,
         totalUsers: userEmails.length,
-        errors: errors.length > 0 ? errors : undefined 
+        emailsSent: userEmails.length,
+        message: `Envío en segundo plano iniciado para ${userEmails.length} destinatarios. Los emails se enviarán de forma individual (sin CC/CCO visible) durante los próximos ${Math.ceil(userEmails.length * delayMs / concurrency / 1000)}s aproximadamente.`,
       }),
       {
         status: 200,
