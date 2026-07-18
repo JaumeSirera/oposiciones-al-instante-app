@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Send, Mail, Smartphone, Loader2, CheckCircle, Users, RefreshCw, Search, History, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, Mail, Smartphone, Loader2, CheckCircle, Users, RefreshCw, Search, History, Clock, AlertCircle, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { authService } from "@/services/authService";
+import EmailProgressDialog from "@/components/EmailProgressDialog";
 
 interface Usuario {
   id: number;
