@@ -182,9 +182,11 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
         <ScrollArea className="min-h-0 flex-1 mt-2 rounded border">
           {loading && items.length === 0 ? (
             <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
-          ) : items.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
-              Sin datos de destinatarios. Este envío puede ser anterior al sistema de seguimiento.
+              {items.length === 0
+                ? "Sin datos de destinatarios. Este envío puede ser anterior al sistema de seguimiento."
+                : `No hay destinatarios en estado "${filter}".`}
             </div>
           ) : (
             <div className="min-w-[780px]">
@@ -198,7 +200,7 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
                 </tr>
               </thead>
               <tbody>
-                {items.map((it) => (
+                {pagedItems.map((it) => (
                   <tr key={it.id} className="border-t">
                     <td className="p-2">
                       <div className="font-medium truncate max-w-[220px]">{it.nombre || "—"}</div>
@@ -222,6 +224,19 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
             </div>
           )}
         </ScrollArea>
+
+        {filteredItems.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between gap-2 pt-2 text-sm">
+            <div className="text-muted-foreground">
+              Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredItems.length)} de {filteredItems.length}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Anterior</Button>
+              <span className="text-xs text-muted-foreground">Página {currentPage} / {totalPages}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Siguiente</Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
