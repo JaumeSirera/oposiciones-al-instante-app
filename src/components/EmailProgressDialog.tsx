@@ -134,22 +134,26 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
 
         <div className="space-y-3">
           <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="rounded border p-2">
-              <div className="text-xs text-muted-foreground">Total</div>
-              <div className="text-lg font-semibold">{stats.total}</div>
-            </div>
-            <div className="rounded border p-2 bg-green-50 dark:bg-green-950/30">
+            <button type="button" onClick={() => setFilter("all")}
+              className={`rounded border p-2 text-left transition ${filter === "all" ? "ring-2 ring-primary" : "hover:bg-muted/50"}`}>
+              <div className="text-xs text-muted-foreground text-center">Total</div>
+              <div className="text-lg font-semibold text-center">{stats.total}</div>
+            </button>
+            <button type="button" onClick={() => setFilter("sent")}
+              className={`rounded border p-2 bg-green-50 dark:bg-green-950/30 transition ${filter === "sent" ? "ring-2 ring-green-600" : "hover:brightness-95"}`}>
               <div className="text-xs text-muted-foreground">Enviados</div>
               <div className="text-lg font-semibold text-green-600">{stats.sent}</div>
-            </div>
-            <div className="rounded border p-2 bg-red-50 dark:bg-red-950/30">
+            </button>
+            <button type="button" onClick={() => setFilter("failed")}
+              className={`rounded border p-2 bg-red-50 dark:bg-red-950/30 transition ${filter === "failed" ? "ring-2 ring-red-600" : "hover:brightness-95"}`}>
               <div className="text-xs text-muted-foreground">Fallidos</div>
               <div className="text-lg font-semibold text-red-600">{stats.failed}</div>
-            </div>
-            <div className="rounded border p-2 bg-yellow-50 dark:bg-yellow-950/30">
+            </button>
+            <button type="button" onClick={() => setFilter("pending")}
+              className={`rounded border p-2 bg-yellow-50 dark:bg-yellow-950/30 transition ${filter === "pending" ? "ring-2 ring-yellow-600" : "hover:brightness-95"}`}>
               <div className="text-xs text-muted-foreground">Pendientes</div>
               <div className="text-lg font-semibold text-yellow-600">{stats.pending}</div>
-            </div>
+            </button>
           </div>
 
           <div>
