@@ -28,13 +28,25 @@ interface Props {
   message: string;
 }
 
+type FilterKey = "all" | "failed" | "sent" | "pending";
+const PAGE_SIZE = 50;
+
 export default function EmailProgressDialog({ open, onOpenChange, historyId, subject, message }: Props) {
   const { toast } = useToast();
   const [items, setItems] = useState<Recipient[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, sent: 0, failed: 0, pending: 0 });
   const [loading, setLoading] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [page, setPage] = useState(1);
   const pollRef = useRef<number | null>(null);
+
+  useEffect(() => { setPage(1); }, [filter, historyId]);
+
+  const filteredItems = filter === "all" ? items : items.filter(i => i.status === filter);
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedItems = filteredItems.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const fetchProgress = useCallback(async () => {
     if (!historyId) return;
