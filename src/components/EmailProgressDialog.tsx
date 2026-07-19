@@ -28,13 +28,25 @@ interface Props {
   message: string;
 }
 
+type FilterKey = "all" | "failed" | "sent" | "pending";
+const PAGE_SIZE = 50;
+
 export default function EmailProgressDialog({ open, onOpenChange, historyId, subject, message }: Props) {
   const { toast } = useToast();
   const [items, setItems] = useState<Recipient[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, sent: 0, failed: 0, pending: 0 });
   const [loading, setLoading] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [page, setPage] = useState(1);
   const pollRef = useRef<number | null>(null);
+
+  useEffect(() => { setPage(1); }, [filter, historyId]);
+
+  const filteredItems = filter === "all" ? items : items.filter(i => i.status === filter);
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedItems = filteredItems.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const fetchProgress = useCallback(async () => {
     if (!historyId) return;
@@ -122,22 +134,26 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
 
         <div className="space-y-3">
           <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="rounded border p-2">
-              <div className="text-xs text-muted-foreground">Total</div>
-              <div className="text-lg font-semibold">{stats.total}</div>
-            </div>
-            <div className="rounded border p-2 bg-green-50 dark:bg-green-950/30">
+            <button type="button" onClick={() => setFilter("all")}
+              className={`rounded border p-2 text-left transition ${filter === "all" ? "ring-2 ring-primary" : "hover:bg-muted/50"}`}>
+              <div className="text-xs text-muted-foreground text-center">Total</div>
+              <div className="text-lg font-semibold text-center">{stats.total}</div>
+            </button>
+            <button type="button" onClick={() => setFilter("sent")}
+              className={`rounded border p-2 bg-green-50 dark:bg-green-950/30 transition ${filter === "sent" ? "ring-2 ring-green-600" : "hover:brightness-95"}`}>
               <div className="text-xs text-muted-foreground">Enviados</div>
               <div className="text-lg font-semibold text-green-600">{stats.sent}</div>
-            </div>
-            <div className="rounded border p-2 bg-red-50 dark:bg-red-950/30">
+            </button>
+            <button type="button" onClick={() => setFilter("failed")}
+              className={`rounded border p-2 bg-red-50 dark:bg-red-950/30 transition ${filter === "failed" ? "ring-2 ring-red-600" : "hover:brightness-95"}`}>
               <div className="text-xs text-muted-foreground">Fallidos</div>
               <div className="text-lg font-semibold text-red-600">{stats.failed}</div>
-            </div>
-            <div className="rounded border p-2 bg-yellow-50 dark:bg-yellow-950/30">
+            </button>
+            <button type="button" onClick={() => setFilter("pending")}
+              className={`rounded border p-2 bg-yellow-50 dark:bg-yellow-950/30 transition ${filter === "pending" ? "ring-2 ring-yellow-600" : "hover:brightness-95"}`}>
               <div className="text-xs text-muted-foreground">Pendientes</div>
               <div className="text-lg font-semibold text-yellow-600">{stats.pending}</div>
-            </div>
+            </button>
           </div>
 
           <div>
@@ -166,9 +182,11 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
         <ScrollArea className="min-h-0 flex-1 mt-2 rounded border">
           {loading && items.length === 0 ? (
             <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
-          ) : items.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
-              Sin datos de destinatarios. Este envío puede ser anterior al sistema de seguimiento.
+              {items.length === 0
+                ? "Sin datos de destinatarios. Este envío puede ser anterior al sistema de seguimiento."
+                : `No hay destinatarios en estado "${filter}".`}
             </div>
           ) : (
             <div className="min-w-[780px]">
@@ -182,7 +200,7 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
                 </tr>
               </thead>
               <tbody>
-                {items.map((it) => (
+                {pagedItems.map((it) => (
                   <tr key={it.id} className="border-t">
                     <td className="p-2">
                       <div className="font-medium truncate max-w-[220px]">{it.nombre || "—"}</div>
@@ -206,6 +224,19 @@ export default function EmailProgressDialog({ open, onOpenChange, historyId, sub
             </div>
           )}
         </ScrollArea>
+
+        {filteredItems.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between gap-2 pt-2 text-sm">
+            <div className="text-muted-foreground">
+              Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredItems.length)} de {filteredItems.length}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Anterior</Button>
+              <span className="text-xs text-muted-foreground">Página {currentPage} / {totalPages}</span>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Siguiente</Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
