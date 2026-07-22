@@ -28,8 +28,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
 
         // Sube en cada envío a Play (que sea MAYOR al publicado)
-        versionCode 72
-        versionName "14.11.25"
+        versionCode 104
+        versionName "22.07.26"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
