@@ -88,10 +88,11 @@ function LayoutContent() {
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pb-16 md:pb-0">
             <Outlet />
           </main>
         </div>
+        <MobileBottomNav />
       </div>
       
       {/* Diálogo de actualización de la app */}
