@@ -1,6 +1,7 @@
 import { useNavigate, Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, UserCog, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -87,10 +88,11 @@ function LayoutContent() {
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pb-16 md:pb-0">
             <Outlet />
           </main>
         </div>
+        <MobileBottomNav />
       </div>
       
       {/* Diálogo de actualización de la app */}
