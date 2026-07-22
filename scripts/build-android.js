@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { execSync } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -23,10 +23,33 @@ function log(message, color = colors.reset) {
   console.log(`${color}${message}${colors.reset}`);
 }
 
+// Asegurar JAVA_HOME en Windows si no está configurado
+const isWindows = process.platform === 'win32';
+const commonAndroidStudioJbr = 'C:\\Program Files\\Android\\Android Studio\\jbr';
+
+if (!process.env.JAVA_HOME && isWindows && existsSync(commonAndroidStudioJbr)) {
+  process.env.JAVA_HOME = commonAndroidStudioJbr;
+  log(`⚙ JAVA_HOME no estaba configurado. Se ha establecido automáticamente a: ${process.env.JAVA_HOME}`, colors.yellow);
+}
+
+if (process.env.JAVA_HOME) {
+  const javaBin = join(process.env.JAVA_HOME, 'bin');
+  const pathSeparator = isWindows ? ';' : ':';
+  const currentPath = process.env.PATH || '';
+  if (!currentPath.split(pathSeparator).includes(javaBin)) {
+    process.env.PATH = `${javaBin}${pathSeparator}${currentPath}`;
+    log(`⚙ Añadido ${javaBin} al PATH`, colors.yellow);
+  }
+}
+
 function execCommand(command, description) {
   log(`\n${description}...`, colors.blue);
   try {
-    execSync(command, { stdio: 'inherit', cwd: join(__dirname, '..') });
+    execSync(command, {
+      stdio: 'inherit',
+      cwd: join(__dirname, '..'),
+      env: process.env
+    });
     log(`✓ ${description} completado`, colors.green);
     return true;
   } catch (error) {
