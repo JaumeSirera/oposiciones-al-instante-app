@@ -119,8 +119,7 @@ if (!execCommand('npx cap sync android', 'Sincronización de Capacitor')) {
 // 4. Compilar AAB
 log('\n=== COMPILANDO AAB ===', colors.bright);
 
-// Detectar sistema operativo
-const isWindows = process.platform === 'win32';
+// Seleccionar wrapper de Gradle
 const gradlewCmd = isWindows ? 'gradlew.bat' : './gradlew';
 
 // Comando completo para Windows
