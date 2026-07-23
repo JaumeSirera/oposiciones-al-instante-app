@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
+import { useGooglePlayBilling, type DonationAmount } from '@/hooks/useGooglePlayBilling';
 
 const Donacion = () => {
   const { t } = useTranslation();
@@ -21,6 +22,34 @@ const Donacion = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [googlePayReady, setGooglePayReady] = useState(false);
   const [paymentsClient, setPaymentsClient] = useState<any>(null);
+
+  // Google Play Billing (solo Android nativo). En web queda inactivo.
+  const { isAndroidNative, isReady: billingReady, isProcessing: billingProcessing, donate: donateViaPlay } =
+    useGooglePlayBilling({
+      userId: user?.id ? Number(user.id) : undefined,
+      onSuccess: (amount) => {
+        toast({
+          title: t('donation.thankYou'),
+          description: `${t('donation.supportValuable')} (${amount}€)`,
+        });
+      },
+      onError: (msg) => {
+        toast({ title: t('donation.paymentError'), description: msg, variant: 'destructive' });
+      },
+    });
+
+  const handlePlayBillingDonation = () => {
+    if (!user?.id) {
+      toast({ title: t('donation.loginRequired'), description: t('donation.mustLoginToDonate'), variant: 'destructive' });
+      navigate('/auth');
+      return;
+    }
+    if (![5, 10, 20].includes(selectedAmount)) {
+      toast({ title: t('common.error'), description: 'Importe no soportado en Play', variant: 'destructive' });
+      return;
+    }
+    donateViaPlay(selectedAmount as DonationAmount);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -239,16 +268,37 @@ const Donacion = () => {
                     <p className="text-sm text-muted-foreground mb-2">
                       {t('donation.youWillDonate')} <span className="font-bold text-blue-600 dark:text-blue-400">{selectedAmount}€</span>
                     </p>
+                    {isAndroidNative && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {billingReady ? '✓ Google Play listo' : 'Conectando con Google Play…'}
+                      </p>
+                    )}
                   </div>
-                  <Button
-                    className="w-full bg-black hover:bg-gray-800" 
-                    size="lg"
-                    onClick={handleGooglePay}
-                    disabled={isLoading || !user}
-                  >
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    {isLoading ? t('donation.processing') : t('donation.payWithCard')}
-                  </Button>
+
+                  {isAndroidNative ? (
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      size="lg"
+                      onClick={handlePlayBillingDonation}
+                      disabled={billingProcessing || !billingReady || !user}
+                    >
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      {billingProcessing
+                        ? t('donation.processing')
+                        : `Donar ${selectedAmount}€ vía Google Play`}
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full bg-black hover:bg-gray-800"
+                      size="lg"
+                      onClick={handleGooglePay}
+                      disabled={isLoading || !user}
+                    >
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      {isLoading ? t('donation.processing') : t('donation.payWithCard')}
+                    </Button>
+                  )}
+
                   {!user && (
                     <p className="text-xs text-amber-600 text-center">
                       {t('donation.mustLoginToDonate')}
