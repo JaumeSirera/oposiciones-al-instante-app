@@ -110,6 +110,7 @@ export function AppSidebar() {
         { title: "Email Actualización", url: "/enviar-email-actualizacion", icon: Mail, requiresSA: true },
         { title: "Administrar usuarios", url: "/administrar-usuarios", icon: Users, requiresSA: true },
         { title: "Administrar procesos", url: "/administrar-procesos", icon: Layers, requiresSA: true },
+        { title: "Descargar APK", url: "https://oposiciones-test.com/files/app-release.apk", icon: Download, requiresSA: true, external: true },
       ]
     },
     {
@@ -181,32 +182,50 @@ export function AppSidebar() {
                 {section.items.map((item) => {
                   const active = isActive(item.url);
                   const isFlashcards = item.url === '/flashcards';
+                  const itemAny = item as any;
+                  const isExternal = itemAny.external;
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild isActive={active}>
-                        <NavLink
-                          to={item.url}
-                          end={item.url === "/"}
-                          onClick={() => {
-                            if (isMobile) {
-                              setOpenMobile(false);
-                            }
-                          }}
-                          className="flex items-center justify-between w-full"
-                        >
-                          <div className="flex items-center gap-2">
+                        {isExternal ? (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            onClick={() => {
+                              if (isMobile) setOpenMobile(false);
+                            }}
+                            className="flex items-center gap-2 w-full"
+                          >
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
-                          </div>
-                          {isFlashcards && pendingCount > 0 && (
-                            <Badge 
-                              variant="destructive" 
-                              className="text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center"
-                            >
-                              {pendingCount > 99 ? '99+' : pendingCount}
-                            </Badge>
-                          )}
-                        </NavLink>
+                          </a>
+                        ) : (
+                          <NavLink
+                            to={item.url}
+                            end={item.url === "/"}
+                            onClick={() => {
+                              if (isMobile) {
+                                setOpenMobile(false);
+                              }
+                            }}
+                            className="flex items-center justify-between w-full"
+                          >
+                            <div className="flex items-center gap-2">
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                            </div>
+                            {isFlashcards && pendingCount > 0 && (
+                              <Badge 
+                                variant="destructive" 
+                                className="text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center"
+                              >
+                                {pendingCount > 99 ? '99+' : pendingCount}
+                              </Badge>
+                            )}
+                          </NavLink>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
