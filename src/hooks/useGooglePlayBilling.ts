@@ -6,7 +6,6 @@ import { validarDonacionGoogle } from '@/services/donacionesIAPService';
 export const DONATION_SKUS = {
   5: 'donation_5',
   10: 'donation_10',
-  20: 'donation_20',
 } as const;
 
 export type DonationAmount = keyof typeof DONATION_SKUS;
