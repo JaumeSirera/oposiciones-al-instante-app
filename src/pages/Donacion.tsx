@@ -44,7 +44,7 @@ const Donacion = () => {
       navigate('/auth');
       return;
     }
-    if (![5, 10, 20].includes(selectedAmount)) {
+    if (![5, 10].includes(selectedAmount)) {
       toast({ title: t('common.error'), description: 'Importe no soportado en Play', variant: 'destructive' });
       return;
     }
@@ -236,8 +236,8 @@ const Donacion = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 {t('donation.selectAmount')}
               </p>
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                {[5, 10, 20].map((amount) => (
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {[5, 10].map((amount) => (
                   <Button
                     key={amount}
                     variant={selectedAmount === amount ? "default" : "outline"}
