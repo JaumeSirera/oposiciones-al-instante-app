@@ -4,8 +4,8 @@ import { validarDonacionGoogle } from '@/services/donacionesIAPService';
 
 // SKUs configurados en Google Play Console (productos consumibles)
 export const DONATION_SKUS = {
-  5: 'donation_5',
-  10: 'donation_10',
+  5: 'donacion_5',
+  10: 'donacion_10',
 } as const;
 
 export type DonationAmount = keyof typeof DONATION_SKUS;
