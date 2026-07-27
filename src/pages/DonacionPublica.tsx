@@ -14,7 +14,7 @@ const DonacionPublica = () => {
     Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
   const handleDonation = async (amount: number) => {
-    // En Android nativo, la donación se hace por Google Play (requiere login).
+    // En Android nativo, la donación se hace por Google Play Billing (requiere login).
     if (isAndroidNative) {
       toast({
         title: 'Inicia sesión para donar vía Google Play',
