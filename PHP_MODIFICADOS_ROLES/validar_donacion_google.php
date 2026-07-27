@@ -8,15 +8,14 @@
  *   - Archivo JSON de credenciales subido al servidor (fuera de public_html idealmente)
  *   - La app declarada en Play Console con los productos consumibles (SKUs) siguientes:
  *
- *   SKUs esperados:
- *     donation_5    -> 5,00 €
- *     donation_10   -> 10,00 €
- *     donation_20   -> 20,00 €
+ *   SKUs esperados (deben coincidir EXACTAMENTE con los IDs en Play Console):
+ *     donacion_5    -> 5,00 €
+ *     donacion_10   -> 10,00 €
  *
  * Input (POST JSON):
  *   {
  *     "id_usuario": 123,
- *     "product_id": "donation_10",
+ *     "product_id": "donacion_10",
  *     "purchase_token": "abcd....",
  *     "order_id": "GPA.1234-5678-9012-34567"
  *   }
@@ -40,9 +39,8 @@ $PACKAGE_NAME         = 'com.jaumesirera.TestsOposiciones';
 
 // Mapeo de SKUs a importes (céntimos). El importe real lo declaras también en Play Console.
 $SKU_MAP = [
-  'donation_5'  => 500,
-  'donation_10' => 1000,
-  'donation_20' => 2000,
+  'donacion_5'  => 500,
+  'donacion_10' => 1000,
 ];
 
 require_once __DIR__ . '/conexion.php'; // Debe exponer $conn (mysqli) según convención del proyecto
